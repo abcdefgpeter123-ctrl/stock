@@ -191,46 +191,170 @@ def fetch_institutional():
 
 # ── 個股：TWSE 開放 API（境外友善）────────────────────────
 
-def fetch_all_twse_openapi():
+def _parse_twse_openapi_rows(rows):
+    """解析 TWSE openapi list 格式，回傳 prices dict"""
+    prices = {}
+    if not rows:
+        return prices
+    # 印出第一筆 debug 訊息，方便確認欄位名稱
+    if rows:
+        first = rows[0]
+        print(f"   [debug] 第一筆欄位: {list(first.keys()) if isinstance(first, dict) else first[:5]}")
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        code  = str(row.get("Code", row.get("code", ""))).strip()
+        name  = str(row.get("StockName", row.get("Name", row.get("name", "")))).strip()
+        # TWSE openapi 的收盤價欄位可能叫 ClosingPrice 或 close
+        close_raw = row.get("ClosingPrice") or row.get("ClosePrice") or row.get("close") or ""
+        close = safe_float(close_raw)
+        chg_raw = row.get("Change") or row.get("change") or ""
+        chg   = safe_float(chg_raw)
+        vol_s = str(row.get("TradeVolume", row.get("volume", "0"))).replace(",", "")
+        vol   = int(vol_s) if vol_s.isdigit() else 0
+        if not code or close == 0:
+            continue
+        prev    = close - chg
+        chg_pct = round(chg / prev * 100, 2) if prev else 0.0
+        prices[code] = {
+            "name":    name,
+            "price":   close,
+            "change":  round(chg, 2),
+            "changeP": chg_pct,
+            "open":    safe_float(row.get("OpeningPrice", row.get("open", ""))),
+            "high":    safe_float(row.get("HighestPrice", row.get("high", ""))),
+            "low":     safe_float(row.get("LowestPrice",  row.get("low",  ""))),
+            "vol":     vol,
+        }
+    return prices
+
+
+def _parse_twse_rwd_rows(resp):
     """
-    TWSE 開放資料平台 — 全部上市股票當日收盤
-    https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL
-    欄位：Code / ClosingPrice / Change / TradeVolume / OpeningPrice / HighestPrice / LowestPrice
+    解析 TWSE rwd 格式（www.twse.com.tw 的 JSON 回應）。
+    回傳格式：
+      fields: ["證券代號","證券名稱","成交股數",...,"開盤價","最高價","最低價","收盤價","漲跌(+/-)","漲跌價差",...]
+      data:   [["0050","元大台灣50","...","93.1","▼","1.8",...], ...]
     """
-    try:
-        url = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
-        r = requests.get(url, headers=HEADERS, timeout=60)
-        rows = r.json()
-        if not isinstance(rows, list):
-            print(f"⚠️ TWSE openapi 非預期格式: {type(rows)}")
-            return {}
-        prices = {}
-        for row in rows:
-            # 欄位名稱：ClosingPrice（不是 ClosePrice）
-            code  = str(row.get("Code", "")).strip()
-            name  = str(row.get("StockName", row.get("Name", ""))).strip()
-            close = safe_float(row.get("ClosingPrice", row.get("ClosePrice", "")))
-            chg   = safe_float(row.get("Change", ""))
-            vol_s = str(row.get("TradeVolume", "0")).replace(",", "")
-            vol   = int(vol_s) if vol_s.isdigit() else 0
-            if not code or close == 0:
+    prices = {}
+    fields = resp.get("fields", [])
+    data   = resp.get("data", [])
+    if not fields or not data:
+        return prices
+
+    def fi(name):
+        return fields.index(name) if name in fields else -1
+
+    idx_code  = fi("證券代號")
+    idx_name  = fi("證券名稱")
+    idx_close = fi("收盤價")
+    idx_dir   = fi("漲跌(+/-)")   # ▲ or ▼
+    idx_chg   = fi("漲跌價差")
+    idx_open  = fi("開盤價")
+    idx_high  = fi("最高價")
+    idx_low   = fi("最低價")
+    idx_vol   = fi("成交股數")
+
+    if idx_code < 0 or idx_close < 0:
+        print(f"   [debug] rwd 欄位找不到，fields={fields[:6]}")
+        return prices
+
+    print(f"   [debug] rwd fields 找到，共 {len(data)} 列")
+    for row in data:
+        try:
+            code  = str(row[idx_code]).strip()
+            name  = str(row[idx_name]).strip() if idx_name >= 0 else ""
+            close = safe_float(row[idx_close])
+            if close == 0:
                 continue
+            # 漲跌方向
+            direction = str(row[idx_dir]).strip() if idx_dir >= 0 else ""
+            chg = safe_float(row[idx_chg]) if idx_chg >= 0 else 0.0
+            if "▼" in direction or direction == "-":
+                chg = -abs(chg)
             prev    = close - chg
             chg_pct = round(chg / prev * 100, 2) if prev else 0.0
+            vol_s   = str(row[idx_vol]).replace(",", "") if idx_vol >= 0 else "0"
+            vol     = int(vol_s) if vol_s.isdigit() else 0
             prices[code] = {
                 "name":    name,
                 "price":   close,
                 "change":  round(chg, 2),
                 "changeP": chg_pct,
-                "open":    safe_float(row.get("OpeningPrice", "")),
-                "high":    safe_float(row.get("HighestPrice", "")),
-                "low":     safe_float(row.get("LowestPrice", "")),
+                "open":    safe_float(row[idx_open]) if idx_open >= 0 else 0,
+                "high":    safe_float(row[idx_high]) if idx_high >= 0 else 0,
+                "low":     safe_float(row[idx_low])  if idx_low  >= 0 else 0,
                 "vol":     vol,
             }
-        return prices
+        except Exception:
+            continue
+    return prices
+
+
+def fetch_all_twse_stocks():
+    """
+    全部上市股票收盤價，依序嘗試三個端點：
+    1. TWSE openapi（開放資料，境外友善）
+    2. TWSE rwd afterTrading STOCK_DAY_ALL（主站，有 fields 索引）
+    3. TWSE rwd MI_INDEX（全市場，有 tables 結構）
+    """
+    headers_rwd = {**HEADERS, "Referer": "https://www.twse.com.tw/"}
+
+    # ── 端點 1：openapi.twse.com.tw ──
+    for url in [
+        "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+        "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_AVG_ALL",
+    ]:
+        try:
+            r = requests.get(url, headers=headers_rwd, timeout=30)
+            rows = r.json()
+            if isinstance(rows, list) and rows:
+                prices = _parse_twse_openapi_rows(rows)
+                if prices:
+                    print(f"   ✅ openapi 端點成功: {url.split('/')[-1]} → {len(prices)} 支")
+                    return prices
+                print(f"   ⚠️ openapi 回傳 {len(rows)} 列但解析 0 支，欄位可能不符")
+        except Exception as e:
+            print(f"   ⚠️ {url[-40:]}: {e}")
+
+    # ── 端點 2：rwd afterTrading STOCK_DAY_ALL ──
+    try:
+        url = "https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY_ALL?response=json"
+        r = requests.get(url, headers=headers_rwd, timeout=30)
+        resp = r.json()
+        if resp.get("stat") == "OK":
+            prices = _parse_twse_rwd_rows(resp)
+            if prices:
+                print(f"   ✅ rwd STOCK_DAY_ALL → {len(prices)} 支")
+                return prices
+        else:
+            print(f"   ⚠️ rwd STOCK_DAY_ALL stat={resp.get('stat')}")
     except Exception as e:
-        print(f"❌ TWSE openapi 上市: {e}")
-        return {}
+        print(f"   ⚠️ rwd STOCK_DAY_ALL: {e}")
+
+    # ── 端點 3：rwd MI_INDEX ──
+    try:
+        url = "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?response=json&type=ALLBUT0999"
+        r = requests.get(url, headers=headers_rwd, timeout=45)
+        resp = r.json()
+        if resp.get("stat") == "OK":
+            prices = {}
+            for table in resp.get("tables", []):
+                fields = table.get("fields", [])
+                if "收盤價" not in fields:
+                    continue
+                sub = _parse_twse_rwd_rows({"fields": fields, "data": table.get("data", [])})
+                prices.update(sub)
+            if prices:
+                print(f"   ✅ rwd MI_INDEX → {len(prices)} 支")
+                return prices
+        else:
+            print(f"   ⚠️ MI_INDEX stat={resp.get('stat')}")
+    except Exception as e:
+        print(f"   ⚠️ MI_INDEX: {e}")
+
+    print("❌ TWSE 上市三個端點全部失敗")
+    return {}
 
 
 def fetch_all_otc_openapi():
@@ -342,7 +466,7 @@ def main():
 
     # 3. 全台個股 — 優先用開放 API
     print("📊 TWSE 開放 API — 上市股票...")
-    twse = fetch_all_twse_openapi()
+    twse = fetch_all_twse_stocks()
     print(f"   上市: {len(twse)} 支")
 
     print("📊 TPEX 開放 API — 上櫃股票...")
