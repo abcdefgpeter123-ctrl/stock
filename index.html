@@ -658,6 +658,7 @@ function renderDetail(code) {
 }
 
 let priceCache = {};
+let nameCache = {};   // code → 中文名稱（來自 data.json prices.name）
 let twiiData = {};
 let activeTheme = "all", sortCol = "name", asc = true, sigFilter = "all", q = "";
 
@@ -727,11 +728,29 @@ function render(){
     if(q && !(s.code.includes(q) || s.name.includes(q) || s.theme.includes(q))) return false;
     return true;
   });
+
+  // 全台股搜尋：若有關鍵字，把 priceCache 中不在固定清單的股票也納入
+  if(q && activeTheme==="all" && sigFilter==="all"){
+    const knownCodes = new Set(STOCKS.map(s => s.code));
+    const extraRows = Object.entries(priceCache)
+      .filter(([code, p]) => {
+        if(knownCodes.has(code)) return false;
+        const name = nameCache[code] || "";
+        return code.includes(q) || name.includes(q);
+      })
+      .map(([code, p]) => ({
+        code, name: nameCache[code] || code,
+        theme:"—", p5:null, p30:null,
+        i5f:0, i5t:0, i5s:0, sig:"none", _extra:true
+      }));
+    rows = [...rows, ...extraRows];
+  }
+
   rows.sort((a, b) => {
     let va, vb;
     if(sortCol==="name"){ va=a.name; vb=b.name; }
-    else if(sortCol==="5d"){ va=a.p5; vb=b.p5; }
-    else if(sortCol==="30d"){ va=a.p30; vb=b.p30; }
+    else if(sortCol==="5d"){ va=a.p5??-999; vb=b.p5??-999; }
+    else if(sortCol==="30d"){ va=a.p30??-999; vb=b.p30??-999; }
     else if(sortCol==="price"){ va=priceCache[a.code]?.price||0; vb=priceCache[b.code]?.price||0; }
     else { va=a.i5f+a.i5t+a.i5s; vb=b.i5f+b.i5t+b.i5s; }
     if(typeof va==="string") return asc ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -746,12 +765,12 @@ function render(){
         <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
         <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
         <td class="name-cell">${s.name}</td>
-        <td><span class="badge b-theme">${s.theme}</span></td>
+        <td>${s._extra ? '<span class="neu" style="font-size:11px">全台股</span>' : `<span class="badge b-theme">${s.theme}</span>`}</td>
         <td>${fmtPrice(s.code)}</td>
-        <td>${pct(s.p5)}</td>
-        <td>${pct(s.p30)}</td>
-        <td>${instBar(s.i5f, s.i5t, s.i5s)}</td>
-        <td>${sigBadge(s.sig)}</td>
+        <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
+        <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
+        <td>${s._extra ? '<span class="neu" style="font-size:11px">—</span>' : instBar(s.i5f, s.i5t, s.i5s)}</td>
+        <td>${s._extra ? '' : sigBadge(s.sig)}</td>
       </tr>
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("");
@@ -795,6 +814,8 @@ async function loadData(){
     }
     if(data.prices){
       priceCache = data.prices;
+      nameCache = {};
+      Object.entries(priceCache).forEach(([c,p]) => { if(p.name) nameCache[c] = p.name; });
     }
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
