@@ -208,6 +208,7 @@ def fetch_all_twse_openapi():
         for row in rows:
             # 欄位名稱：ClosingPrice（不是 ClosePrice）
             code  = str(row.get("Code", "")).strip()
+            name  = str(row.get("StockName", row.get("Name", ""))).strip()
             close = safe_float(row.get("ClosingPrice", row.get("ClosePrice", "")))
             chg   = safe_float(row.get("Change", ""))
             vol_s = str(row.get("TradeVolume", "0")).replace(",", "")
@@ -217,6 +218,7 @@ def fetch_all_twse_openapi():
             prev    = close - chg
             chg_pct = round(chg / prev * 100, 2) if prev else 0.0
             prices[code] = {
+                "name":    name,
                 "price":   close,
                 "change":  round(chg, 2),
                 "changeP": chg_pct,
@@ -244,6 +246,8 @@ def fetch_all_otc_openapi():
         for row in rows:
             code  = str(row.get("SecuritiesCompanyCode",
                         row.get("code", ""))).strip()
+            name  = str(row.get("CompanyName", row.get("Name",
+                        row.get("name", "")))).strip()
             close = safe_float(row.get("Close", row.get("close", "")))
             chg   = safe_float(row.get("Change", row.get("change", "")))
             if not code or close == 0:
@@ -251,6 +255,7 @@ def fetch_all_otc_openapi():
             prev    = close - chg
             chg_pct = round(chg / prev * 100, 2) if prev else 0.0
             prices[code] = {
+                "name":    name,
                 "price":   close,
                 "change":  round(chg, 2),
                 "changeP": chg_pct,
