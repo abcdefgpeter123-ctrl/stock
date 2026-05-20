@@ -137,32 +137,47 @@ def fetch_institutional():
                 r = requests.get(url, headers=HEADERS, timeout=12)
                 resp = r.json()
 
-                # openapi 回傳格式是 list
-                rows = resp if isinstance(resp, list) else resp.get("data", [])
+                # openapi 回傳格式是 list；TWSE 舊/新端點回傳 dict 含 "data"
+                rows = resp if isinstance(resp, list) else (resp.get("data") or [])
                 if not rows:
                     continue
 
                 foreign = trust = dealer = 0
                 date_str = d.strftime("%Y/%m/%d")
+                any_parsed = False
 
                 for row in rows:
                     if isinstance(row, dict):
-                        name = row.get("SecuritiesCompanyCode", row.get("name", ""))
-                        net  = int(str(row.get("BuyOrSellNetAmount",
-                                    row.get("net", 0))).replace(",",""))
+                        name = str(row.get("Name", row.get("name",
+                                   row.get("SecuritiesCompanyCode", ""))))
+                        net_raw = (row.get("BuyOrSellNetAmount") or
+                                   row.get("net") or
+                                   row.get("NetBuySell") or "0")
+                        net = int(str(net_raw).replace(",", ""))
                     else:
+                        if len(row) < 4:
+                            continue
                         name = row[0]
-                        net  = int(row[4].replace(",","")) if row[4] else 0
+                        # 差額固定是最後一欄（不管 4 欄或 5 欄都適用）
+                        net_str = str(row[-1]).replace(",", "").strip()
+                        try:
+                            net = int(net_str)
+                        except ValueError:
+                            continue
 
-                    if "外資" in name:  foreign += net
-                    elif "投信" in name: trust  += net
-                    elif "自營" in name: dealer += net
+                    if "外資" in name:   foreign += net
+                    elif "投信" in name: trust   += net
+                    elif "自營" in name: dealer  += net
+                    any_parsed = True
 
-                # TWSE 舊/新端點有 date 欄位
+                if not any_parsed:
+                    continue
+
+                # TWSE 舊/新端點有民國 date 欄位，轉成西元
                 if isinstance(resp, dict) and resp.get("date"):
-                    date_str = roc_to_ad_date(resp["date"], d)
+                    date_str = roc_to_ad_date(str(resp["date"]), d)
 
-                print(f"   ✅ 法人({date_str}) via {url[:50]}...")
+                print(f"   ✅ 法人({date_str})")
                 return {"foreign": foreign, "trust": trust,
                         "dealer": dealer, "date": date_str}
 
@@ -180,18 +195,23 @@ def fetch_all_twse_openapi():
     """
     TWSE 開放資料平台 — 全部上市股票當日收盤
     https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL
-    回傳 list of dict，欄位包含 Code / ClosePrice / Change / TradeVolume 等
+    欄位：Code / ClosingPrice / Change / TradeVolume / OpeningPrice / HighestPrice / LowestPrice
     """
     try:
         url = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
         r = requests.get(url, headers=HEADERS, timeout=60)
         rows = r.json()
+        if not isinstance(rows, list):
+            print(f"⚠️ TWSE openapi 非預期格式: {type(rows)}")
+            return {}
         prices = {}
         for row in rows:
+            # 欄位名稱：ClosingPrice（不是 ClosePrice）
             code  = str(row.get("Code", "")).strip()
-            close = safe_float(row.get("ClosePrice", ""))
+            close = safe_float(row.get("ClosingPrice", row.get("ClosePrice", "")))
             chg   = safe_float(row.get("Change", ""))
-            vol   = int(str(row.get("TradeVolume","0")).replace(",","") or 0)
+            vol_s = str(row.get("TradeVolume", "0")).replace(",", "")
+            vol   = int(vol_s) if vol_s.isdigit() else 0
             if not code or close == 0:
                 continue
             prev    = close - chg
@@ -200,9 +220,9 @@ def fetch_all_twse_openapi():
                 "price":   close,
                 "change":  round(chg, 2),
                 "changeP": chg_pct,
-                "open":    safe_float(row.get("OpeningPrice","")),
-                "high":    safe_float(row.get("HighestPrice","")),
-                "low":     safe_float(row.get("LowestPrice","")),
+                "open":    safe_float(row.get("OpeningPrice", "")),
+                "high":    safe_float(row.get("HighestPrice", "")),
+                "low":     safe_float(row.get("LowestPrice", "")),
                 "vol":     vol,
             }
         return prices
@@ -324,17 +344,16 @@ def main():
     otc = fetch_all_otc_openapi()
     print(f"   上櫃: {len(otc)} 支")
 
-    all_prices = {**otc, **twse}   # 上市優先
-
-    if len(all_prices) < 100:
-        # 開放 API 失敗（IP 限制 / 非交易時間），改用 Yahoo Finance 備援
-        print("⚠️  開放 API 無資料，切換 Yahoo Finance 備援清單...")
+    # 上市不足 100 支（API 失敗）→ 用 Yahoo Finance 補主要清單
+    if len(twse) < 100:
+        print("⚠️  TWSE 開放 API 無上市資料，改用 Yahoo Finance 補主要清單...")
         yf = fetch_fallback_list()
-        # 合併：保留既有資料，更新成功的部分
-        all_prices = {**data.get("prices", {}), **yf}
-        print(f"✅ Yahoo Finance 備援: {len(yf)} 支（合併後共 {len(all_prices)} 支）")
+        print(f"   Yahoo Finance: {len(yf)} 支")
+        all_prices = {**data.get("prices", {}), **otc, **yf}
     else:
-        print(f"✅ 開放 API 全市場共 {len(all_prices)} 支")
+        all_prices = {**otc, **twse}   # 上市優先
+
+    print(f"✅ 全市場合計 {len(all_prices)} 支")
 
     data["prices"] = all_prices
 
