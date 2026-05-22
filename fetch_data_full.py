@@ -70,44 +70,44 @@ FALLBACK_CODES = [
 # members: 同題材但尚未跟上的成員股（機會點候選）
 THEME_GROUPS = {
     "記憶體": {
-        "leaders": ["2408", "2344", "3006"],   # 南亞科, 華邦電, 晶豪科
-        "members": ["2369", "2351", "2337"],   # 菱生精密, 順德, 旺宏
+        "leaders": ["2408", "2344", "3006"],          # 南亞科, 華邦電, 晶豪科
+        "members": ["2369", "2351", "2337", "4256"],  # 菱生精密, 順德, 旺宏, 光罩
     },
     "液冷散熱": {
-        "leaders": ["6274", "3017", "3230"],   # 台燿, 奇鋐, 雙鴻
-        "members": ["6538", "3556"],           # 倉和, 禾瑞亞
+        "leaders": ["6274", "3017", "3230"],           # 台燿, 奇鋐, 雙鴻
+        "members": ["6538", "3556", "1626", "6290"],   # 倉和, 禾瑞亞, 艾姆勒, 良維
     },
     "低軌衛星": {
-        "leaders": ["3152", "6438"],           # 璟德, 昇達科
-        "members": ["3048", "6411"],           # 益登, 上詮
+        "leaders": ["3152", "6438"],                   # 璟德, 昇達科
+        "members": ["3048", "6411", "4977"],           # 益登, 上詮光, 上緯新創
     },
     "矽光子CPO": {
-        "leaders": ["3081", "2455", "4971"],   # 聯亞, 全新, IET-KY
-        "members": ["3163", "3363", "6442"],   # 波若威, 上詮, 光聖
+        "leaders": ["3081", "2455", "4971"],           # 聯亞, 全新, IET-KY
+        "members": ["3163", "3363", "6442", "2413"],   # 波若威, 上詮, 光聖, 環瑞
     },
     "AI伺服器": {
-        "leaders": ["2330", "6669", "3661"],   # 台積電, 緯穎, 世芯-KY
-        "members": ["3008", "4863", "2449"],   # 大立光, 新光銅, 京元電
+        "leaders": ["2330", "6669", "3661"],                    # 台積電, 緯穎, 世芯-KY
+        "members": ["3008", "4863", "2449", "2458", "6412", "2441"],  # 大立光, 新光銅, 京元電, 義隆, 群電, 超豐
     },
     "被動元件": {
-        "leaders": ["2327", "2492"],           # 國巨, 禾伸堂
-        "members": ["2351", "3034"],           # 順德, 聯詠
+        "leaders": ["2327", "2492"],                   # 國巨, 禾伸堂
+        "members": ["2351", "3034", "2360"],           # 順德, 聯詠, 致茂
     },
     "海運": {
-        "leaders": ["2603", "2609"],           # 長榮, 陽明
-        "members": ["2615", "2606"],           # 萬海, 裕民
+        "leaders": ["2603", "2609"],                   # 長榮, 陽明
+        "members": ["2615", "2606", "2605"],           # 萬海, 裕民, 新興
     },
     "航空": {
-        "leaders": ["2618", "2634"],           # 長榮航, 漢翔
-        "members": ["2610", "6706"],           # 華航, 惠普
+        "leaders": ["2618", "2634"],                   # 長榮航, 漢翔
+        "members": ["2610", "6706", "2650"],           # 華航, 惠普, 台虎
     },
     "電動車": {
-        "leaders": ["2227", "2228", "1539"],   # 裕日車, 劍麟, 巨庭
-        "members": ["1536", "6431"],           # 和大, 光麗-KY
+        "leaders": ["2227", "2228", "1539"],           # 裕日車, 劍麟, 巨庭
+        "members": ["1536", "6431", "2388", "1537"],   # 和大, 光麗-KY, 威盛, 廣隆
     },
     "生技": {
-        "leaders": ["4147", "6446"],           # 中裕, 藥華藥
-        "members": ["3705", "4736", "4128"],   # 永信, 泰博, 中天
+        "leaders": ["4147", "6446"],                   # 中裕, 藥華藥
+        "members": ["3705", "4736", "4128", "4166"],   # 永信, 泰博, 中天, 藥技
     },
 }
 
@@ -272,8 +272,9 @@ def update_company_info(all_prices, company_info, api_key, max_new=50):
 
 def fetch_price_history(code):
     """
-    從 Yahoo Finance 抓個股近 2 個月日線，回傳 closes list（新→舊已排好，最後一筆最新）。
-    先試 .TW（上市），再試 .TWO（上櫃）。
+    從 Yahoo Finance 抓個股近 2 個月日線。
+    回傳 (closes, dates)：closes 為收盤價 list，dates 為對應 "MM/DD" 字串 list。
+    先試 .TW（上市），再試 .TWO（上櫃）。失敗回傳 (None, None)。
     """
     for suffix in [".TW", ".TWO"]:
         try:
@@ -281,13 +282,17 @@ def fetch_price_history(code):
                    f"{code}{suffix}?interval=1d&range=2mo")
             r = requests.get(url, headers=HEADERS, timeout=12)
             result = r.json()["chart"]["result"][0]
-            closes = result["indicators"]["quote"][0]["close"]
-            closes = [c for c in closes if c is not None]
-            if len(closes) >= 6:
-                return closes
+            timestamps = result.get("timestamp", [])
+            closes_raw = result["indicators"]["quote"][0]["close"]
+            pairs = [(t, c) for t, c in zip(timestamps, closes_raw) if c is not None]
+            if len(pairs) >= 6:
+                closes = [c for _, c in pairs]
+                dates  = [datetime.datetime.utcfromtimestamp(t).strftime("%m/%d")
+                          for t, _ in pairs]
+                return closes, dates
         except Exception:
             continue
-    return None
+    return None, None
 
 
 def compute_opportunities(all_prices):
@@ -308,13 +313,18 @@ def compute_opportunities(all_prices):
         all_codes.update(g["members"])
 
     # 批次抓取歷史收盤價
-    histories = {}
+    histories      = {}        # code → closes list（用於 pct 計算）
+    histories_json = {}        # code → {labels, closes}（存入 data.json 供圖表用）
     codes_list = sorted(all_codes)
     print(f"   📈 抓取 {len(codes_list)} 支個股歷史（機會點偵測）...")
     for i, code in enumerate(codes_list, 1):
-        closes = fetch_price_history(code)
+        closes, dates = fetch_price_history(code)
         if closes:
             histories[code] = closes
+            histories_json[code] = {
+                "labels": dates[-30:],
+                "closes": [round(c, 1) for c in closes[-30:]],
+            }
         time.sleep(0.25)
         if i % 15 == 0:
             print(f"   進度 {i}/{len(codes_list)}...")
@@ -391,7 +401,7 @@ def compute_opportunities(all_prices):
     # 按落差由大到小排序
     opportunities.sort(key=lambda x: x["gap"], reverse=True)
     print(f"   🎯 機會點偵測完成: {len(opportunities)} 支")
-    return opportunities
+    return opportunities, histories_json
 
 
 # ── 加權指數 ──────────────────────────────────────────────
@@ -803,10 +813,12 @@ def main():
         json.dump(company_info, f, ensure_ascii=False, indent=2)
     print(f"   💾 company_info.json 已更新（{len(company_info)} 筆）")
 
-    # 5. 機會點自動偵測
+    # 5. 機會點自動偵測（同時收集30日歷史供圖表用）
     print("🔍 機會點偵測中...")
-    opps = compute_opportunities(all_prices)
+    opps, histories = compute_opportunities(all_prices)
     data["opportunities"] = opps
+    data["histories"] = histories
+    print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
 
     # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))
