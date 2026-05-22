@@ -302,14 +302,8 @@ const STOCKS=[
   {code:"1539",name:"巨庭",theme:"電動車",p5:4.1,p30:17.2,i5f:3,i5t:12,i5s:2,sig:"up"},
   {code:"1536",name:"和大",theme:"電動車",p5:2.8,p30:11.5,i5f:6,i5t:14,i5s:3,sig:"up"},
   {code:"6431",name:"光麗-KY",theme:"電動車",p5:2.2,p30:9.5,i5f:2,i5t:8,i5s:1,sig:"up"}];
-const OPPS=[
-  {code:"2369",name:"菱生精密",theme:"記憶體",reason:"南亞科/華邦電已大漲，菱生為DRAM測試廠，訂單連動但股價尚未反應，法人尚未大舉介入"},
-  {code:"3048",name:"益登",theme:"低軌衛星",reason:"璟德股價已飆漲68%，益登同為射頻元件廠，低軌衛星供應鏈延伸受惠，股價相對落後"},
-  {code:"3556",name:"禾瑞亞",theme:"液冷散熱",reason:"AI伺服器功耗突破2000W推動液冷需求，禾瑞亞溫控IC直接受惠，法人尚未點火"},
-  {code:"3034",name:"聯詠",theme:"被動元件",reason:"被動元件漲價題材帶動國巨、禾伸堂，聯詠下游需求同步受惠但股價僅小漲"},
-  {code:"3008",name:"大立光",theme:"AI眼鏡/AR",reason:"AI眼鏡2026-2028快速普及帶動光學需求，大立光為光學龍頭，本波漲幅遠低於供應鏈其他股"},
-  {code:"6538",name:"倉和",theme:"液冷散熱",reason:"液冷散熱需求爆發，倉和專攻冷卻液管路元件，市值偏小尚未進入法人雷達"},
-];
+// 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
+let opps = [];
 
 
 // 我的最愛邏輯（用 localStorage 儲存）
@@ -775,20 +769,32 @@ function render(){
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("");
 
-  const filtOpps = OPPS.filter(o => activeTheme==="all" || o.theme===activeTheme);
-  document.getElementById("opp-grid").innerHTML = filtOpps.map(o => {
-    const d = priceCache[o.code];
-    const ps = d
-      ? `<div class="oc-price" style="color:${d.change>=0?'var(--up)':'var(--dn)'}">NT$${d.price.toFixed(1)} <span style="font-size:11px">(${d.change>=0?"+":""}${d.changeP.toFixed(1)}%)</span></div>`
-      : `<div class="oc-price" style="color:var(--text3)">—</div>`;
-    return `<div class="opp-card">
-      <div class="oc-code">${o.code} <span class="badge b-theme">${o.theme}</span></div>
-      <div class="oc-name">${o.name}</div>
-      ${ps}
-      <div class="oc-reason">${o.reason}</div>
-      <div class="oc-tag"><span class="badge b-opp">尚未啟動</span></div>
-    </div>`;
-  }).join("");
+  const filtOpps = opps.filter(o => activeTheme==="all" || o.theme===activeTheme);
+  if(filtOpps.length === 0){
+    document.getElementById("opp-grid").innerHTML =
+      `<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text3);font-size:13px">
+        ${opps.length === 0
+          ? "今日暫無機會點（每日收盤後自動更新）"
+          : "目前篩選題材無機會點"}
+      </div>`;
+  } else {
+    document.getElementById("opp-grid").innerHTML = filtOpps.map(o => {
+      const d = priceCache[o.code];
+      const ps = d
+        ? `<div class="oc-price" style="color:${d.change>=0?'var(--up)':'var(--dn)'}">NT$${d.price.toFixed(1)} <span style="font-size:11px">(${d.change>=0?"+":""}${d.changeP.toFixed(1)}%)</span></div>`
+        : `<div class="oc-price" style="color:var(--text3)">—</div>`;
+      const p30txt = o.p30!=null ? `<span style="color:var(--text2);font-size:11px">30日 ${o.p30>=0?"+":""}${o.p30}%</span>` : "";
+      const gaptxt = o.gap!=null ? `<span class="badge b-opp" style="margin-left:6px">落差${o.gap}%</span>` : "";
+      return `<div class="opp-card">
+        <div class="oc-code">${o.code} <span class="badge b-theme">${o.theme}</span>${gaptxt}</div>
+        <div class="oc-name">${o.name}</div>
+        ${ps}
+        ${p30txt}
+        <div class="oc-reason" style="margin-top:6px">${o.reason}</div>
+        <div class="oc-tag"><span class="badge b-opp">尚未啟動</span></div>
+      </div>`;
+    }).join("");
+  }
 }
 
 async function loadData(){
@@ -816,6 +822,9 @@ async function loadData(){
       priceCache = data.prices;
       nameCache = {};
       Object.entries(priceCache).forEach(([c,p]) => { if(p.name) nameCache[c] = p.name; });
+    }
+    if(data.opportunities){
+      opps = data.opportunities;
     }
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
