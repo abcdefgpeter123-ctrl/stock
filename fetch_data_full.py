@@ -64,6 +64,52 @@ FALLBACK_CODES = [
 ]
 
 
+# ── 題材分組（用於機會點自動偵測）──────────────────────────
+# leaders: 該題材先行啟動的龍頭股（用來判斷題材是否熱絡）
+# members: 同題材但尚未跟上的成員股（機會點候選）
+THEME_GROUPS = {
+    "記憶體": {
+        "leaders": ["2408", "2344", "3006"],   # 南亞科, 華邦電, 晶豪科
+        "members": ["2369", "2351", "2337"],   # 菱生精密, 順德, 旺宏
+    },
+    "液冷散熱": {
+        "leaders": ["6274", "3017", "3230"],   # 台燿, 奇鋐, 雙鴻
+        "members": ["6538", "3556"],           # 倉和, 禾瑞亞
+    },
+    "低軌衛星": {
+        "leaders": ["3152", "6438"],           # 璟德, 昇達科
+        "members": ["3048", "6411"],           # 益登, 上詮
+    },
+    "矽光子CPO": {
+        "leaders": ["3081", "2455", "4971"],   # 聯亞, 全新, IET-KY
+        "members": ["3163", "3363", "6442"],   # 波若威, 上詮, 光聖
+    },
+    "AI伺服器": {
+        "leaders": ["2330", "6669", "3661"],   # 台積電, 緯穎, 世芯-KY
+        "members": ["3008", "4863", "2449"],   # 大立光, 新光銅, 京元電
+    },
+    "被動元件": {
+        "leaders": ["2327", "2492"],           # 國巨, 禾伸堂
+        "members": ["2351", "3034"],           # 順德, 聯詠
+    },
+    "海運": {
+        "leaders": ["2603", "2609"],           # 長榮, 陽明
+        "members": ["2615", "2606"],           # 萬海, 裕民
+    },
+    "航空": {
+        "leaders": ["2618", "2634"],           # 長榮航, 漢翔
+        "members": ["2610", "6706"],           # 華航, 惠普
+    },
+    "電動車": {
+        "leaders": ["2227", "2228", "1539"],   # 裕日車, 劍麟, 巨庭
+        "members": ["1536", "6431"],           # 和大, 光麗-KY
+    },
+    "生技": {
+        "leaders": ["4147", "6446"],           # 中裕, 藥華藥
+        "members": ["3705", "4736", "4128"],   # 永信, 泰博, 中天
+    },
+}
+
 # ── 工具函式 ──────────────────────────────────────────────
 
 def roc_to_ad_date(twse_date: str, fallback: datetime.date) -> str:
@@ -84,6 +130,131 @@ def safe_float(v, default=0.0):
         return float(s)
     except ValueError:
         return default
+
+
+# ── 個股歷史價格（Yahoo Finance）─────────────────────────
+
+def fetch_price_history(code):
+    """
+    從 Yahoo Finance 抓個股近 2 個月日線，回傳 closes list（新→舊已排好，最後一筆最新）。
+    先試 .TW（上市），再試 .TWO（上櫃）。
+    """
+    for suffix in [".TW", ".TWO"]:
+        try:
+            url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
+                   f"{code}{suffix}?interval=1d&range=2mo")
+            r = requests.get(url, headers=HEADERS, timeout=12)
+            result = r.json()["chart"]["result"][0]
+            closes = result["indicators"]["quote"][0]["close"]
+            closes = [c for c in closes if c is not None]
+            if len(closes) >= 6:
+                return closes
+        except Exception:
+            continue
+    return None
+
+
+def compute_opportunities(all_prices):
+    """
+    比較各題材龍頭 vs 成員的真實 30 日漲幅，
+    自動找出「龍頭已大漲、但成員還沒動」的機會點。
+    回傳 list of dict，每筆包含 code/name/theme/p30/p5/leader/leader_p30/gap/reason。
+    """
+    LEADER_THRESHOLD = 12   # 龍頭 30 日漲幅需 >= 12% 才算題材熱絡
+    GAP_THRESHOLD    = 8    # 成員落後龍頭 >= 8% 才算有機會
+    MAX_MEMBER_P30   = 7    # 成員 30 日漲幅 <= 7% 才算「尚未啟動」
+
+    # 收集所有需要歷史資料的代號
+    all_codes = set()
+    for g in THEME_GROUPS.values():
+        all_codes.update(g["leaders"])
+        all_codes.update(g["members"])
+
+    # 批次抓取歷史收盤價
+    histories = {}
+    codes_list = sorted(all_codes)
+    print(f"   📈 抓取 {len(codes_list)} 支個股歷史（機會點偵測）...")
+    for i, code in enumerate(codes_list, 1):
+        closes = fetch_price_history(code)
+        if closes:
+            histories[code] = closes
+        time.sleep(0.25)
+        if i % 15 == 0:
+            print(f"   進度 {i}/{len(codes_list)}...")
+
+    def pct(closes, n):
+        """最近 n 個交易日漲跌幅（%）"""
+        if not closes or len(closes) < n + 1:
+            return None
+        base = closes[-(n + 1)]
+        cur  = closes[-1]
+        return round((cur - base) / base * 100, 1) if base > 0 else None
+
+    opportunities = []
+
+    for theme, group in THEME_GROUPS.items():
+        # ─ 計算龍頭漲幅
+        leader_stats = []
+        for code in group["leaders"]:
+            closes = histories.get(code)
+            if not closes:
+                continue
+            r30 = pct(closes, 30)
+            if r30 is None:
+                continue
+            name = all_prices.get(code, {}).get("name", code)
+            leader_stats.append((code, name, r30))
+
+        if not leader_stats:
+            continue
+
+        # 最強龍頭
+        best = max(leader_stats, key=lambda x: x[2])
+        leader_code, leader_name, leader_p30 = best
+
+        if leader_p30 < LEADER_THRESHOLD:
+            continue  # 題材尚未熱絡，跳過
+
+        # ─ 找落後成員
+        for code in group["members"]:
+            closes = histories.get(code)
+            if not closes:
+                continue
+            m_p30 = pct(closes, 30)
+            m_p5  = pct(closes, 5)
+            if m_p30 is None:
+                continue
+
+            gap = round(leader_p30 - m_p30, 1)
+            if gap < GAP_THRESHOLD or m_p30 > MAX_MEMBER_P30:
+                continue  # 落差不夠，或成員已大漲
+
+            name = all_prices.get(code, {}).get("name", code)
+
+            # 動態產生原因說明
+            direction = "漲" if m_p30 >= 0 else "跌"
+            reason = (
+                f"{theme}龍頭【{leader_name}】近30日大漲+{leader_p30:.0f}%，"
+                f"【{name}】同屬{theme}供應鏈，近30日僅{direction}{abs(m_p30):.0f}%，"
+                f"落差{gap:.0f}%，法人尚未大舉介入，具補漲潛力"
+            )
+
+            opportunities.append({
+                "code":       code,
+                "name":       name,
+                "theme":      theme,
+                "p30":        m_p30,
+                "p5":         m_p5,
+                "leader":     leader_name,
+                "leader_p30": leader_p30,
+                "gap":        gap,
+                "reason":     reason,
+            })
+
+    # 按落差由大到小排序
+    opportunities.sort(key=lambda x: x["gap"], reverse=True)
+    print(f"   🎯 機會點偵測完成: {len(opportunities)} 支")
+    return opportunities
 
 
 # ── 加權指數 ──────────────────────────────────────────────
@@ -486,7 +657,12 @@ def main():
 
     data["prices"] = all_prices
 
-    # 4. 時間戳
+    # 4. 機會點自動偵測
+    print("🔍 機會點偵測中...")
+    opps = compute_opportunities(all_prices)
+    data["opportunities"] = opps
+
+    # 5. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))
     data["updated_at"] = datetime.datetime.now(tz_tw).strftime("%Y/%m/%d %H:%M")
 
