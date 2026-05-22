@@ -1,0 +1,492 @@
+{
+  "2330": {
+    "core_products": "先進邏輯晶片代工",
+    "business_desc": "全球最大晶圓代工廠，製程領先（3nm/2nm），主要客戶涵蓋 Apple、NVIDIA、AMD，AI 算力需求帶動先進製程訂單大幅成長。",
+    "industry": "半導體業",
+    "major_clients": "Apple、NVIDIA、AMD、Qualcomm",
+    "generated": "2026/05/22"
+  },
+  "2317": {
+    "core_products": "電子組裝代工（EMS）",
+    "business_desc": "全球最大電子代工廠，負責 Apple iPhone 及 AI 伺服器組裝，積極布局 AI 伺服器供應鏈，與 NVIDIA 深度合作。",
+    "industry": "電子零組件業",
+    "major_clients": "Apple、NVIDIA、Microsoft",
+    "generated": "2026/05/22"
+  },
+  "3711": {
+    "core_products": "IC 封裝測試",
+    "business_desc": "全球最大 IC 封測廠，先進封裝（SiP、CoWoS 相容）為 AI 晶片需求受惠股，客戶涵蓋各大半導體廠。",
+    "industry": "半導體業",
+    "major_clients": "Qualcomm、MediaTek、Apple",
+    "generated": "2026/05/22"
+  },
+  "6669": {
+    "core_products": "AI 伺服器整機",
+    "business_desc": "台灣 AI 伺服器 ODM 龍頭，專攻 NVIDIA GPU 伺服器，受 AI 資料中心建設潮帶動，出貨量高速成長。",
+    "industry": "伺服器業",
+    "major_clients": "Meta、Google、Microsoft",
+    "generated": "2026/05/22"
+  },
+  "5274": {
+    "core_products": "BMC 管理晶片",
+    "business_desc": "AI 伺服器基板管理控制器（BMC）全球龍頭，每台 AI 伺服器均需搭載，受益 AI 伺服器出貨量爆發。",
+    "industry": "半導體業",
+    "major_clients": "緯穎、廣達、英業達",
+    "generated": "2026/05/22"
+  },
+  "3661": {
+    "core_products": "ASIC 客製晶片設計",
+    "business_desc": "台灣 IC 設計公司，專攻 AI 推論 ASIC 客製化設計，與雲端巨頭合作開發專用 AI 晶片，高毛利模式。",
+    "industry": "半導體業",
+    "major_clients": "Amazon、Google",
+    "generated": "2026/05/22"
+  },
+  "4863": {
+    "core_products": "銅箔基板（CCL）",
+    "business_desc": "AI 伺服器高速傳輸用銅箔基板供應商，AI 伺服器對高頻高速 CCL 需求大增，受益 AI 建設潮。",
+    "industry": "電子零組件業",
+    "major_clients": "台灣各大 PCB 廠",
+    "generated": "2026/05/22"
+  },
+  "3008": {
+    "core_products": "光學鏡頭模組",
+    "business_desc": "全球最大手機鏡頭廠，近年積極切入 AI 伺服器光學互連市場，產品高端化帶動毛利率提升。",
+    "industry": "光學業",
+    "major_clients": "Apple、Samsung",
+    "generated": "2026/05/22"
+  },
+  "2449": {
+    "core_products": "IC 測試服務",
+    "business_desc": "台灣中型 IC 測試廠，AI 晶片需求帶動測試訂單成長，積極擴充先進製程測試產能。",
+    "industry": "半導體業",
+    "major_clients": "MediaTek、聯發科、瑞昱",
+    "generated": "2026/05/22"
+  },
+  "2458": {
+    "core_products": "觸控/指紋 IC",
+    "business_desc": "台灣觸控與指紋辨識 IC 設計廠，產品廣泛應用於筆電、平板，切入 AI PC 生物辨識市場，受惠 AI PC 換機潮。",
+    "industry": "半導體業",
+    "major_clients": "Lenovo、HP、Dell",
+    "generated": "2026/05/22"
+  },
+  "6412": {
+    "core_products": "電源供應器（PSU）",
+    "business_desc": "台灣伺服器與資料中心電源供應器廠，AI 伺服器功耗大幅提升帶動高瓦數 PSU 需求，主要供應雲端業者與 ODM 廠。",
+    "industry": "電子零組件業",
+    "major_clients": "雲端業者、ODM 廠（廣達、英業達等）",
+    "generated": "2026/05/22"
+  },
+  "2441": {
+    "core_products": "IC 封裝測試",
+    "business_desc": "台灣中型 IC 封測廠，主攻車用電子與工業控制 IC 封測，AI 晶片需求帶動封測訂單，受益全球車用半導體供應鏈成長。",
+    "industry": "半導體業",
+    "major_clients": "車用 IC 廠商、工業控制廠商",
+    "generated": "2026/05/22"
+  },
+  "3006": {
+    "core_products": "SRAM/利基型記憶體",
+    "business_desc": "台灣 SRAM 及利基型記憶體 IC 設計廠，AI 邊緣運算對低功耗記憶體需求提升，受益記憶體題材輪動。",
+    "industry": "半導體業",
+    "major_clients": "工業控制、網通設備廠",
+    "generated": "2026/05/22"
+  },
+  "2408": {
+    "core_products": "DDR5 DRAM",
+    "business_desc": "台灣 DRAM 製造廠，生產 DDR5 記憶體，AI 伺服器對 HBM 與 DDR5 需求爆發，帶動記憶體報價大幅回升。",
+    "industry": "半導體業",
+    "major_clients": "伺服器廠、PC 廠",
+    "generated": "2026/05/22"
+  },
+  "2344": {
+    "core_products": "NOR Flash / DRAM",
+    "business_desc": "台灣記憶體廠，生產 NOR Flash 及 DRAM，受益 AI 邊緣裝置對 NOR Flash 需求增加及記憶體景氣回升。",
+    "industry": "半導體業",
+    "major_clients": "手機廠、IoT 裝置廠",
+    "generated": "2026/05/22"
+  },
+  "2369": {
+    "core_products": "IC 封裝測試",
+    "business_desc": "台灣 IC 封測廠，以記憶體 IC 封測為主，受記憶體景氣回升帶動訂單成長，法人尚未大舉介入。",
+    "industry": "半導體業",
+    "major_clients": "南亞科、華邦電",
+    "generated": "2026/05/22"
+  },
+  "2351": {
+    "core_products": "被動元件（電阻/電容）",
+    "business_desc": "台灣被動元件廠，生產電阻、電容等，AI 伺服器與電動車對被動元件需求提升，受益被動元件漲價潮。",
+    "industry": "電子零組件業",
+    "major_clients": "電子製造廠",
+    "generated": "2026/05/22"
+  },
+  "2337": {
+    "core_products": "NOR Flash",
+    "business_desc": "台灣 NOR Flash 記憶體廠，產品廣泛應用於車用電子、工業控制，AI 邊緣裝置帶動 NOR Flash 需求。",
+    "industry": "半導體業",
+    "major_clients": "車用電子廠、IoT 廠",
+    "generated": "2026/05/22"
+  },
+  "3081": {
+    "core_products": "砷化鎵 / 矽光子元件",
+    "business_desc": "台灣化合物半導體廠，矽光子及高速光電元件供應商，CPO（共封裝光學）為 AI 資料中心下世代傳輸方案核心元件。",
+    "industry": "半導體業",
+    "major_clients": "光模組廠、AI 資料中心設備廠",
+    "generated": "2026/05/22"
+  },
+  "2455": {
+    "core_products": "砷化鎵磊晶片",
+    "business_desc": "台灣砷化鎵磊晶片廠，生產高速光通訊用磊晶片，CPO 架構帶動高速光電元件需求大增，為矽光子題材核心供應商。",
+    "industry": "半導體業",
+    "major_clients": "光模組廠、VCSEL 廠",
+    "generated": "2026/05/22"
+  },
+  "4971": {
+    "core_products": "光電 IC 模組",
+    "business_desc": "開曼設立的光電 IC 模組廠，CPO 相容產品切入 AI 資料中心高速互連市場，受矽光子題材帶動大漲。",
+    "industry": "半導體業",
+    "major_clients": "AI 資料中心設備廠",
+    "generated": "2026/05/22"
+  },
+  "3163": {
+    "core_products": "光通訊模組",
+    "business_desc": "台灣光通訊模組廠，生產高速光模組，受 AI 資料中心對高速光互連需求爆發帶動，矽光子題材受惠股。",
+    "industry": "光電業",
+    "major_clients": "AI 資料中心設備廠",
+    "generated": "2026/05/22"
+  },
+  "3363": {
+    "core_products": "光纖被動元件",
+    "business_desc": "台灣光纖被動元件廠，CPO 與 800G/1.6T 高速光模組需求帶動，為矽光子供應鏈中游廠商。",
+    "industry": "光電業",
+    "major_clients": "光模組廠",
+    "generated": "2026/05/22"
+  },
+  "6442": {
+    "core_products": "光學薄膜元件",
+    "business_desc": "台灣光學薄膜與光電元件廠，產品應用於高速光通訊，受矽光子CPO題材帶動，但基本面需持續觀察。",
+    "industry": "光電業",
+    "major_clients": "光模組廠",
+    "generated": "2026/05/22"
+  },
+  "2327": {
+    "core_products": "MLCC / 積層陶瓷電容",
+    "business_desc": "全球前三大被動元件廠，MLCC 為核心產品，AI 伺服器、電動車帶動高端 MLCC 需求，毛利率持續改善。",
+    "industry": "電子零組件業",
+    "major_clients": "Apple、車廠、AI 伺服器廠",
+    "generated": "2026/05/22"
+  },
+  "2492": {
+    "core_products": "電阻器",
+    "business_desc": "台灣被動元件廠，以電阻器為主，AI 伺服器建置潮帶動電阻需求，受國巨帶動整體被動元件題材走揚。",
+    "industry": "電子零組件業",
+    "major_clients": "電子製造廠",
+    "generated": "2026/05/22"
+  },
+  "3034": {
+    "core_products": "顯示驅動 IC",
+    "business_desc": "台灣顯示驅動 IC 設計廠，OLED 面板驅動 IC 市場龍頭，受 AI 裝置面板滲透率提升帶動需求。",
+    "industry": "半導體業",
+    "major_clients": "Samsung、LG、BOE",
+    "generated": "2026/05/22"
+  },
+  "6274": {
+    "core_products": "高頻高速 PCB",
+    "business_desc": "台灣高頻高速銅箔基板廠，AI 伺服器對高速 PCB 材料需求激增，液冷伺服器板材為新成長動能。",
+    "industry": "電子零組件業",
+    "major_clients": "AI 伺服器 PCB 廠",
+    "generated": "2026/05/22"
+  },
+  "3017": {
+    "core_products": "散熱模組（液冷/氣冷）",
+    "business_desc": "台灣最大散熱模組廠，液冷散熱系統為 AI 資料中心剛需，AI GPU 功耗激增帶動液冷滲透率快速提升。",
+    "industry": "電子零組件業",
+    "major_clients": "緯穎、廣達、英業達、Dell",
+    "generated": "2026/05/22"
+  },
+  "3230": {
+    "core_products": "液冷散熱系統",
+    "business_desc": "台灣液冷散熱解決方案廠，專注 AI 資料中心液冷系統，隨 AI GPU 功耗提升液冷需求快速增加。",
+    "industry": "電子零組件業",
+    "major_clients": "AI 伺服器 ODM 廠",
+    "generated": "2026/05/22"
+  },
+  "6538": {
+    "core_products": "液冷散熱元件",
+    "business_desc": "台灣液冷散熱零件廠，生產冷板、歧管等液冷系統核心零件，受益 AI 資料中心液冷滲透率提升。",
+    "industry": "電子零組件業",
+    "major_clients": "奇鋐、雙鴻等散熱系統廠",
+    "generated": "2026/05/22"
+  },
+  "3556": {
+    "core_products": "觸控 IC / 電源管理 IC",
+    "business_desc": "台灣 IC 設計廠，觸控及電源管理 IC 為主力，布局 AI 邊緣裝置電源管理，受液冷散熱題材間接帶動。",
+    "industry": "半導體業",
+    "major_clients": "品牌手機廠、平板廠",
+    "generated": "2026/05/22"
+  },
+  "3152": {
+    "core_products": "RF 射頻元件",
+    "business_desc": "台灣 RF 射頻元件廠，低軌衛星通訊所需高頻射頻元件供應商，SpaceX Starlink 生態系受惠廠商。",
+    "industry": "半導體業",
+    "major_clients": "低軌衛星通訊廠",
+    "generated": "2026/05/22"
+  },
+  "6438": {
+    "core_products": "微波 / 毫米波元件",
+    "business_desc": "台灣微波及毫米波元件廠，低軌衛星地面站通訊設備核心供應商，受全球低軌衛星布建潮帶動高速成長。",
+    "industry": "半導體業",
+    "major_clients": "低軌衛星設備廠",
+    "generated": "2026/05/22"
+  },
+  "3048": {
+    "core_products": "連接器 / 射頻連接器",
+    "business_desc": "台灣連接器廠，低軌衛星地面站與基站射頻連接器供應商，受衛星通訊建設潮帶動訂單成長。",
+    "industry": "電子零組件業",
+    "major_clients": "衛星通訊設備廠",
+    "generated": "2026/05/22"
+  },
+  "2603": {
+    "core_products": "貨櫃航運",
+    "business_desc": "台灣最大貨櫃航運公司，受全球貿易量回升、紅海危機帶動運費大幅走揚，為海運題材龍頭股。",
+    "industry": "航運業",
+    "major_clients": "全球貿易商",
+    "generated": "2026/05/22"
+  },
+  "2609": {
+    "core_products": "貨櫃航運",
+    "business_desc": "台灣第二大貨櫃航運公司，與長榮同步受益海運運費上漲，散裝船業務提供額外收益來源。",
+    "industry": "航運業",
+    "major_clients": "全球貿易商",
+    "generated": "2026/05/22"
+  },
+  "2615": {
+    "core_products": "貨櫃航運",
+    "business_desc": "台灣中型貨櫃航運公司，主攻亞太航線，受海運費率上漲帶動獲利回升，惟市占率低於長榮陽明。",
+    "industry": "航運業",
+    "major_clients": "亞太貿易商",
+    "generated": "2026/05/22"
+  },
+  "2606": {
+    "core_products": "散裝航運",
+    "business_desc": "台灣散裝船運公司，散裝運費受全球大宗商品貿易帶動，與貨櫃海運題材連動但走勢相對較弱。",
+    "industry": "航運業",
+    "major_clients": "大宗商品貿易商",
+    "generated": "2026/05/22"
+  },
+  "2618": {
+    "core_products": "航空客貨運",
+    "business_desc": "台灣最大航空公司，旅遊需求復甦與電商貨運帶動客貨運雙成長，AI 相關高價零組件空運需求增加。",
+    "industry": "航空業",
+    "major_clients": "旅客、電商平台",
+    "generated": "2026/05/22"
+  },
+  "2610": {
+    "core_products": "航空客貨運",
+    "business_desc": "台灣第二大航空公司，受旅遊復甦帶動客運量成長，貨運受電商與半導體零件空運需求支撐。",
+    "industry": "航空業",
+    "major_clients": "旅客、貿易商",
+    "generated": "2026/05/22"
+  },
+  "2634": {
+    "core_products": "航太零件製造",
+    "business_desc": "台灣最大航太工業公司，生產軍民用飛機機體結構件，台灣國防預算增加帶動軍機訂單，民用航太亦受惠全球機隊擴充。",
+    "industry": "航太業",
+    "major_clients": "空軍、波音、空中巴士",
+    "generated": "2026/05/22"
+  },
+  "2227": {
+    "core_products": "日系車代理 / 電動車",
+    "business_desc": "台灣日產汽車代理商，積極布局電動車銷售與充電基礎設施，受台灣電動車政策補貼帶動轉型動能。",
+    "industry": "汽車業",
+    "major_clients": "台灣消費者",
+    "generated": "2026/05/22"
+  },
+  "2228": {
+    "core_products": "車用鋁合金壓鑄件",
+    "business_desc": "台灣車用鋁合金零件廠，電動車輕量化需求推動鋁合金壓鑄件成長，為電動車供應鏈重要廠商。",
+    "industry": "汽車零件業",
+    "major_clients": "Tesla、車廠",
+    "generated": "2026/05/22"
+  },
+  "1539": {
+    "core_products": "車用精密鑄件",
+    "business_desc": "台灣車用精密鑄造廠，電動車結構件需求帶動訂單成長，客戶涵蓋歐美車廠，為電動車題材受惠股。",
+    "industry": "汽車零件業",
+    "major_clients": "歐美車廠",
+    "generated": "2026/05/22"
+  },
+  "1536": {
+    "core_products": "車用齒輪 / 傳動元件",
+    "business_desc": "台灣車用傳動元件廠，電動車對精密齒輪箱需求提升，為電動車動力系統供應鏈廠商。",
+    "industry": "汽車零件業",
+    "major_clients": "Tesla、歐美電動車廠",
+    "generated": "2026/05/22"
+  },
+  "6431": {
+    "core_products": "車用 LED 燈具",
+    "business_desc": "開曼設立車用 LED 照明廠，電動車對 LED 燈具需求提升，主攻歐美車廠 LED 前大燈市場。",
+    "industry": "光電業",
+    "major_clients": "歐美車廠",
+    "generated": "2026/05/22"
+  },
+  "2388": {
+    "core_products": "車用 / 工業 IC",
+    "business_desc": "台灣 IC 設計廠，車用與工業控制 IC 為主力，電動車智能化帶動車用 IC 需求，切入 RISC-V 架構市場。",
+    "industry": "半導體業",
+    "major_clients": "車廠、工業設備廠",
+    "generated": "2026/05/22"
+  },
+  "4147": {
+    "core_products": "HIV 抗體藥物",
+    "business_desc": "台灣生技公司，HIV 長效治療抗體藥物獲 FDA 核准，為台灣少數具全球市場授權收益的生技廠商。",
+    "industry": "生技製藥業",
+    "major_clients": "全球藥廠授權",
+    "generated": "2026/05/22"
+  },
+  "6446": {
+    "core_products": "血液腫瘤標靶藥",
+    "business_desc": "台灣生技公司，Besremi（真性紅血球增多症）藥物獲歐美核准上市，授權收益模式，為台灣生技股龍頭。",
+    "industry": "生技製藥業",
+    "major_clients": "歐美授權藥廠",
+    "generated": "2026/05/22"
+  },
+  "3705": {
+    "core_products": "學名藥製造",
+    "business_desc": "台灣老牌製藥廠，生產各類學名藥，受健保藥品給付政策支撐，穩健獲利，生技題材連動標的。",
+    "industry": "製藥業",
+    "major_clients": "醫院、診所、藥局",
+    "generated": "2026/05/22"
+  },
+  "4736": {
+    "core_products": "血糖監測儀器",
+    "business_desc": "台灣血糖監測設備廠，連續血糖監測（CGM）為新成長動能，醫療器材出口市場持續擴大。",
+    "industry": "醫療器材業",
+    "major_clients": "糖尿病患者、醫療院所",
+    "generated": "2026/05/22"
+  },
+  "4128": {
+    "core_products": "新藥研發（腫瘤/免疫）",
+    "business_desc": "台灣新藥研發公司，腫瘤免疫療法為主力研發方向，授權合作為主要獲利模式，研發進展影響股價。",
+    "industry": "生技製藥業",
+    "major_clients": "國際藥廠授權",
+    "generated": "2026/05/22"
+  },
+  "2002": {
+    "core_products": "鋼鐵製品",
+    "business_desc": "台灣最大鋼鐵廠，受全球鋼價與中國鋼材傾銷影響，AI 資料中心建設帶動鋼結構需求為新題材。",
+    "industry": "鋼鐵業",
+    "major_clients": "建設業、製造業",
+    "generated": "2026/05/22"
+  },
+  "1301": {
+    "core_products": "石化基礎原料",
+    "business_desc": "台灣最大石化廠，生產乙烯、丙烯等基礎化工原料，油價與景氣循環影響獲利，傳統產業代表股。",
+    "industry": "石化業",
+    "major_clients": "下游化工廠",
+    "generated": "2026/05/22"
+  },
+  "1303": {
+    "core_products": "塑膠原料",
+    "business_desc": "台塑集團核心廠商，生產 PVC、PE 等塑膠原料，傳產景氣循環股，電動車輕量化帶動工程塑膠需求。",
+    "industry": "石化業",
+    "major_clients": "塑膠加工廠",
+    "generated": "2026/05/22"
+  },
+  "2881": {
+    "core_products": "壽險 / 金控",
+    "business_desc": "台灣最大金控，旗下富邦人壽、台北富邦銀行，受利率環境與股市上漲帶動淨值回升，為金融股龍頭。",
+    "industry": "金融業",
+    "major_clients": "一般消費者、企業",
+    "generated": "2026/05/22"
+  },
+  "2882": {
+    "core_products": "壽險 / 金控",
+    "business_desc": "台灣大型金控，旗下國泰人壽、國泰世華銀行，資產規模龐大，利率與股市表現為獲利主要驅動力。",
+    "industry": "金融業",
+    "major_clients": "一般消費者、企業",
+    "generated": "2026/05/22"
+  },
+  "2412": {
+    "core_products": "電信服務",
+    "business_desc": "台灣最大電信公司，5G 建設完成後進入收穫期，AI 企業解決方案與雲端服務為新成長動能。",
+    "industry": "電信業",
+    "major_clients": "一般消費者、企業用戶",
+    "generated": "2026/05/22"
+  },
+  "6488": {
+    "core_products": "矽晶圓",
+    "business_desc": "全球前三大矽晶圓廠，AI 先進製程帶動大矽晶圓需求，長約訂單保障穩定收益，為半導體基礎材料廠。",
+    "industry": "半導體材料業",
+    "major_clients": "台積電、三星、英特爾",
+    "generated": "2026/05/22"
+  },
+  "1626": {
+    "core_products": "液冷系統元件",
+    "business_desc": "台灣液冷散熱零件廠，生產 AI 資料中心液冷系統用冷板及管路元件，受 AI 算力中心液冷需求帶動成長。",
+    "industry": "電子零組件業",
+    "major_clients": "散熱系統廠",
+    "generated": "2026/05/22"
+  },
+  "6290": {
+    "core_products": "電源線材 / 散熱模組",
+    "business_desc": "台灣連接器與散熱模組廠，AI 伺服器液冷配套電源與線材需求增加，受液冷散熱題材間接帶動。",
+    "industry": "電子零組件業",
+    "major_clients": "AI 伺服器廠",
+    "generated": "2026/05/22"
+  },
+  "2360": {
+    "core_products": "電測設備",
+    "business_desc": "台灣電子量測設備廠，半導體與被動元件廠商擴產帶動量測設備需求，受益被動元件景氣回升。",
+    "industry": "電子設備業",
+    "major_clients": "被動元件廠、半導體廠",
+    "generated": "2026/05/22"
+  },
+  "2605": {
+    "core_products": "散裝 / 特種船運",
+    "business_desc": "台灣特種航運公司，以散裝船為主，受全球大宗商品運費上漲帶動，海運題材輪動受惠標的。",
+    "industry": "航運業",
+    "major_clients": "大宗商品貿易商",
+    "generated": "2026/05/22"
+  },
+  "2650": {
+    "core_products": "低成本航空（LCC）",
+    "business_desc": "台灣虎航為台灣首家低成本航空，旅遊復甦帶動客座率提升，東南亞航線擴張為新成長動能。",
+    "industry": "航空業",
+    "major_clients": "旅客",
+    "generated": "2026/05/22"
+  },
+  "1537": {
+    "core_products": "充電器 / 電源供應器",
+    "business_desc": "台灣充電器與電源供應器廠，電動車充電設備需求帶動成長，AI 伺服器高功率電源亦為新市場。",
+    "industry": "電子零組件業",
+    "major_clients": "電動車廠、AI 伺服器廠",
+    "generated": "2026/05/22"
+  },
+  "4166": {
+    "core_products": "新藥 CRO/CDMO",
+    "business_desc": "台灣新藥研發委託服務廠，提供藥物研發代工，受全球生技廠商委外研發需求增加帶動業績成長。",
+    "industry": "生技製藥業",
+    "major_clients": "國際製藥廠",
+    "generated": "2026/05/22"
+  },
+  "2413": {
+    "core_products": "光纖熔接設備",
+    "business_desc": "台灣光纖設備廠，AI 資料中心大量部署光纖帶動熔接設備需求，CPO 光纖佈線為新成長市場。",
+    "industry": "光電業",
+    "major_clients": "電信業者、資料中心",
+    "generated": "2026/05/22"
+  },
+  "6411": {
+    "core_products": "射頻元件 / 衛星通訊",
+    "business_desc": "台灣低軌衛星通訊用射頻被動元件廠，SpaceX Starlink 及 OneWeb 等低軌衛星地面站建設帶動需求。",
+    "industry": "電子零組件業",
+    "major_clients": "低軌衛星設備廠",
+    "generated": "2026/05/22"
+  },
+  "4977": {
+    "core_products": "複合材料 / 衛星天線",
+    "business_desc": "台灣複合材料與衛星天線廠，低軌衛星地面端設備市場受益者，天線輕量化技術為差異化優勢。",
+    "industry": "航太業",
+    "major_clients": "低軌衛星設備廠",
+    "generated": "2026/05/22"
+  }
+}
