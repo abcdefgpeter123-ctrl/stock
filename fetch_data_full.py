@@ -7,6 +7,7 @@ GitHub Actions 從 GitHub 伺服器（美國）執行，開放資料 API 設計�
 """
 
 import json
+import os
 import requests
 import datetime
 import time
@@ -132,6 +133,141 @@ def safe_float(v, default=0.0):
         return default
 
 
+# ── 公司基本資料 / 自動生成 ──────────────────────────────
+
+def load_company_info():
+    try:
+        with open("company_info.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def _info_needs_update(entry, days=90):
+    """超過 days 天沒更新，或根本沒有資料，都視為需要更新"""
+    if not entry or "generated" not in entry:
+        return True
+    try:
+        gen = datetime.datetime.strptime(entry["generated"], "%Y/%m/%d").date()
+        return (datetime.date.today() - gen).days > days
+    except Exception:
+        return True
+
+
+def _call_claude(code, name, api_key):
+    """呼叫 Claude Haiku 生成公司簡介（JSON）"""
+    prompt = (
+        f"台股代號 {code}，公司名稱「{name}」。\n"
+        "請用繁體中文，只輸出以下 JSON 格式，不要任何其他文字：\n"
+        '{"core_products":"核心產品2-4字","business_desc":"主要業務1-2句含主要客戶","industry":"產業類別","major_clients":"主要客戶（若不確定可寫—）"}'
+    )
+    try:
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 300,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=20,
+        )
+        text = resp.json()["content"][0]["text"].strip()
+        # 取出第一個 {...}
+        start = text.find("{")
+        end   = text.rfind("}") + 1
+        return json.loads(text[start:end]) if start >= 0 else None
+    except Exception as e:
+        print(f"   ⚠️ Claude API {code}: {e}")
+        return None
+
+
+def fetch_trailing_pe(code):
+    """從 Yahoo Finance 抓本益比（trailingPE）"""
+    for suffix in [".TW", ".TWO"]:
+        try:
+            url = (f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/"
+                   f"{code}{suffix}?modules=defaultKeyStatistics,summaryDetail")
+            r = requests.get(url, headers=HEADERS, timeout=12)
+            data = r.json()["quoteSummary"]["result"][0]
+            pe = (data.get("summaryDetail", {})
+                      .get("trailingPE", {})
+                      .get("raw"))
+            eps = (data.get("defaultKeyStatistics", {})
+                       .get("trailingEps", {})
+                       .get("raw"))
+            if pe or eps:
+                return {
+                    "pe":  round(pe,  1) if pe  else None,
+                    "eps": round(eps, 2) if eps else None,
+                }
+        except Exception:
+            continue
+    return {}
+
+
+def update_company_info(all_prices, company_info, api_key, max_new=50):
+    """
+    為沒有描述（或描述已過期）的股票呼叫 Claude 自動生成，
+    每次最多生成 max_new 筆（避免單次執行太久）。
+    同時為 STOCKS + THEME_GROUPS 成員更新本益比。
+    """
+    today_str = datetime.date.today().strftime("%Y/%m/%d")
+
+    # ── 優先補齊的代號（主清單 + 題材分組）
+    priority = set()
+    for g in THEME_GROUPS.values():
+        priority.update(g["leaders"])
+        priority.update(g["members"])
+
+    # 排序：優先股先補，其餘按代號排序
+    def sort_key(code):
+        return (0 if code in priority else 1, code)
+
+    codes_to_check = sorted(all_prices.keys(), key=sort_key)
+    generated = 0
+
+    if api_key:
+        print(f"   🤖 Claude API 自動生成公司描述（最多 {max_new} 筆）...")
+        for code in codes_to_check:
+            if generated >= max_new:
+                break
+            entry = company_info.get(code, {})
+            if not _info_needs_update(entry):
+                continue
+            name = all_prices.get(code, {}).get("name", code)
+            info = _call_claude(code, name, api_key)
+            if info:
+                info["generated"] = today_str
+                # 保留已有的 pe/eps
+                if "pe" in entry:
+                    info["pe"]  = entry["pe"]
+                if "eps" in entry:
+                    info["eps"] = entry["eps"]
+                company_info[code] = info
+                generated += 1
+                time.sleep(0.4)
+        print(f"   ✅ 新增 {generated} 筆公司描述")
+    else:
+        print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過 AI 描述生成")
+
+    # ── 更新本益比（優先清單）
+    pe_codes = list(priority)[:60]  # 每天最多抓 60 支，避免超時
+    print(f"   📊 更新 {len(pe_codes)} 支本益比...")
+    for code in pe_codes:
+        pe_data = fetch_trailing_pe(code)
+        if pe_data:
+            entry = company_info.setdefault(code, {"generated": today_str})
+            entry.update(pe_data)
+        time.sleep(0.2)
+
+    return company_info
+
+
 # ── 個股歷史價格（Yahoo Finance）─────────────────────────
 
 def fetch_price_history(code):
@@ -163,6 +299,7 @@ def compute_opportunities(all_prices):
     LEADER_THRESHOLD = 12   # 龍頭 30 日漲幅需 >= 12% 才算題材熱絡
     GAP_THRESHOLD    = 8    # 成員落後龍頭 >= 8% 才算有機會
     MAX_MEMBER_P30   = 7    # 成員 30 日漲幅 <= 7% 才算「尚未啟動」
+    MIN_MEMBER_P30   = -3   # 成員 30 日跌幅不能超過 -3%（跌太多代表有基本面問題）
 
     # 收集所有需要歷史資料的代號
     all_codes = set()
@@ -226,8 +363,8 @@ def compute_opportunities(all_prices):
                 continue
 
             gap = round(leader_p30 - m_p30, 1)
-            if gap < GAP_THRESHOLD or m_p30 > MAX_MEMBER_P30:
-                continue  # 落差不夠，或成員已大漲
+            if gap < GAP_THRESHOLD or m_p30 > MAX_MEMBER_P30 or m_p30 < MIN_MEMBER_P30:
+                continue  # 落差不夠、成員已大漲、或成員跌幅過深（基本面疑慮）
 
             name = all_prices.get(code, {}).get("name", code)
 
@@ -657,12 +794,21 @@ def main():
 
     data["prices"] = all_prices
 
-    # 4. 機會點自動偵測
+    # 4. 公司基本資料 / 自動生成
+    print("🏢 公司資料更新中...")
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    company_info = load_company_info()
+    company_info = update_company_info(all_prices, company_info, api_key)
+    with open("company_info.json", "w", encoding="utf-8") as f:
+        json.dump(company_info, f, ensure_ascii=False, indent=2)
+    print(f"   💾 company_info.json 已更新（{len(company_info)} 筆）")
+
+    # 5. 機會點自動偵測
     print("🔍 機會點偵測中...")
     opps = compute_opportunities(all_prices)
     data["opportunities"] = opps
 
-    # 5. 時間戳
+    # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))
     data["updated_at"] = datetime.datetime.now(tz_tw).strftime("%Y/%m/%d %H:%M")
 
