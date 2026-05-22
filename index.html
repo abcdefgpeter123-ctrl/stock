@@ -56,7 +56,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .code-cell{font-family:var(--mono);font-size:12px;color:var(--text3)}
 .name-cell{font-weight:500}
 .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
-.b-up{background:var(--up-bg);color:var(--up)}.b-dn{background:var(--dn-bg);color:var(--dn)}.b-neu{background:rgba(255,255,255,.05);color:var(--text2)}.b-opp{background:var(--purple-bg);color:var(--purple)}.b-theme{background:var(--teal-bg);color:var(--teal)}
+.b-up{background:var(--up-bg);color:var(--up)}.b-dn{background:var(--dn-bg);color:var(--dn)}.b-neu{background:rgba(255,255,255,.05);color:var(--text2)}.b-opp{background:var(--purple-bg);color:var(--purple)}.b-theme{background:var(--teal-bg);color:var(--teal)}.b-weak{background:rgba(251,146,60,.12);color:#fb923c}
 .inst-wrap{min-width:90px}
 .inst-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-bottom:3px}
 .if{background:var(--blue)}.it{background:var(--up)}.is{background:var(--yellow)}
@@ -196,6 +196,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <option value="up">法人買超</option>
       <option value="dn">法人賣超</option>
       <option value="opp">機會點</option>
+      <option value="weak">待加強</option>
     </select>
     <button class="refresh-btn" id="refresh-btn" onclick="loadData()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
@@ -399,7 +400,7 @@ function renderFavorites() {
         <td>${pct(s.p5)}</td>
         <td>${pct(s.p30)}</td>
         <td>${instBar(s.i5f, s.i5t, s.i5s)}</td>
-        <td>${sigBadge(s.sig)}</td>
+        <td>${sigBadge(s)}</td>
       </tr>
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("")}</tbody>
@@ -765,9 +766,20 @@ function instBar(f, t, s){
   return `<div class="inst-wrap"><div class="inst-bar"><div class="if" style="width:${fp}%"></div><div class="it" style="width:${tp}%"></div><div class="is" style="width:${sp}%"></div></div><div class="inst-nums"><span class="${fc}">外${f>0?"+":""}${f}</span><span style="margin:0 3px;opacity:.4">|</span><span class="${tc}">投${t>0?"+":""}${t}</span><span style="margin:0 3px;opacity:.4">|</span>自${s>0?"+":""}${s}</div></div>`;
 }
 
-function sigBadge(sig){
-  if(sig==="up") return `<span class="badge b-up">買超中</span>`;
-  if(sig==="dn") return `<span class="badge b-dn">賣超中</span>`;
+function computeSig(s){
+  const net = (s.i5f||0)+(s.i5t||0)+(s.i5s||0);
+  const p30 = s.p30;
+  if(net>=8) return "up";           // 強力法人買超
+  if(p30!==null && p30<0 && net<=0) return "weak"; // 跌勢+無支撐
+  if(p30===null && net===0) return "watch";         // 無數據
+  return "opp";                     // 題材成員，有動能或資金
+}
+function sigBadge(s){
+  const sig = computeSig(s);
+  if(sig==="up")    return `<span class="badge b-up">買超中</span>`;
+  if(sig==="dn")    return `<span class="badge b-dn">賣超中</span>`;
+  if(sig==="weak")  return `<span class="badge b-weak">待加強</span>`;
+  if(sig==="watch") return `<span class="badge b-neu">觀察中</span>`;
   return `<span class="badge b-opp">機會點</span>`;
 }
 
@@ -802,9 +814,10 @@ function setInstMetrics(data){
 function render(){
   let rows = STOCKS.filter(s => {
     if(activeTheme!=="all" && s.theme!==activeTheme) return false;
-    if(sigFilter==="up" && (s.i5f+s.i5t+s.i5s)<=0) return false;
-    if(sigFilter==="dn" && (s.i5f+s.i5t+s.i5s)>=0) return false;
-    if(sigFilter==="opp" && s.sig!=="opp") return false;
+    if(sigFilter==="up"   && computeSig(s)!=="up")   return false;
+    if(sigFilter==="dn"   && computeSig(s)!=="dn")   return false;
+    if(sigFilter==="opp"  && computeSig(s)!=="opp")  return false;
+    if(sigFilter==="weak" && computeSig(s)!=="weak")  return false;
     if(q && !(s.code.includes(q) || s.name.includes(q) || s.theme.includes(q))) return false;
     return true;
   });
@@ -850,7 +863,7 @@ function render(){
         <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
         <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
         <td>${s._extra ? '<span class="neu" style="font-size:11px">—</span>' : instBar(s.i5f, s.i5t, s.i5s)}</td>
-        <td>${s._extra ? '' : sigBadge(s.sig)}</td>
+        <td>${s._extra ? '' : sigBadge(s)}</td>
       </tr>
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("");
