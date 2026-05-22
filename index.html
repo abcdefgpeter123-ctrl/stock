@@ -6,6 +6,7 @@
 <title>台股研究儀表板</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8edf5;--text2:#8b96a8;--text3:#4f5d73;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -301,7 +302,33 @@ const STOCKS=[
   {code:"2228",name:"劍麟",theme:"電動車",p5:3.2,p30:13.5,i5f:5,i5t:18,i5s:4,sig:"up"},
   {code:"1539",name:"巨庭",theme:"電動車",p5:4.1,p30:17.2,i5f:3,i5t:12,i5s:2,sig:"up"},
   {code:"1536",name:"和大",theme:"電動車",p5:2.8,p30:11.5,i5f:6,i5t:14,i5s:3,sig:"up"},
-  {code:"6431",name:"光麗-KY",theme:"電動車",p5:2.2,p30:9.5,i5f:2,i5t:8,i5s:1,sig:"up"}];
+  {code:"6431",name:"光麗-KY",theme:"電動車",p5:2.2,p30:9.5,i5f:2,i5t:8,i5s:1,sig:"up"},
+  // 新增股票
+  {code:"2458",name:"義隆電子",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2388",name:"威盛電子",theme:"電動車",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6412",name:"群電",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2441",name:"超豐電子",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 液冷散熱
+  {code:"3017",name:"奇鋐",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3230",name:"雙鴻",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"1626",name:"艾姆勒",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6290",name:"良維",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 低軌衛星
+  {code:"6438",name:"昇達科",theme:"低軌衛星",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6411",name:"上詮光",theme:"低軌衛星",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"4977",name:"上緯新創",theme:"低軌衛星",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 被動元件
+  {code:"2360",name:"致茂",theme:"被動元件",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 海運
+  {code:"2605",name:"新興",theme:"海運",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 航空
+  {code:"2650",name:"台虎",theme:"航空",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 電動車
+  {code:"1537",name:"廣隆",theme:"電動車",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 生技
+  {code:"4166",name:"藥技",theme:"生技",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // 矽光子CPO
+  {code:"2413",name:"環瑞",theme:"矽光子CPO",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"}];
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
 let opps = [];
 
@@ -589,13 +616,17 @@ function toggleETF(code) {
 
 // 個股詳細資料
 let stockInfo = {};
+let companyInfo = {};   // AI 自動生成（company_info.json）
+let histories = {};     // 30日收盤歷史（data.json histories）
 let expandedStock = null;
 
 async function loadStockInfo() {
-  try {
-    const res = await fetch("./stock_info.json?t=" + Date.now(), {cache:"no-store"});
-    if(res.ok) stockInfo = await res.json();
-  } catch(e) { console.warn("stock_info.json 未載入", e); }
+  await Promise.allSettled([
+    fetch("./stock_info.json?t=" + Date.now(), {cache:"no-store"})
+      .then(r => r.ok ? r.json() : {}).then(d => { stockInfo = d; }).catch(() => {}),
+    fetch("./company_info.json?t=" + Date.now(), {cache:"no-store"})
+      .then(r => r.ok ? r.json() : {}).then(d => { companyInfo = d; }).catch(() => {}),
+  ]);
 }
 
 function toggleStockDetail(code) {
@@ -610,44 +641,99 @@ function toggleStockDetail(code) {
   }
 }
 
+// ── 折線圖 ─────────────────────────────────────────────────
+const _chartInstances = {};
+function initCharts() {
+  document.querySelectorAll('canvas[data-chart-code]').forEach(canvas => {
+    const code = canvas.dataset.chartCode;
+    if (_chartInstances[code]) { _chartInstances[code].destroy(); delete _chartInstances[code]; }
+    const h = histories[code];
+    if (!h || !h.closes || h.closes.length < 2) return;
+    const isUp = h.closes[h.closes.length-1] >= h.closes[0];
+    const color = isUp ? '#ef4444' : '#22c55e';
+    canvas.width  = canvas.parentElement.offsetWidth || 400;
+    canvas.height = 110;
+    _chartInstances[code] = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: h.labels,
+        datasets: [{ data: h.closes, borderColor: color, borderWidth: 1.5,
+          pointRadius: 0, pointHoverRadius: 4, fill: true,
+          backgroundColor: isUp?'rgba(239,68,68,0.08)':'rgba(34,197,94,0.08)', tension: 0.3 }]
+      },
+      options: {
+        responsive: false, animation: false,
+        plugins: { legend:{display:false}, tooltip:{ displayColors:false,
+          callbacks:{ label: c => `NT$${c.parsed.y.toFixed(1)}` } } },
+        scales: {
+          x: { ticks:{maxTicksLimit:6,font:{size:10},color:'#4f5d73'}, grid:{display:false}, border:{display:false} },
+          y: { ticks:{font:{size:10},color:'#4f5d73',maxTicksLimit:4,
+               callback: v => v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0)},
+               grid:{color:'rgba(255,255,255,0.04)'}, border:{display:false} }
+        }
+      }
+    });
+  });
+}
+
 function renderDetail(code) {
-  const info = stockInfo[code];
-  if (!info) {
-    return `<div class="detail-content">
-      <div class="detail-text" style="color:var(--text3)">尚未填寫此股票的詳細資料，可至 GitHub 的 stock_info.json 編輯。</div>
-    </div>`;
-  }
-  const peGap = info.pe && info.pe_avg ? info.pe - info.pe_avg : null;
+  const si = stockInfo[code]  || {};
+  const ci = companyInfo[code] || {};
+  const hasAny = Object.keys(si).length > 0 || Object.keys(ci).length > 0;
+
+  const core    = si.core_product  || ci.core_products  || "—";
+  const bDesc   = si.description   || ci.business_desc  || "—";
+  const story   = si.recent_story  || "—";
+  const industry = ci.industry     || "—";
+  const clients = ci.major_clients || "—";
+  const risks   = si.risks || [];
+  const pe    = si.pe    ?? ci.pe    ?? null;
+  const peAvg = si.pe_avg ?? null;
+  const eps   = ci.eps   ?? null;
+  const peGap = (pe != null && peAvg != null) ? pe - peAvg : null;
   const peCompareHtml = peGap === null ? "" :
     `<div class="pe-compare" style="background:${peGap>0?'var(--up-bg)':'var(--dn-bg)'};color:${peGap>0?'var(--up)':'var(--dn)'}">
       ${peGap>0?'⬆ 高於':'⬇ 低於'}同業平均 ${Math.abs(peGap).toFixed(1)} 倍 ${peGap>0?'（估值偏貴）':'（估值偏便宜）'}
     </div>`;
 
+  if(!hasAny){
+    return `<div class="detail-content">
+      <div style="color:var(--text3);font-size:13px;padding:8px 0">此股票尚無詳細資料，下次 GitHub Actions 執行後將自動生成。</div>
+      ${histories[code] ? `<div class="detail-label" style="margin-top:12px">📈 近30日收盤走勢</div><canvas data-chart-code="${code}" style="width:100%;height:110px;max-height:110px"></canvas>` : ""}
+    </div>`;
+  }
+
   return `<div class="detail-content">
     <div class="detail-grid">
       <div class="detail-block">
         <div class="detail-label">🎯 核心產品</div>
-        <div class="detail-text">${info.core_product || "—"}</div>
+        <div class="detail-text" style="font-weight:500">${core}</div>
+        ${industry !== "—" ? `<div style="margin-top:6px;font-size:11px;color:var(--text3)">產業：${industry}</div>` : ""}
       </div>
       <div class="detail-block">
-        <div class="detail-label">📰 近期相關故事</div>
-        <div class="detail-text">${info.recent_story || "—"}</div>
+        <div class="detail-label">🏢 主要業務說明</div>
+        <div class="detail-text">${bDesc}</div>
+        ${clients !== "—" ? `<div style="margin-top:8px;font-size:11px;color:var(--text3)">主要客戶：${clients}</div>` : ""}
       </div>
       <div class="detail-block">
-        <div class="detail-label">📊 本益比 P/E</div>
+        <div class="detail-label">📰 近期股價故事</div>
+        <div class="detail-text">${story}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">📊 本益比 / EPS</div>
         <div class="pe-grid">
-          <div class="pe-item"><div class="pe-val">${info.pe?info.pe.toFixed(1):"—"}</div><div class="pe-lbl">本檔</div></div>
-          <div class="pe-item"><div class="pe-val">${info.pe_avg?info.pe_avg.toFixed(1):"—"}</div><div class="pe-lbl">同業平均</div></div>
+          <div class="pe-item"><div class="pe-val">${pe!=null?pe.toFixed(1):"—"}</div><div class="pe-lbl">本益比 (P/E)</div></div>
+          <div class="pe-item"><div class="pe-val" style="font-size:15px">${eps!=null?eps.toFixed(2):(peAvg!=null?peAvg.toFixed(1):"—")}</div><div class="pe-lbl">${eps!=null?"EPS (元)":(peAvg!=null?"同業均值":"—")}</div></div>
         </div>
         ${peCompareHtml}
       </div>
-      <div class="detail-block">
-        <div class="detail-label">⚠ 風險提醒</div>
-        <ul class="risk-list">
-          ${(info.risks||[]).map(r => `<li>${r}</li>`).join("") || "<li>—</li>"}
-        </ul>
+      ${risks.length>0?`<div class="detail-block"><div class="detail-label">⚠ 風險提醒</div><ul class="risk-list">${risks.map(r=>`<li>${r}</li>`).join("")}</ul></div>`:""}
+      <div class="detail-block" style="grid-column:1/-1">
+        <div class="detail-label">📈 近30日收盤走勢</div>
+        ${histories[code] ? `<canvas data-chart-code="${code}" style="width:100%;height:110px;max-height:110px"></canvas>` : `<div style="color:var(--text3);font-size:12px;padding:8px 0">歷史走勢將於下次 Actions 執行後顯示</div>`}
       </div>
     </div>
+    ${ci.generated?`<div style="margin-top:10px;font-size:10px;color:var(--text3);text-align:right">資料生成：${ci.generated}　由 Claude AI 自動產生</div>`:""}
   </div>`;
 }
 
@@ -795,6 +881,8 @@ function render(){
       </div>`;
     }).join("");
   }
+  // 展開股票後也初始化折線圖
+  setTimeout(initCharts, 50);
 }
 
 async function loadData(){
@@ -826,6 +914,9 @@ async function loadData(){
     if(data.opportunities){
       opps = data.opportunities;
     }
+    if(data.histories){
+      histories = data.histories;
+    }
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
     }
@@ -838,6 +929,7 @@ async function loadData(){
   render();
   renderFavorites();
   renderETFs();
+  setTimeout(initCharts, 50);
   document.getElementById("loading").classList.add("hidden");
   setTimeout(() => document.getElementById("loading").style.display = "none", 400);
   document.getElementById("app").style.opacity = "1";
