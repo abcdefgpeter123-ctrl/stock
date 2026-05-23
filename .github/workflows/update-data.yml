@@ -22,16 +22,21 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests yfinance anthropic
 
       - name: Fetch stock data
         run: python fetch_data_full.py
+
+      - name: Fetch PE/EPS and generate stories
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python update_company_info.py
 
       - name: Commit and push if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data.json
+          git add data.json company_info.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
