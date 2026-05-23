@@ -186,6 +186,87 @@ def _call_claude(code, name, api_key):
         return None
 
 
+def _generate_story(code, name, theme, p5, p30, api_key):
+    """用 Claude Haiku 生成個股近期股價故事（2-3句純文字）"""
+    p5_txt  = (f"+{p5}%" if p5 and p5 > 0 else f"{p5}%") if p5 is not None else "持平"
+    p30_txt = (f"+{p30}%" if p30 and p30 > 0 else f"{p30}%") if p30 is not None else "持平"
+    prompt = (
+        f"台股代號 {code}，公司名稱「{name}」，所屬題材：{theme}。\n"
+        f"近5日漲幅：{p5_txt}，近30日漲幅：{p30_txt}。\n"
+        "請用繁體中文 2-3 句，描述這支股票近期股價表現原因、題材催化劑與未來展望。\n"
+        "直接輸出純文字，不要 JSON，不要引號，不要標題。"
+    )
+    try:
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 200,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=20,
+        )
+        return resp.json()["content"][0]["text"].strip()
+    except Exception as e:
+        print(f"   ⚠️ Story {code}: {e}")
+        return None
+
+
+def generate_stories(company_info, histories_json, all_prices, api_key, max_new=35):
+    """為沒有 recent_story（或故事過期）的題材股生成近期股價故事"""
+    if not api_key:
+        print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過故事生成")
+        return company_info
+
+    today_str = datetime.date.today().strftime("%Y/%m/%d")
+
+    # 建立 code → theme 對照表
+    code_theme = {}
+    for theme, g in THEME_GROUPS.items():
+        for code in list(g["leaders"]) + list(g["members"]):
+            code_theme[code] = theme
+
+    def pct(closes, n):
+        if not closes or len(closes) < n + 1:
+            return None
+        base = closes[-(n + 1)]
+        cur  = closes[-1]
+        return round((cur - base) / base * 100, 1) if base > 0 else None
+
+    generated = 0
+    print(f"   📝 生成個股故事（最多 {max_new} 筆）...")
+    for code, theme in code_theme.items():
+        if generated >= max_new:
+            break
+        entry = company_info.get(code, {})
+        # 今天已生成就跳過
+        if entry.get("story_date") == today_str:
+            continue
+        hist = histories_json.get(code)
+        if not hist:
+            continue
+        closes = hist["closes"]
+        name   = all_prices.get(code, {}).get("name", code)
+        p5     = pct(closes, 5)
+        p30    = pct(closes, 30)
+        story  = _generate_story(code, name, theme, p5, p30, api_key)
+        if story:
+            entry = company_info.setdefault(code, {"generated": today_str})
+            entry["recent_story"] = story
+            entry["story_date"]   = today_str
+            company_info[code]    = entry
+            generated += 1
+            time.sleep(0.5)
+
+    print(f"   ✅ 生成 {generated} 筆近期故事")
+    return company_info
+
+
 def fetch_trailing_pe(code):
     """從 Yahoo Finance 抓本益比（trailingPE）"""
     for suffix in [".TW", ".TWO"]:
@@ -819,6 +900,13 @@ def main():
     data["opportunities"] = opps
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
+
+    # 5b. 個股近期故事生成（用已抓好的 histories）
+    print("📝 生成個股近期故事...")
+    company_info = generate_stories(company_info, histories, all_prices, api_key)
+    with open("company_info.json", "w", encoding="utf-8") as f:
+        json.dump(company_info, f, ensure_ascii=False, indent=2)
+    print(f"   💾 company_info.json 已更新（含故事）")
 
     # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))

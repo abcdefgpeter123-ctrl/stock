@@ -105,9 +105,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .detail-row td{padding:0!important;border-top:1px solid var(--purple)!important}
 .detail-content{padding:18px 22px}
 .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-.detail-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.detail-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;overflow:hidden;min-width:0}
 .detail-label{font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px}
-.detail-text{font-size:13px;color:var(--text);line-height:1.65}
+.detail-text{font-size:13px;color:var(--text);line-height:1.65;word-break:break-word;overflow-wrap:break-word;white-space:pre-wrap}
 .pe-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .pe-item{background:var(--bg2);border-radius:6px;padding:8px 10px;text-align:center}
 .pe-val{font-size:18px;font-weight:500;font-family:var(--mono)}
