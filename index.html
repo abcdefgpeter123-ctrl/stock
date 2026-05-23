@@ -684,7 +684,8 @@ function renderDetail(code) {
 
   const core    = si.core_product  || ci.core_products  || "—";
   const bDesc   = si.description   || ci.business_desc  || "—";
-  const story   = si.recent_story  || "—";
+  const storyRaw = si.recent_story || ci.recent_story || null;
+  const story   = storyRaw || null;
   const industry = ci.industry     || "—";
   const clients = ci.major_clients || "—";
   const risks   = si.risks || [];
@@ -717,16 +718,21 @@ function renderDetail(code) {
         ${clients !== "—" ? `<div style="margin-top:8px;font-size:11px;color:var(--text3)">主要客戶：${clients}</div>` : ""}
       </div>
       <div class="detail-block">
-        <div class="detail-label">📰 近期股價故事</div>
-        <div class="detail-text">${story}</div>
+        <div class="detail-label">📰 近期股價故事
+          ${ci.generated ? `<span style="margin-left:auto;font-size:10px;color:var(--text3);font-weight:400">來源：${ci.generated}</span>` : ""}
+        </div>
+        ${story
+          ? `<div class="detail-text">${story}</div>`
+          : `<div style="color:var(--text3);font-size:12px;padding:4px 0;line-height:1.6">尚無近期分析，將於下次每日更新後自動補充。</div>`}
       </div>
       <div class="detail-block">
         <div class="detail-label">📊 本益比 / EPS</div>
         <div class="pe-grid">
-          <div class="pe-item"><div class="pe-val">${pe!=null?pe.toFixed(1):"—"}</div><div class="pe-lbl">本益比 (P/E)</div></div>
-          <div class="pe-item"><div class="pe-val" style="font-size:15px">${eps!=null?eps.toFixed(2):(peAvg!=null?peAvg.toFixed(1):"—")}</div><div class="pe-lbl">${eps!=null?"EPS (元)":(peAvg!=null?"同業均值":"—")}</div></div>
+          <div class="pe-item"><div class="pe-val">${pe!=null?pe.toFixed(1):`<span style="font-size:13px;color:var(--text3)">尚無</span>`}</div><div class="pe-lbl">本益比 (P/E)</div></div>
+          <div class="pe-item"><div class="pe-val" style="font-size:15px">${eps!=null?eps.toFixed(2):(peAvg!=null?peAvg.toFixed(1):`<span style="font-size:13px;color:var(--text3)">尚無</span>`)}</div><div class="pe-lbl">${eps!=null?"EPS (元)":(peAvg!=null?"同業均值":"財報資料")}</div></div>
         </div>
         ${peCompareHtml}
+        ${(pe===null&&eps===null)?`<div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center">財報數據將於下次更新後顯示</div>`:""}
       </div>
       ${risks.length>0?`<div class="detail-block"><div class="detail-label">⚠ 風險提醒</div><ul class="risk-list">${risks.map(r=>`<li>${r}</li>`).join("")}</ul></div>`:""}
       <div class="detail-block" style="grid-column:1/-1">
