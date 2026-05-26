@@ -179,6 +179,8 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-stat-cell:nth-child(n+11){border-bottom:none}
 .tp-stat-lbl{display:block;font-size:11px;color:#a8bacf;margin-bottom:2px;font-family:var(--mono)}
 .tp-stat-val{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
+.tp-stat-note{display:block;font-size:10px;color:#2d4a5c;margin-top:2px;line-height:1.3}
+.tp-stat-est{display:inline-block;font-size:9px;color:#3a6080;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.15);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle;font-family:var(--font)}
 .tp-fundamentals{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:9px;background:#07101e}
 .tp-fund-block{display:flex;gap:10px;align-items:flex-start}
 .tp-fund-block.inline{align-items:center}
@@ -1096,19 +1098,21 @@ function renderDetail(code) {
   const bidPrice = price != null ? fmt(price - tick) : "—";
   const askPrice = price != null ? fmt(price + tick) : "—";
 
+  // note = 說明無法取得的原因；est = 估算值（非真實數據）
+  const TICK_NOTE = '需即時 tick 報價，目前資料來源為日K終盤，無此欄位';
   const stats = [
     {lbl:"成交", val:fmt(price),   c:cls},
-    {lbl:"買進", val:bidPrice,     c:cls},
-    {lbl:"單量", val:"—",          c:""},
+    {lbl:"買進", val:bidPrice,     c:cls,  est:true, note:'依最小跳動估算，非真實委買價'},
+    {lbl:"單量", val:"—",          c:"neu",note:TICK_NOTE},
     {lbl:"開盤", val:fmt(open),    c: (open && price) ? (open >= price ? "up" : "dn") : ""},
-    {lbl:"內盤", val:"—",          c:""},
+    {lbl:"內盤", val:"—",          c:"neu",note:TICK_NOTE},
     {lbl:"漲跌", val: price!=null ? `${arr}${Math.abs(change).toFixed(2)}` : "—", c:cls},
-    {lbl:"賣出", val:askPrice,     c:cls},
+    {lbl:"賣出", val:askPrice,     c:cls,  est:true, note:'依最小跳動估算，非真實委賣價'},
     {lbl:"總量", val: vol != null ? vol.toLocaleString() : "—", c:""},
     {lbl:"最低", val:fmt(low),     c:"dn"},
-    {lbl:"外盤", val:"—",          c:""},
+    {lbl:"外盤", val:"—",          c:"neu",note:TICK_NOTE},
     {lbl:"幅度", val: price!=null ? `${sign}${changeP.toFixed(2)}%` : "—", c:cls},
-    {lbl:"均價", val:avgPrice,     c:""},
+    {lbl:"均價", val:avgPrice,     c:"",   est:true, note:'(開盤+收盤)÷2，非加權成交均價'},
     {lbl:"振幅", val:amplitude,    c:""},
     {lbl:"最高", val:fmt(high),    c:"up"},
     {lbl:"參考", val: refPrice!=null ? refPrice.toFixed(2) : "—", c:""},
@@ -1152,15 +1156,21 @@ function renderDetail(code) {
       ${h && h.closes && h.closes.length >= 2
         ? `<canvas data-tp-code="${code}" class="tp-price-canvas"></canvas>
            <canvas data-tp-vol="${code}"  class="tp-vol-canvas"></canvas>`
-        : `<div class="tp-no-data">📊 走勢資料尚未載入（每日 Actions 更新後顯示）</div>`}
+        : (() => {
+            const inWatchlist = typeof STOCKS !== 'undefined' && STOCKS.some(s => s.code === code);
+            return inWatchlist
+              ? `<div class="tp-no-data">📊 走勢資料待更新<br><span style="font-size:11px">此股票在監控清單中，下次 GitHub Actions 執行後將自動補充</span></div>`
+              : `<div class="tp-no-data">📊 此股票不在監控清單<br><span style="font-size:11px;line-height:1.6">走勢圖僅追蹤 STOCKS 陣列中的個股。<br>如需追蹤 <strong style="color:#60a5fa">${code}</strong>，請將其加入 index.html 的 STOCKS 清單，重新 commit 後即自動生成歷史資料。</span></div>`;
+          })()
     </div>
 
     <!-- 報價數據格 -->
     <div class="tp-stats-grid">
       ${stats.map(s =>
-        `<div class="tp-stat-cell">
+        `<div class="tp-stat-cell" ${s.note ? `title="${s.note}"` : ''}>
           <span class="tp-stat-lbl">${s.lbl}</span>
-          <span class="tp-stat-val ${s.c}">${s.val}</span>
+          <span class="tp-stat-val ${s.c}">${s.val}${s.est && s.val !== '—' ? '<span class="tp-stat-est">估算</span>' : ''}</span>
+          ${s.note && s.val === '—' ? `<span class="tp-stat-note">${s.note}</span>` : ''}
         </div>`).join("")}
     </div>
 
