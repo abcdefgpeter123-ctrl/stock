@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8edf5;--text2:#8b96a8;--text3:#4f5d73;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
+:root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);min-height:100%}
 body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:1100px;margin:0 auto}
@@ -147,9 +147,9 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-stock-name{font-size:15px;font-weight:600;color:var(--text)}
 .tp-price{font-family:var(--mono);font-size:24px;font-weight:600;letter-spacing:-.01em}
 .tp-change{font-family:var(--mono);font-size:13px}
-.tp-total-vol{font-size:12px;color:#4a6a8a;font-family:var(--mono);margin-left:auto;align-self:flex-end}
+.tp-total-vol{font-size:12px;color:#a8bacf;font-family:var(--mono);margin-left:auto;align-self:flex-end}
 .tp-periods{display:flex;gap:4px;flex-wrap:wrap}
-.tp-period{background:none;border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:4px 11px;font-size:12px;color:#4a6a8a;cursor:pointer;font-family:var(--font);transition:all .15s}
+.tp-period{background:none;border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:4px 11px;font-size:12px;color:#a8bacf;cursor:pointer;font-family:var(--font);transition:all .15s}
 .tp-period:hover{border-color:rgba(255,255,255,0.18);color:var(--text2)}
 .tp-period.active{background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.4);color:#60a5fa;font-weight:500}
 .tp-chart-area{background:#060d18;position:relative;padding:6px 0 0}
@@ -160,15 +160,15 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-stat-cell{padding:7px 12px;border-right:1px solid rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.04)}
 .tp-stat-cell:nth-child(5n){border-right:none}
 .tp-stat-cell:nth-child(n+11){border-bottom:none}
-.tp-stat-lbl{display:block;font-size:11px;color:#3a5470;margin-bottom:2px;font-family:var(--mono)}
+.tp-stat-lbl{display:block;font-size:11px;color:#a8bacf;margin-bottom:2px;font-family:var(--mono)}
 .tp-stat-val{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
 .tp-fundamentals{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:9px;background:#07101e}
 .tp-fund-block{display:flex;gap:10px;align-items:flex-start}
 .tp-fund-block.inline{align-items:center}
-.tp-fund-lbl{font-size:10px;color:#3a5470;white-space:nowrap;min-width:52px;padding-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.tp-fund-lbl{font-size:10px;color:#a8bacf;white-space:nowrap;min-width:52px;padding-top:2px;text-transform:uppercase;letter-spacing:.06em}
 .tp-fund-text{font-size:12px;color:var(--text2);line-height:1.65;flex:1}
 .tp-fund-val{font-family:var(--mono);font-size:16px;font-weight:600}
-.tp-fund-avg{font-size:11px;color:#3a5470;margin-left:8px}
+.tp-fund-avg{font-size:11px;color:#a8bacf;margin-left:8px}
 .tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
 .tp-risk-item:before{content:"⚠";position:absolute;left:0;font-size:10px;color:#fbbf24;top:1px}
 @media(max-width:600px){.tp-stats-grid{grid-template-columns:repeat(3,1fr)}.tp-stat-cell:nth-child(5n){border-right:1px solid rgba(255,255,255,0.04)}.tp-stat-cell:nth-child(3n){border-right:none}.tp-price{font-size:20px}}
@@ -695,8 +695,8 @@ async function loadStockInfo() {
 function toggleStockDetail(code) {
   expandedStock = expandedStock === code ? null : code;
   render();
+  renderFavorites();   // 讓我的最愛也能展開看盤面板
   if (expandedStock) {
-    // 自動捲動到展開列
     setTimeout(() => {
       const row = document.querySelector(`tr[data-detail="${code}"]`);
       if (row) row.scrollIntoView({behavior:"smooth", block:"center"});
@@ -729,8 +729,8 @@ function initCharts() {
         plugins: { legend:{display:false}, tooltip:{ displayColors:false,
           callbacks:{ label: c => `NT$${c.parsed.y.toFixed(1)}` } } },
         scales: {
-          x: { ticks:{maxTicksLimit:6,font:{size:10},color:'#4f5d73'}, grid:{display:false}, border:{display:false} },
-          y: { ticks:{font:{size:10},color:'#4f5d73',maxTicksLimit:4,
+          x: { ticks:{maxTicksLimit:6,font:{size:10},color:'#a8bacf'}, grid:{display:false}, border:{display:false} },
+          y: { ticks:{font:{size:10},color:'#a8bacf',maxTicksLimit:4,
                callback: v => v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0)},
                grid:{color:'rgba(255,255,255,0.04)'}, border:{display:false} }
         }
@@ -941,12 +941,12 @@ function initTpCharts() {
         },
         scales: {
           x: {
-            ticks: { maxTicksLimit: 7, font:{size:10}, color:'#2a3a50', maxRotation:0 },
+            ticks: { maxTicksLimit: 7, font:{size:10}, color:'#a8bacf', maxRotation:0 },
             grid: { display: false }, border: { display: false }
           },
           y: {
             position: 'right',
-            ticks: { font:{size:10}, color:'#2a4a6a', maxTicksLimit:5,
+            ticks: { font:{size:10}, color:'#a8bacf', maxTicksLimit:5,
               callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(1) },
             grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false },
             border: { display: false }
