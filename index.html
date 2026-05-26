@@ -855,7 +855,8 @@ function renderDetail(code) {
 }
 
 // ── 看盤圖表 ─────────────────────────────────────────────
-const _tpCharts = {};
+const _tpCharts  = {};
+const _tpPeriods = {};   // code → 目前選擇的期間
 
 // 產生模擬當日分鐘資料（用開高低收推算）
 function genIntradayData(open, price, high, low) {
@@ -897,11 +898,12 @@ function getTpChartData(code, period) {
 function initTpCharts() {
   document.querySelectorAll('canvas[data-tp-code]').forEach(canvas => {
     const code = canvas.dataset.tpCode;
-    if (_tpCharts[code+'_p']) { _tpCharts[code+'_p'].destroy(); delete _tpCharts[code+'_p']; }
-
-    const periodBtn = canvas.closest('.tp-wrap')?.querySelector('.tp-period.active');
-    const period = periodBtn?.textContent?.trim() || '近月';
+    // 優先用 _tpPeriods 記錄的期間，避免 DOM 讀取時序問題
+    const period = _tpPeriods[code] || '近月';
     const chartData = getTpChartData(code, period);
+    // 安全銷毀舊圖（用 Chart.getChart 最可靠）
+    const old = Chart.getChart(canvas);
+    if (old) old.destroy();
     if (!chartData) return;
 
     const { labels, closes } = chartData;
@@ -955,12 +957,12 @@ function initTpCharts() {
 
   document.querySelectorAll('canvas[data-tp-vol]').forEach(canvas => {
     const code = canvas.dataset.tpVol;
-    if (_tpCharts[code+'_v']) { _tpCharts[code+'_v'].destroy(); delete _tpCharts[code+'_v']; }
+    const old = Chart.getChart(canvas);
+    if (old) old.destroy();
 
     const h = histories[code];
     if (!h?.closes?.length) return;
-    const periodBtn = canvas.closest('.tp-wrap')?.querySelector('.tp-period.active');
-    const period = periodBtn?.textContent?.trim() || '近月';
+    const period = _tpPeriods[code] || '近月';
     const chartData = getTpChartData(code, period);
     if (!chartData) return;
 
@@ -996,10 +998,11 @@ function initTpCharts() {
 }
 
 function switchTpPeriod(code, period, btn) {
+  _tpPeriods[code] = period;   // 先存期間，initTpCharts 直接讀這裡
   const wrap = btn.closest('.tp-periods');
   wrap.querySelectorAll('.tp-period').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  setTimeout(initTpCharts, 10);
+  setTimeout(initTpCharts, 50);
 }
 
 // 收合功能
