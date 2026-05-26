@@ -1093,6 +1093,25 @@ function renderDetail(code) {
   const sign = changeP >= 0 ? "+" : "";
   const fmt  = v => v != null ? v.toFixed(2) : "—";
 
+  // 走勢圖 HTML（預先計算，避免 template literal 巢狀語法錯誤）
+  const hasHistory = h && h.closes && h.closes.length >= 2;
+  let chartHtml;
+  if (hasHistory) {
+    chartHtml = '<canvas data-tp-code="' + code + '" class="tp-price-canvas"></canvas>' +
+                '<canvas data-tp-vol="'  + code + '" class="tp-vol-canvas"></canvas>';
+  } else {
+    const inWatchlist = STOCKS.some(function(s){ return s.code === code; });
+    if (inWatchlist) {
+      chartHtml = '<div class="tp-no-data">📊 走勢資料待更新<br>' +
+                  '<span style="font-size:11px">此股票在監控清單中，下次 GitHub Actions 執行後將自動補充</span></div>';
+    } else {
+      chartHtml = '<div class="tp-no-data">📊 此股票不在監控清單<br>' +
+                  '<span style="font-size:11px;line-height:1.6">走勢圖僅追蹤 STOCKS 陣列中的個股。' +
+                  '如需追蹤 <strong style="color:#60a5fa">' + code + '</strong>，' +
+                  '請將其加入 index.html 的 STOCKS 清單，重新 commit 後即自動生成歷史資料。</span></div>';
+    }
+  }
+
   // 估算買進/賣出（最小跳動 0.5 元或 0.1 元）
   const tick = price >= 50 ? 0.5 : 0.1;
   const bidPrice = price != null ? fmt(price - tick) : "—";
@@ -1153,25 +1172,20 @@ function renderDetail(code) {
 
     <!-- 圖表區 -->
     <div class="tp-chart-area" id="tp-chart-area-${code}">
-      ${h && h.closes && h.closes.length >= 2
-        ? `<canvas data-tp-code="${code}" class="tp-price-canvas"></canvas>
-           <canvas data-tp-vol="${code}"  class="tp-vol-canvas"></canvas>`
-        : (() => {
-            const inWatchlist = typeof STOCKS !== 'undefined' && STOCKS.some(s => s.code === code);
-            return inWatchlist
-              ? `<div class="tp-no-data">📊 走勢資料待更新<br><span style="font-size:11px">此股票在監控清單中，下次 GitHub Actions 執行後將自動補充</span></div>`
-              : `<div class="tp-no-data">📊 此股票不在監控清單<br><span style="font-size:11px;line-height:1.6">走勢圖僅追蹤 STOCKS 陣列中的個股。<br>如需追蹤 <strong style="color:#60a5fa">${code}</strong>，請將其加入 index.html 的 STOCKS 清單，重新 commit 後即自動生成歷史資料。</span></div>`;
-          })()
+      ${chartHtml}
     </div>
 
     <!-- 報價數據格 -->
     <div class="tp-stats-grid">
-      ${stats.map(s =>
-        `<div class="tp-stat-cell" ${s.note ? `title="${s.note}"` : ''}>
-          <span class="tp-stat-lbl">${s.lbl}</span>
-          <span class="tp-stat-val ${s.c}">${s.val}${s.est && s.val !== '—' ? '<span class="tp-stat-est">估算</span>' : ''}</span>
-          ${s.note && s.val === '—' ? `<span class="tp-stat-note">${s.note}</span>` : ''}
-        </div>`).join("")}
+      ${stats.map(function(s){
+        var titleAttr = s.note ? 'title="' + s.note + '"' : '';
+        var estTag    = (s.est && s.val !== '—') ? '<span class="tp-stat-est">估算</span>' : '';
+        var noteTag   = (s.note && s.val === '—') ? '<span class="tp-stat-note">' + s.note + '</span>' : '';
+        return '<div class="tp-stat-cell" ' + titleAttr + '>' +
+               '<span class="tp-stat-lbl">' + s.lbl + '</span>' +
+               '<span class="tp-stat-val ' + s.c + '">' + s.val + estTag + '</span>' +
+               noteTag + '</div>';
+      }).join("")}
     </div>
 
     <!-- 基本面 -->
