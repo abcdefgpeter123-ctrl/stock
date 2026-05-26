@@ -56,7 +56,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .code-cell{font-family:var(--mono);font-size:12px;color:var(--text3)}
 .name-cell{font-weight:500}
 .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
-.b-up{background:var(--up-bg);color:var(--up)}.b-dn{background:var(--dn-bg);color:var(--dn)}.b-neu{background:rgba(255,255,255,.05);color:var(--text2)}.b-opp{background:var(--purple-bg);color:var(--purple)}.b-theme{background:var(--teal-bg);color:var(--teal)}.b-weak{background:rgba(251,146,60,.12);color:#fb923c}
+.b-up{background:var(--up-bg);color:var(--up)}.b-dn{background:var(--dn-bg);color:var(--dn)}.b-neu{background:rgba(255,255,255,.05);color:var(--text2)}.b-opp{background:var(--purple-bg);color:var(--purple)}.b-theme{background:var(--teal-bg);color:var(--teal)}.b-weak{background:rgba(251,146,60,.12);color:#fb923c}.b-rev{background:rgba(251,191,36,.12);color:#fbbf24}
 .inst-wrap{min-width:90px}
 .inst-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-bottom:3px}
 .if{background:var(--blue)}.it{background:var(--up)}.is{background:var(--yellow)}
@@ -169,8 +169,8 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-fund-text{font-size:12px;color:var(--text2);line-height:1.65;flex:1}
 .tp-fund-val{font-family:var(--mono);font-size:16px;font-weight:600}
 .tp-fund-avg{font-size:11px;color:#3a5470;margin-left:8px}
-.tp-risk-item{font-size:12px;color:#4a5a6a;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
-.tp-risk-item:before{content:"⚠";position:absolute;left:0;font-size:10px;color:#926a1a;top:1px}
+.tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
+.tp-risk-item:before{content:"⚠";position:absolute;left:0;font-size:10px;color:#fbbf24;top:1px}
 @media(max-width:600px){.tp-stats-grid{grid-template-columns:repeat(3,1fr)}.tp-stat-cell:nth-child(5n){border-right:1px solid rgba(255,255,255,0.04)}.tp-stat-cell:nth-child(3n){border-right:none}.tp-price{font-size:20px}}
 </style>
 </head>
@@ -252,6 +252,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <option value="dn">法人賣超</option>
       <option value="opp">機會點</option>
       <option value="weak">待加強</option>
+      <option value="rev">趨勢反轉</option>
     </select>
     <button class="refresh-btn" id="refresh-btn" onclick="loadData()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
@@ -1055,8 +1056,17 @@ function instBar(f, t, s){
 function computeSig(s){
   const net = (s.i5f||0)+(s.i5t||0)+(s.i5s||0);
   const p30 = s.p30;
-  if(net>=8) return "up";           // 強力法人買超
+  if(net>=8) return "up";           // 強力法人買超（最優先）
   if(p30!==null && p30<0 && net<=0) return "weak"; // 跌勢+無支撐
+  // 趨勢反轉：跌破 MA20 或 MA30
+  const h = histories[s.code];
+  const price = priceCache[s.code]?.price;
+  if (h?.closes?.length >= 20 && price) {
+    const c = h.closes;
+    const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
+    const ma30 = c.length >= 30 ? c.slice(-30).reduce((a,b)=>a+b,0) / 30 : null;
+    if (price < ma20 || (ma30 && price < ma30)) return "rev";
+  }
   if(p30===null && net===0) return "watch";         // 無數據
   return "opp";                     // 題材成員，有動能或資金
 }
@@ -1065,6 +1075,7 @@ function sigBadge(s){
   if(sig==="up")    return `<span class="badge b-up">買超中</span>`;
   if(sig==="dn")    return `<span class="badge b-dn">賣超中</span>`;
   if(sig==="weak")  return `<span class="badge b-weak">待加強</span>`;
+  if(sig==="rev")   return `<span class="badge b-rev">趨勢反轉</span>`;
   if(sig==="watch") return `<span class="badge b-neu">觀察中</span>`;
   return `<span class="badge b-opp">機會點</span>`;
 }
@@ -1104,6 +1115,7 @@ function render(){
     if(sigFilter==="dn"   && computeSig(s)!=="dn")   return false;
     if(sigFilter==="opp"  && computeSig(s)!=="opp")  return false;
     if(sigFilter==="weak" && computeSig(s)!=="weak")  return false;
+    if(sigFilter==="rev"  && computeSig(s)!=="rev")   return false;
     if(q && !(s.code.includes(q) || s.name.includes(q) || s.theme.includes(q))) return false;
     return true;
   });
