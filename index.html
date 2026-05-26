@@ -746,7 +746,9 @@ function renderDetail(code) {
   const h   = histories[code];
 
   const stockMeta = STOCKS.find(s => s.code === code) || {};
-  const name    = pd.name || nameCache[code] || stockMeta.name || code;
+  // 優先用 STOCKS 陣列的中文名稱，再 fallback 到 data.json（並去除異常星號）
+  const rawApiName = (pd.name || nameCache[code] || "").replace(/\*/g, "").trim();
+  const name = stockMeta.name || rawApiName || code;
   const price   = pd.price   ?? null;
   const change  = pd.change  ?? 0;
   const changeP = pd.changeP ?? 0;
@@ -778,7 +780,7 @@ function renderDetail(code) {
     {lbl:"內盤", val:"—",          c:""},
     {lbl:"漲跌", val: price!=null ? `${arr}${Math.abs(change).toFixed(2)}` : "—", c:cls},
     {lbl:"賣出", val:askPrice,     c:cls},
-    {lbl:"總量", val: vol > 0 ? vol.toLocaleString() : "—", c:""},
+    {lbl:"總量", val: vol != null ? vol.toLocaleString() : "—", c:""},
     {lbl:"最低", val:fmt(low),     c:"dn"},
     {lbl:"外盤", val:"—",          c:""},
     {lbl:"幅度", val: price!=null ? `${sign}${changeP.toFixed(2)}%` : "—", c:cls},
@@ -807,7 +809,7 @@ function renderDetail(code) {
           ? `<span class="tp-price ${cls}">${price.toFixed(2)}</span>
              <span class="tp-change ${cls}">&nbsp;${arr}${Math.abs(change).toFixed(2)}(${sign}${changeP.toFixed(2)}%)</span>`
           : `<span style="font-size:13px;color:#3a5470;margin-left:4px">暫無報價</span>`}
-        <span class="tp-total-vol">總 ${vol > 0 ? vol.toLocaleString() : "—"}</span>
+        <span class="tp-total-vol">總 ${vol != null ? vol.toLocaleString() : "—"}</span>
       </div>
       <!-- 時間維度切換 -->
       <div class="tp-periods" id="tp-per-${code}">
@@ -1204,7 +1206,7 @@ async function loadData(){
     if(data.prices){
       priceCache = data.prices;
       nameCache = {};
-      Object.entries(priceCache).forEach(([c,p]) => { if(p.name) nameCache[c] = p.name; });
+      Object.entries(priceCache).forEach(([c,p]) => { if(p.name) nameCache[c] = p.name.replace(/\*/g,"").trim(); });
     }
     if(data.opportunities){
       opps = data.opportunities;
