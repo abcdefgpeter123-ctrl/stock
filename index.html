@@ -721,7 +721,7 @@ function initCharts() {
         labels: h.labels,
         datasets: [{ data: h.closes, borderColor: color, borderWidth: 1.5,
           pointRadius: 0, pointHoverRadius: 4, fill: true,
-          backgroundColor: isUp?'rgba(239,68,68,0.08)':'rgba(34,197,94,0.08)', tension: 0.3 }]
+          backgroundColor: isUp?'rgba(239,68,68,0.08)':'rgba(34,197,94,0.08)', tension: 0 }]
       },
       options: {
         responsive: false, animation: false,
@@ -920,7 +920,7 @@ function initTpCharts() {
           data: closes,
           borderColor: color, borderWidth: 1.5,
           pointRadius: 0, pointHoverRadius: 3,
-          fill: true, backgroundColor: bgColor, tension: 0.2
+          fill: true, backgroundColor: bgColor, tension: 0
         }]
       },
       options: {
