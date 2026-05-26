@@ -62,7 +62,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .if{background:var(--blue)}.it{background:var(--up)}.is{background:var(--yellow)}
 .inst-nums{font-size:10px;color:var(--text3);font-family:var(--mono)}
 .opp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
-.opp-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:0 var(--r) var(--r) 0;padding:14px 16px}
+.opp-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:0 var(--r) var(--r) 0;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.opp-card:hover{background:#1e2a3a;border-color:#5b7fa6}
+.opp-card.opp-active{border-left-color:#38bdf8;background:#1a2d40;box-shadow:0 0 0 1px #38bdf840}
+#opp-detail-panel{grid-column:1/-1;margin-top:4px}
 .oc-code{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px;display:flex;align-items:center;gap:6px}
 .oc-name{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px}
 .oc-reason{font-size:12px;color:var(--text2);line-height:1.65}
@@ -289,6 +292,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 
   <div class="sec-hd">受惠尚未啟動 — 機會點追蹤</div>
   <div class="opp-grid" id="opp-grid"></div>
+  <div id="opp-detail-panel"></div>
 
   <div class="footer">
     <span>資料來源：data.json（由 n8n 每日抓取台灣證交所/玩股網更新）</span>
@@ -704,6 +708,28 @@ function toggleStockDetail(code) {
   }
 }
 
+function toggleOppDetail(code) {
+  const panel = document.getElementById("opp-detail-panel");
+  if (expandedOpp === code) {
+    // 收起
+    expandedOpp = null;
+    panel.innerHTML = "";
+    document.querySelectorAll(".opp-card").forEach(c => c.classList.remove("opp-active"));
+  } else {
+    expandedOpp = code;
+    // 高亮選中卡片
+    document.querySelectorAll(".opp-card").forEach(c => {
+      c.classList.toggle("opp-active", c.dataset.code === code);
+    });
+    // 渲染看盤面板
+    panel.innerHTML = renderDetail(code);
+    setTimeout(() => {
+      initTpCharts();
+      panel.scrollIntoView({behavior:"smooth", block:"start"});
+    }, 60);
+  }
+}
+
 // ── 折線圖 ─────────────────────────────────────────────────
 const _chartInstances = {};
 function initCharts() {
@@ -858,6 +884,7 @@ function renderDetail(code) {
 // ── 看盤圖表 ─────────────────────────────────────────────
 const _tpCharts  = {};
 const _tpPeriods = {};   // code → 目前選擇的期間
+let expandedOpp = null;  // 目前展開的機會點代碼
 
 // 產生模擬當日分鐘資料（用開高低收推算）
 function genIntradayData(open, price, high, low) {
@@ -1182,15 +1209,25 @@ function render(){
         : `<div class="oc-price" style="color:var(--text3)">—</div>`;
       const p30txt = o.p30!=null ? `<span style="color:var(--text2);font-size:11px">30日 ${o.p30>=0?"+":""}${o.p30}%</span>` : "";
       const gaptxt = o.gap!=null ? `<span class="badge b-opp" style="margin-left:6px">落差${o.gap}%</span>` : "";
-      return `<div class="opp-card">
+      const isOppActive = expandedOpp === o.code;
+      return `<div class="opp-card${isOppActive ? ' opp-active' : ''}" data-code="${o.code}" onclick="toggleOppDetail('${o.code}')">
         <div class="oc-code">${o.code} <span class="badge b-theme">${o.theme}</span>${gaptxt}</div>
         <div class="oc-name">${o.name}</div>
         ${ps}
         ${p30txt}
         <div class="oc-reason" style="margin-top:6px">${o.reason}</div>
-        <div class="oc-tag"><span class="badge b-opp">尚未啟動</span></div>
+        <div class="oc-tag"><span class="badge b-opp">尚未啟動</span> <span style="color:var(--text3);font-size:11px;margin-left:6px">${isOppActive ? '▲ 收起' : '▼ 展開詳情'}</span></div>
       </div>`;
     }).join("");
+  }
+  // 若機會點有展開則重繪看盤面板
+  const oppPanel = document.getElementById("opp-detail-panel");
+  if (oppPanel) {
+    if (expandedOpp) {
+      oppPanel.innerHTML = renderDetail(expandedOpp);
+    } else {
+      oppPanel.innerHTML = "";
+    }
   }
   // 展開股票後也初始化折線圖
   setTimeout(() => { initCharts(); initTpCharts(); }, 60);
