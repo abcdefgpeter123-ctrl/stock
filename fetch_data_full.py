@@ -836,6 +836,127 @@ def fetch_fallback_list():
     return prices
 
 
+# ── 個股三大法人（T86）─────────────────────────────────────
+
+def fetch_inst_stocks(all_prices, target_days=5):
+    """
+    從 TWSE T86 抓取個股三大法人買賣超（股數）並累加最近 target_days 個交易日。
+    轉換成「億元」：shares * 當前股價 / 1e8（近似值，已夠顯示趨勢）。
+    回傳 {code: {f, t, s}}，f/t/s 單位：億元（保留1位小數）。
+    """
+    from collections import defaultdict
+
+    acc = defaultdict(lambda: {"f": 0.0, "t": 0.0, "s": 0.0})
+    collected = 0
+
+    for i in range(14):                # 往回最多找 14 個日曆日
+        if collected >= target_days:
+            break
+        d = datetime.date.today() - datetime.timedelta(days=i)
+        date_str = d.strftime("%Y%m%d")
+
+        # 先試 openapi，再試 rwd
+        urls = [
+            f"https://openapi.twse.com.tw/v1/fund/T86?date={date_str}",
+            f"https://www.twse.com.tw/fund/T86?response=json&date={date_str}&selectType=ALL",
+            f"https://www.twse.com.tw/rwd/zh/fund/T86?response=json&date={date_str}&selectType=ALL",
+        ]
+
+        parsed = False
+        for url in urls:
+            try:
+                r = requests.get(url, headers=HEADERS, timeout=25)
+                resp = r.json()
+
+                # openapi 回傳 list；rwd 回傳 dict with "data"
+                if isinstance(resp, list):
+                    rows = resp
+                    # openapi T86 格式：每筆是 dict
+                    for row in rows:
+                        if not isinstance(row, dict):
+                            continue
+                        code = str(row.get("Code", row.get("code", ""))).strip()
+                        if not code:
+                            continue
+                        def pg(k, *aliases):
+                            for a in (k,) + aliases:
+                                v = row.get(a)
+                                if v is not None:
+                                    try:
+                                        return int(str(v).replace(",", ""))
+                                    except Exception:
+                                        pass
+                            return 0
+                        f_net = pg("ForeignInvestmentNetBuySell", "外陸資買賣超股數")
+                        t_net = pg("InvestmentTrustNetBuySell",   "投信買賣超股數")
+                        s_net = pg("DealerNetBuySell",            "自營商買賣超股數")
+                        price = all_prices.get(code, {}).get("price", 0) or 0
+                        acc[code]["f"] += f_net * price / 1e8
+                        acc[code]["t"] += t_net * price / 1e8
+                        acc[code]["s"] += s_net * price / 1e8
+                    parsed = bool(rows)
+
+                else:
+                    # rwd 格式
+                    if resp.get("stat") not in ("OK", "ok"):
+                        continue
+                    rows = resp.get("data", [])
+                    if not rows:
+                        continue
+                    fields = resp.get("fields", [])
+                    # 典型欄位順序（固定位置比欄位名稱更可靠）：
+                    # 0=代號, 1=名稱, 2=外買, 3=外賣, 4=外超, 5=投買, 6=投賣, 7=投超,
+                    # 8=自行買, 9=自行賣, 10=自行超, 11=避險買, 12=避險賣, 13=避險超, 14=三大超
+                    def col(name, fallback_idx):
+                        try:
+                            return fields.index(name)
+                        except ValueError:
+                            return fallback_idx
+
+                    i_code  = col("證券代號", 0)
+                    i_f_net = col("外陸資買賣超股數", 4)
+                    i_t_net = col("投信買賣超股數",   7)
+                    i_s1    = col("自營商(自行買賣)買賣超股數", 10)
+                    i_s2    = col("自營商(避險)買賣超股數",     13)
+
+                    def pn(row, idx):
+                        try:
+                            return int(str(row[idx]).replace(",", ""))
+                        except Exception:
+                            return 0
+
+                    for row in rows:
+                        if len(row) < 5:
+                            continue
+                        code  = str(row[i_code]).strip()
+                        price = all_prices.get(code, {}).get("price", 0) or 0
+                        acc[code]["f"] += pn(row, i_f_net) * price / 1e8
+                        acc[code]["t"] += pn(row, i_t_net) * price / 1e8
+                        acc[code]["s"] += (pn(row, i_s1) + pn(row, i_s2)) * price / 1e8
+                    parsed = True
+
+                if parsed:
+                    collected += 1
+                    print(f"   ✅ T86 {d.strftime('%Y/%m/%d')} 完成（{collected}/{target_days}）")
+                    time.sleep(0.4)
+                    break
+
+            except Exception as e:
+                print(f"   ⚠️ T86 {url[-50:]}: {e}")
+                continue
+
+    result = {
+        code: {
+            "f": round(v["f"], 1),
+            "t": round(v["t"], 1),
+            "s": round(v["s"], 1),
+        }
+        for code, v in acc.items()
+    }
+    print(f"   📊 個股法人資料：{len(result)} 支，累計 {collected} 個交易日")
+    return result
+
+
 # ── 主程式 ────────────────────────────────────────────────
 
 def main():
@@ -901,7 +1022,12 @@ def main():
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
 
-    # 5b. 個股近期故事生成（用已抓好的 histories）
+    # 5b. 個股三大法人（T86，最近5個交易日累計）
+    print("📊 個股三大法人資料（T86）...")
+    inst_stocks = fetch_inst_stocks(all_prices, target_days=5)
+    data["inst_stocks"] = inst_stocks
+
+    # 5c. 個股近期故事生成（用已抓好的 histories）
     print("📝 生成個股近期故事...")
     company_info = generate_stories(company_info, histories, all_prices, api_key)
     with open("company_info.json", "w", encoding="utf-8") as f:

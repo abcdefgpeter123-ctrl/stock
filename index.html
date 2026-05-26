@@ -684,7 +684,8 @@ function toggleETF(code) {
 // 個股詳細資料
 let stockInfo = {};
 let companyInfo = {};   // AI 自動生成（company_info.json）
-let histories = {};     // 30日收盤歷史（data.json histories）
+let histories  = {};    // 30日收盤歷史（data.json histories）
+let instStocks = {};    // 個股三大法人5日累計（data.json inst_stocks）
 let expandedStock = null;
 
 async function loadStockInfo() {
@@ -1059,6 +1060,32 @@ function fmtPrice(code){
   return `<span class="${c}" style="font-family:var(--mono);font-weight:500">${d.price.toFixed(1)}</span><span class="${c}" style="font-size:11px;margin-left:5px">${sign}${d.changeP.toFixed(1)}%</span>`;
 }
 
+// 從 histories 動態補算 p5/p30（對靜態 null 值）
+function computeReturns(){
+  STOCKS.forEach(s => {
+    const h = histories[s.code];
+    if(!h || !h.closes || h.closes.length < 2) return;
+    const closes = h.closes;
+    const cur = closes[closes.length - 1];
+    if(s.p5 == null && closes.length >= 6){
+      const base = closes[closes.length - 6];
+      if(base > 0) s.p5 = Math.round((cur - base) / base * 1000) / 10;
+    }
+    if(s.p30 == null){
+      const n = Math.min(30, closes.length - 1);
+      const base = closes[closes.length - 1 - n];
+      if(base > 0) s.p30 = Math.round((cur - base) / base * 1000) / 10;
+    }
+  });
+}
+
+// 取個股法人數值：優先 inst_stocks（動態），fallback 靜態 i5f/i5t/i5s
+function getInst(s){
+  const d = instStocks[s.code];
+  if(d) return { f: d.f, t: d.t, s: d.s };
+  return { f: s.i5f||0, t: s.i5t||0, s: s.i5s||0 };
+}
+
 function instBar(f, t, s){
   // 計算最大絕對值以縮放條寬（最大50%）
   const maxAbs = Math.max(Math.abs(f), Math.abs(t), Math.abs(s), 1);
@@ -1081,7 +1108,8 @@ function instBar(f, t, s){
 }
 
 function computeSig(s){
-  const net = (s.i5f||0)+(s.i5t||0)+(s.i5s||0);
+  const iv  = getInst(s);
+  const net = iv.f + iv.t + iv.s;
   const p30 = s.p30;
   if(net>=8) return "up";           // 強力法人買超（最優先）
   if(p30!==null && p30<0 && net<=0) return "weak"; // 跌勢+無支撐
@@ -1170,7 +1198,7 @@ function render(){
     else if(sortCol==="5d"){ va=a.p5??-999; vb=b.p5??-999; }
     else if(sortCol==="30d"){ va=a.p30??-999; vb=b.p30??-999; }
     else if(sortCol==="price"){ va=priceCache[a.code]?.price||0; vb=priceCache[b.code]?.price||0; }
-    else { va=a.i5f+a.i5t+a.i5s; vb=b.i5f+b.i5t+b.i5s; }
+    else { const ia=getInst(a),ib=getInst(b); va=ia.f+ia.t+ia.s; vb=ib.f+ib.t+ib.s; }
     if(typeof va==="string") return asc ? va.localeCompare(vb) : vb.localeCompare(va);
     return asc ? va-vb : vb-va;
   });
@@ -1187,7 +1215,7 @@ function render(){
         <td>${fmtPrice(s.code)}</td>
         <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
         <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
-        <td>${s._extra ? '<span class="neu" style="font-size:11px">—</span>' : instBar(s.i5f, s.i5t, s.i5s)}</td>
+        <td>${s._extra ? '<span class="neu" style="font-size:11px">—</span>' : (()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s);})()}</td>
         <td>${s._extra ? '' : sigBadge(s)}</td>
       </tr>
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
@@ -1265,6 +1293,11 @@ async function loadData(){
     if(data.histories){
       histories = data.histories;
     }
+    if(data.inst_stocks){
+      instStocks = data.inst_stocks;
+    }
+    // 用 histories 補算 p5/p30（對靜態清單中 null 的項目）
+    computeReturns();
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
     }
