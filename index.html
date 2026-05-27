@@ -115,6 +115,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .holding-name{color:var(--text);flex:1}
 .holding-code{color:var(--text3);font-family:var(--mono);font-size:10px;margin-right:8px}
 .holding-weight{color:var(--text2);font-family:var(--mono);font-size:11px;font-weight:500}
+/* ETF 類型標籤 */
+.etf-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.etf-type{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;letter-spacing:.02em}
+.etf-type-active{background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.25)}
+.etf-type-market{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.etf-type-index{background:rgba(255,255,255,.06);color:var(--text3);border:1px solid var(--border)}
+.etf-watchlist{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
 .etf-expand-hint{font-size:10px;color:var(--text3);margin-top:4px;text-align:right}
 
 
@@ -501,9 +508,12 @@ function renderFavorites() {
 
 
 // ETF 清單 + 前10大成份股（資料來源：各 ETF 官方文件 2026年5月）
+// type: "主動型" = 動態選股高息型 | "市值型" = 純被動市值加權 | "指數型" = 追蹤海外指數
+// watchlist: true = 持股已納入個股監控清單
 const ETFS = [
   {
     code: "0050", name: "元大台灣50",
+    type: "市值型", watchlist: true,
     desc: "追蹤台灣市值前50大個股，台股最具代表性 ETF",
     holdings: [
       {code:"2330",name:"台積電",weight:54.2},
@@ -520,6 +530,7 @@ const ETFS = [
   },
   {
     code: "0056", name: "元大高股息",
+    type: "主動型", watchlist: true,
     desc: "鎖定殖利率前30名高息股，國民級存股 ETF",
     holdings: [
       {code:"2382",name:"廣達",weight:5.2},
@@ -536,6 +547,7 @@ const ETFS = [
   },
   {
     code: "00878", name: "國泰永續高股息",
+    type: "主動型", watchlist: true,
     desc: "結合ESG與高息策略，季配息穩定族群",
     holdings: [
       {code:"2308",name:"台達電",weight:5.3},
@@ -552,6 +564,7 @@ const ETFS = [
   },
   {
     code: "00919", name: "群益台灣精選高息",
+    type: "主動型", watchlist: true,
     desc: "雙月配息、選股動能強，新世代高息熱門款",
     holdings: [
       {code:"2382",name:"廣達",weight:8.2},
@@ -568,6 +581,7 @@ const ETFS = [
   },
   {
     code: "00929", name: "復華台灣科技優息",
+    type: "主動型", watchlist: true,
     desc: "月配息、科技題材，受年輕投資人青睞",
     holdings: [
       {code:"3711",name:"日月光投控",weight:7.8},
@@ -584,6 +598,7 @@ const ETFS = [
   },
   {
     code: "00940", name: "元大臺灣價值高息",
+    type: "主動型", watchlist: true,
     desc: "月配息、價值+高息選股，2024年募集破紀錄",
     holdings: [
       {code:"2382",name:"廣達",weight:6.8},
@@ -600,6 +615,7 @@ const ETFS = [
   },
   {
     code: "00713", name: "元大台灣高息低波",
+    type: "主動型", watchlist: true,
     desc: "高息+低波動雙因子，存股族首選",
     holdings: [
       {code:"2885",name:"元大金",weight:6.5},
@@ -616,6 +632,7 @@ const ETFS = [
   },
   {
     code: "00757", name: "統一FANG+",
+    type: "指數型", watchlist: false,
     desc: "美國科技十大龍頭ETF，AI主題首選",
     holdings: [
       {code:"NVDA",name:"NVIDIA",weight:11.5},
@@ -632,6 +649,7 @@ const ETFS = [
   },
   {
     code: "00662", name: "富邦NASDAQ",
+    type: "指數型", watchlist: false,
     desc: "追蹤NASDAQ-100，美國科技股代表",
     holdings: [
       {code:"AAPL",name:"蘋果",weight:9.2},
@@ -648,6 +666,7 @@ const ETFS = [
   },
   {
     code: "00891", name: "中信關鍵半導體",
+    type: "主動型", watchlist: true,
     desc: "聚焦半導體核心供應鏈，產業最純度高",
     holdings: [
       {code:"2330",name:"台積電",weight:20.0},
@@ -683,6 +702,12 @@ function renderETFs() {
       </div>
     `).join("");
 
+    const typeCls = etf.type==="主動型" ? "etf-type-active" : etf.type==="市值型" ? "etf-type-market" : "etf-type-index";
+    const tagsHtml = '<div class="etf-tags">'
+      + '<span class="etf-type ' + typeCls + '">' + (etf.type||"") + '</span>'
+      + (etf.watchlist ? '<span class="etf-watchlist">📌 持股來源</span>' : '')
+      + '</div>';
+
     return `<div class="etf-card ${expandedETF===etf.code?'expanded':''}" onclick="toggleETF('${etf.code}')">
       <div class="etf-head">
         <div>
@@ -691,6 +716,7 @@ function renderETFs() {
         </div>
         <div class="etf-price">${priceHtml}</div>
       </div>
+      ${tagsHtml}
       <div class="etf-desc">${etf.desc}</div>
       <div class="etf-expand-hint">${expandedETF===etf.code?'▲ 收合':'▼ 查看成份股'}</div>
       <div class="etf-holdings">
