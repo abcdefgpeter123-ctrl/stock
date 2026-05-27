@@ -555,40 +555,6 @@ const ETFS = [
     ]
   },
   {
-    code: "00878", name: "國泰永續高股息",
-    type: "高息型", watchlist: true,
-    desc: "結合ESG與高息策略，季配息穩定族群",
-    holdings: [
-      {code:"2308",name:"台達電",weight:5.3},
-      {code:"2382",name:"廣達",weight:5.0},
-      {code:"3711",name:"日月光投控",weight:4.6},
-      {code:"2885",name:"元大金",weight:4.2},
-      {code:"2891",name:"中信金",weight:4.0},
-      {code:"2884",name:"玉山金",weight:3.8},
-      {code:"2886",name:"兆豐金",weight:3.6},
-      {code:"2887",name:"台新金",weight:3.4},
-      {code:"2880",name:"華南金",weight:3.2},
-      {code:"6505",name:"台塑化",weight:3.0}
-    ]
-  },
-  {
-    code: "00919", name: "群益台灣精選高息",
-    type: "高息型", watchlist: true,
-    desc: "雙月配息、選股動能強，新世代高息熱門款",
-    holdings: [
-      {code:"2382",name:"廣達",weight:8.2},
-      {code:"3711",name:"日月光投控",weight:7.5},
-      {code:"2376",name:"技嘉",weight:6.8},
-      {code:"3034",name:"聯詠",weight:5.4},
-      {code:"2308",name:"台達電",weight:5.1},
-      {code:"3231",name:"緯創",weight:4.8},
-      {code:"2356",name:"英業達",weight:4.5},
-      {code:"2324",name:"仁寶",weight:4.2},
-      {code:"2317",name:"鴻海",weight:4.0},
-      {code:"6669",name:"緯穎",weight:3.7}
-    ]
-  },
-  {
     code: "00929", name: "復華台灣科技優息",
     type: "高息型", watchlist: true,
     desc: "月配息、科技題材，受年輕投資人青睞",
@@ -603,40 +569,6 @@ const ETFS = [
       {code:"3017",name:"奇鋐",weight:4.3},
       {code:"2454",name:"聯發科",weight:4.0},
       {code:"6669",name:"緯穎",weight:3.8}
-    ]
-  },
-  {
-    code: "00940", name: "元大臺灣價值高息",
-    type: "高息型", watchlist: true,
-    desc: "月配息、價值+高息選股，2024年募集破紀錄",
-    holdings: [
-      {code:"2382",name:"廣達",weight:6.8},
-      {code:"2308",name:"台達電",weight:6.2},
-      {code:"3711",name:"日月光投控",weight:5.8},
-      {code:"2376",name:"技嘉",weight:5.4},
-      {code:"3034",name:"聯詠",weight:5.1},
-      {code:"3231",name:"緯創",weight:4.8},
-      {code:"2603",name:"長榮",weight:4.5},
-      {code:"2454",name:"聯發科",weight:4.2},
-      {code:"2356",name:"英業達",weight:4.0},
-      {code:"2324",name:"仁寶",weight:3.8}
-    ]
-  },
-  {
-    code: "00713", name: "元大台灣高息低波",
-    type: "高息型", watchlist: true,
-    desc: "高息+低波動雙因子，存股族首選",
-    holdings: [
-      {code:"2885",name:"元大金",weight:6.5},
-      {code:"2891",name:"中信金",weight:6.2},
-      {code:"2884",name:"玉山金",weight:5.8},
-      {code:"2886",name:"兆豐金",weight:5.5},
-      {code:"2382",name:"廣達",weight:5.2},
-      {code:"2308",name:"台達電",weight:4.8},
-      {code:"3711",name:"日月光投控",weight:4.5},
-      {code:"6505",name:"台塑化",weight:4.2},
-      {code:"2002",name:"中鋼",weight:3.9},
-      {code:"2412",name:"中華電",weight:3.7}
     ]
   },
   {
@@ -1221,6 +1153,7 @@ function toggleSection(id, btn) {
 let priceCache = {};
 let nameCache = {};   // code → 中文名稱（來自 data.json prices.name）
 let twiiData = {};
+let etfSourceMap = {};  // code → 持有該股的國內主動式ETF代號陣列
 let activeTheme = "all", sortCol = "name", asc = true, sigFilter = "all", q = "";
 
 function pct(v){
@@ -1386,7 +1319,10 @@ function render(){
       <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}')">
         <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
         <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
-        <td class="name-cell">${s.name}</td>
+        <td class="name-cell">
+          <div>${s.name}</div>
+          ${!s._extra && etfSourceMap[s.code]?.length ? `<div style="margin-top:2px">${etfSourceMap[s.code].map(c=>`<span style="font-size:9.5px;background:rgba(96,165,250,0.13);color:var(--blue);border-radius:3px;padding:1px 4px;margin-right:3px;font-weight:500">${c}</span>`).join('')}</div>` : ''}
+        </td>
         <td>${s._extra ? '<span class="neu" style="font-size:11px">全台股</span>' : `<span class="badge b-theme">${s.theme}</span>`}</td>
         <td>${fmtPrice(s.code)}</td>
         <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
@@ -1485,6 +1421,14 @@ async function loadData(){
       });
       console.log("ETF 持股已從 data.json 動態更新");
     }
+    // 建立國內主動式ETF持股反查表（stock code → ETF codes）
+    etfSourceMap = {};
+    ETFS.filter(e => e.type === "國內主動式").forEach(etf => {
+      etf.holdings.forEach(h => {
+        if(!etfSourceMap[h.code]) etfSourceMap[h.code] = [];
+        if(!etfSourceMap[h.code].includes(etf.code)) etfSourceMap[h.code].push(etf.code);
+      });
+    });
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
@@ -1494,6 +1438,7 @@ async function loadData(){
     computeReturns();
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
+      document.getElementById("src-tag").textContent = "抓取日期：" + data.updated_at;
     }
   } catch(e){
     document.getElementById("err-bar").textContent = "⚠️ 資料載入失敗：" + e.message;
