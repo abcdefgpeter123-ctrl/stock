@@ -1144,7 +1144,6 @@ function initTpCharts() {
     const h = histories[code];
     const maDatasets = [];
     const MA_COLORS = { '5':'#f97316','10':'#facc15','20':'#38bdf8','30':'#c084fc','60':'#4ade80' };
-    const period = _tpPeriods[code] || '近月';
     if (period !== '當日' && h?.closes?.length) {
       const fullCloses = h.closes;
       const displayN = closes.length;
