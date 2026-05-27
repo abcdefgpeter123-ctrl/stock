@@ -1256,7 +1256,7 @@ function instBar(f, t, s){
         <div class="inst-center"></div>
         <div class="inst-bar2-fill ${cls}" style="width:${pct}%"></div>
       </div>
-      <span class="inst-row2-val ${vc}">${val > 0 ? '+' : ''}${val}</span>
+      <span class="inst-row2-val ${vc}">${val > 0 ? '+' : ''}${Math.round(val)}<span style="font-size:9px;opacity:.6">萬</span></span>
     </div>`;
   }
   return `<div class="inst-bar2">
