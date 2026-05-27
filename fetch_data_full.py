@@ -801,6 +801,94 @@ def fetch_fallback_list():
     return prices
 
 
+# ── ETF 持股比重（TWSE OpenAPI）────────────────────────────
+
+# 要追蹤的 ETF 代號（含主動型）
+ETF_TRACK_CODES = [
+    "0050", "0056", "00878", "00919", "00929", "00940",
+    "00713", "00757", "00662", "00891",
+    "00992A", "00981A", "00988A", "00990A",
+]
+
+def fetch_etf_holdings():
+    """
+    從 TWSE OpenAPI 抓取 ETF 申購/買回清單（日常籃子 = 成分股 + 比重）。
+    台灣所有掛牌 ETF（含主動型）均需每日公告，設計開放給境外存取。
+    回傳: { "0050": [{code, name, weight}, ...前10大...], ... }
+    """
+    result = {}
+
+    # ① TWSE OpenAPI — 每日申購買回清單（主要來源）
+    try:
+        url = "https://openapi.twse.com.tw/v1/ETF/DAILYBASKETContent"
+        r = requests.get(url, headers=HEADERS, timeout=25)
+        if r.ok:
+            raw = r.json()
+            for item in raw:
+                # 相容多種欄位名稱（API 版本不同可能有差異）
+                etf_code = (
+                    item.get("基金代號") or item.get("ETFid") or
+                    item.get("fund_id") or ""
+                ).strip()
+                if etf_code not in ETF_TRACK_CODES:
+                    continue
+                comp_code = (
+                    item.get("成分股代號") or item.get("ComponentStockCode") or ""
+                ).strip()
+                comp_name = (
+                    item.get("成分股名稱") or item.get("ComponentStockName") or ""
+                ).strip()
+                w_raw = (
+                    item.get("比重(%)") or item.get("Ratio") or
+                    item.get("比重") or "0"
+                )
+                try:
+                    w = float(str(w_raw).replace(",", "").strip())
+                except ValueError:
+                    w = 0.0
+                if not comp_code:
+                    continue
+                result.setdefault(etf_code, []).append(
+                    {"code": comp_code, "name": comp_name, "weight": w}
+                )
+            print(f"   TWSE OpenAPI ETF 持股: {len(result)} 檔有資料")
+    except Exception as e:
+        print(f"   ⚠️ TWSE OpenAPI ETF 失敗: {e}")
+
+    # ② 備用：TWSE 舊版 TWT84U（僅 0050 等被動型）
+    if not result:
+        for code in ETF_TRACK_CODES[:10]:          # 舊端點只支援台灣指數型
+            try:
+                url = (
+                    f"https://www.twse.com.tw/fund/TWT84U"
+                    f"?response=json&strDate=&fundNo={code}"
+                )
+                r = requests.get(url, headers=HEADERS, timeout=15)
+                if not r.ok:
+                    continue
+                data = r.json()
+                rows = data.get("data") or []
+                holdings = []
+                for row in rows[:10]:
+                    if len(row) >= 4:
+                        holdings.append({
+                            "code": str(row[0]).strip(),
+                            "name": str(row[1]).strip(),
+                            "weight": safe_float(row[3]),
+                        })
+                if holdings:
+                    result[code] = holdings
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"   ⚠️ TWT84U {code}: {e}")
+
+    # 按比重排序，保留前10
+    for code in result:
+        result[code] = sorted(result[code], key=lambda x: -x["weight"])[:10]
+
+    return result
+
+
 # ── 個股三大法人（T86）─────────────────────────────────────
 
 def fetch_inst_stocks(all_prices, target_days=5):
@@ -987,7 +1075,13 @@ def main():
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
 
-    # 5b. 個股三大法人（T86，最近5個交易日累計）
+    # 5b. ETF 持股比重（TWSE OpenAPI）
+    print("📊 ETF 成分股持股抓取中...")
+    etf_holdings = fetch_etf_holdings()
+    data["etf_holdings"] = etf_holdings
+    print(f"   ✅ {len(etf_holdings)} 檔 ETF 持股已更新")
+
+    # 5c. 個股三大法人（T86，最近5個交易日累計）
     print("📊 個股三大法人資料（T86）...")
     inst_stocks = fetch_inst_stocks(all_prices, target_days=5)
     data["inst_stocks"] = inst_stocks

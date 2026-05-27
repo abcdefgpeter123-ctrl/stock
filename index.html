@@ -799,7 +799,11 @@ function renderETFs() {
       <div class="etf-desc">${etf.desc}</div>
       <div class="etf-expand-hint">${expandedETF===etf.code?'▲ 收合':'▼ 查看成份股'}</div>
       <div class="etf-holdings">
-        <div class="etf-holdings-title">前10大成份股</div>
+        <div class="etf-holdings-title">前10大成份股
+          <span style="font-size:9px;margin-left:6px;color:${etf._holdingsLive?'var(--teal)':'var(--text3)'}">
+            ${etf._holdingsLive ? '● 即時' : '● 估算'}
+          </span>
+        </div>
         ${holdingsHtml}
       </div>
     </div>`;
@@ -1450,6 +1454,17 @@ async function loadData(){
     }
     if(data.inst_stocks){
       instStocks = data.inst_stocks;
+    }
+    // 動態更新 ETF 持股（來自 TWSE OpenAPI，每日自動抓取）
+    if(data.etf_holdings){
+      ETFS.forEach(etf => {
+        const fresh = data.etf_holdings[etf.code];
+        if(fresh && fresh.length > 0){
+          etf.holdings = fresh;
+          etf._holdingsLive = true;   // 標記為即時資料
+        }
+      });
+      console.log("ETF 持股已從 data.json 動態更新");
     }
     // 用 histories 補算 p5/p30（對靜態清單中 null 的項目）
     computeReturns();
