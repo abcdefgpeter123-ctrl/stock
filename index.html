@@ -1074,11 +1074,17 @@ function getTpChartData(code, period) {
     return genIntradayData(open, price, high, low);
   }
   if (!h?.closes?.length) return null;
-  const n = period === '五日' ? 5 : period === '近月' ? 30 :
-            period === '三月' ? 60 : period === '六月' ? 120 : null;
-  const closes = n ? h.closes.slice(-n) : h.closes;
-  const labels = n ? h.labels.slice(-n)  : h.labels;
-  return { labels, closes };
+  // 各期間對應交易日數（1年≈252、6月≈126、3月≈63、近月≈22、五日=5）
+  const n = period === '五日' ? 5
+          : period === '近月' ? 22
+          : period === '三月' ? 63
+          : period === '六月' ? 126
+          : period === '一年' ? 252
+          : null;   // 五年 = 全部可用資料
+  const closes  = n ? h.closes.slice(-n)  : h.closes;
+  const labels  = n ? h.labels.slice(-n)  : h.labels;
+  const volumes = h.volumes ? (n ? h.volumes.slice(-n) : h.volumes) : null;
+  return { labels, closes, volumes };
 }
 
 function initTpCharts() {
@@ -1153,10 +1159,12 @@ function initTpCharts() {
     if (!chartData) return;
 
     const n = chartData.closes.length;
-    // 用收盤間距模擬成交量比例（無真實量時）
-    const vols = chartData.closes.map((c, i) =>
-      i === 0 ? 500 : Math.round(Math.abs(c - chartData.closes[i-1]) / (chartData.closes[0] || 1) * 50000 + 200)
-    );
+    // 優先用真實成交量，否則以收盤間距模擬
+    const vols = (chartData.volumes && chartData.volumes.length === n)
+      ? chartData.volumes.map(v => v || 0)
+      : chartData.closes.map((c, i) =>
+          i === 0 ? 500 : Math.round(Math.abs(c - chartData.closes[i-1]) / (chartData.closes[0] || 1) * 50000 + 200)
+        );
     const isUp = chartData.closes[n-1] >= chartData.closes[0];
     const barColors = chartData.closes.map((c,i) =>
       i === 0 ? 'rgba(96,165,250,0.35)' :

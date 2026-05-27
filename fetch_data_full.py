@@ -318,27 +318,35 @@ def update_company_info(all_prices, company_info, api_key, max_new=50):
 
 def fetch_price_history(code):
     """
-    從 Yahoo Finance 抓個股近 2 個月日線。
-    回傳 (closes, dates)：closes 為收盤價 list，dates 為對應 "MM/DD" 字串 list。
-    先試 .TW（上市），再試 .TWO（上櫃）。失敗回傳 (None, None)。
+    從 Yahoo Finance 抓個股近 1 年日線（含成交量）。
+    回傳 (closes, dates, volumes)，先試 .TW 再試 .TWO。失敗回傳 (None, None, None)。
     """
     for suffix in [".TW", ".TWO"]:
         try:
             url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
-                   f"{code}{suffix}?interval=1d&range=2mo")
-            r = requests.get(url, headers=HEADERS, timeout=12)
+                   f"{code}{suffix}?interval=1d&range=1y")
+            r = requests.get(url, headers=HEADERS, timeout=15)
             result = r.json()["chart"]["result"][0]
-            timestamps = result.get("timestamp", [])
-            closes_raw = result["indicators"]["quote"][0]["close"]
-            pairs = [(t, c) for t, c in zip(timestamps, closes_raw) if c is not None]
-            if len(pairs) >= 6:
-                closes = [c for _, c in pairs]
-                dates  = [datetime.datetime.utcfromtimestamp(t).strftime("%m/%d")
-                          for t, _ in pairs]
-                return closes, dates
+            timestamps  = result.get("timestamp", [])
+            quote       = result["indicators"]["quote"][0]
+            closes_raw  = quote.get("close",  [])
+            volumes_raw = quote.get("volume", [])
+            # 補齊 volumes 長度（偶爾比 closes 短）
+            volumes_raw = list(volumes_raw) + [None] * max(0, len(closes_raw) - len(volumes_raw))
+            triples = [
+                (t, c, v)
+                for t, c, v in zip(timestamps, closes_raw, volumes_raw)
+                if c is not None
+            ]
+            if len(triples) >= 6:
+                closes  = [c for _, c, _ in triples]
+                dates   = [datetime.datetime.utcfromtimestamp(t).strftime("%m/%d")
+                           for t, _, _ in triples]
+                volumes = [int(v) if v is not None else 0 for _, _, v in triples]
+                return closes, dates, volumes
         except Exception:
             continue
-    return None, None
+    return None, None, None
 
 
 def compute_opportunities(all_prices, extra_codes=None):
@@ -365,14 +373,15 @@ def compute_opportunities(all_prices, extra_codes=None):
     histories      = {}        # code → closes list（用於 pct 計算）
     histories_json = {}        # code → {labels, closes}（存入 data.json 供圖表用）
     codes_list = sorted(all_codes)
-    print(f"   📈 抓取 {len(codes_list)} 支個股歷史（機會點偵測）...")
+    print(f"   📈 抓取 {len(codes_list)} 支個股歷史（機會點偵測，最近1年）...")
     for i, code in enumerate(codes_list, 1):
-        closes, dates = fetch_price_history(code)
+        closes, dates, volumes = fetch_price_history(code)
         if closes:
-            histories[code] = closes
+            histories[code] = closes          # 完整年資料，供 pct 計算
             histories_json[code] = {
-                "labels": dates[-30:],
-                "closes": [round(c, 1) for c in closes[-30:]],
+                "labels":  dates,                           # 全年日期（~252 筆）
+                "closes":  [round(c, 1) for c in closes],  # 全年收盤
+                "volumes": volumes,                         # 全年成交量
             }
         time.sleep(0.25)
         if i % 15 == 0:
