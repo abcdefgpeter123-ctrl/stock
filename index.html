@@ -680,18 +680,19 @@ const ETFS = [
   {
     code: "00992A", name: "群益科技創新",
     type: "國內主動式", watchlist: false,
+    holdingsDate: "2026/05/28", holdingsSource: "群益投信官網",
     desc: "聚焦AI與科技趨勢主動選股，今年以來漲幅一度超過40%，表現搶眼",
     holdings: [
-      {code:"2330",name:"台積電",weight:18.5},
-      {code:"2454",name:"聯發科",weight:9.2},
-      {code:"3661",name:"世芯-KY",weight:7.8},
-      {code:"6669",name:"緯穎",weight:7.1},
-      {code:"2382",name:"廣達",weight:6.4},
-      {code:"3711",name:"日月光投控",weight:5.6},
-      {code:"2308",name:"台達電",weight:5.2},
-      {code:"3034",name:"聯詠",weight:4.8},
-      {code:"2379",name:"瑞昱",weight:4.3},
-      {code:"3017",name:"奇鋐",weight:3.9}
+      {code:"2330",name:"台積電",weight:7.55},
+      {code:"3037",name:"欣興",weight:5.85},
+      {code:"2383",name:"台光電",weight:5.30},
+      {code:"2345",name:"智邦",weight:4.94},
+      {code:"6223",name:"旺矽",weight:4.04},
+      {code:"8996",name:"高力",weight:3.79},
+      {code:"6669",name:"緯穎",weight:3.79},
+      {code:"3105",name:"穩懋",weight:3.59},
+      {code:"3443",name:"創意",weight:3.42},
+      {code:"2059",name:"川湖",weight:3.28}
     ]
   },
   {
@@ -748,7 +749,7 @@ const ETFS = [
   }
 ];
 
-let expandedETF = null;
+let expandedETFs = new Set();
 
 function renderETFs() {
   const grid = document.getElementById("etf-grid");
@@ -781,9 +782,9 @@ function renderETFs() {
 
     const dataWarnHtml = etf._holdingsLive
       ? '<span style="font-size:9px;color:var(--teal);margin-bottom:6px;display:inline-block">● 即時資料（TWSE 每日更新）</span>'
-      : '<span class="etf-data-warn">⚠️ 靜態資料（手動輸入，非最新持股）各成分股比重僅供參考</span>';
+      : `<span class="etf-data-warn">⚠️ ${etf.holdingsDate ? `資料日期：${etf.holdingsDate}・來源：${etf.holdingsSource||'手動輸入'}` : '靜態資料（手動輸入，非最新持股）'}・成分股比重僅供參考</span>`;
 
-    const isExpanded = expandedETF === etf.code;
+    const isExpanded = expandedETFs.has(etf.code);
     return `<div class="etf-card ${isExpanded?'expanded':''}" onclick="toggleETF('${etf.code}')">
       <div class="etf-head">
         <div>
@@ -806,11 +807,11 @@ function renderETFs() {
     </div>`;
   }).join("");
   // 初始化圓餅圖（展開中的那張）
-  if(expandedETF) setTimeout(() => initETFPieChart(expandedETF), 60);
+  expandedETFs.forEach(code => setTimeout(() => initETFPieChart(code), 60));
 }
 
 function toggleETF(code) {
-  expandedETF = expandedETF === code ? null : code;
+  if(expandedETFs.has(code)) expandedETFs.delete(code); else expandedETFs.add(code);
   renderETFs();
 }
 
