@@ -1613,11 +1613,20 @@ function render(){
       const p30txt = o.p30!=null ? `<span style="color:var(--text2);font-size:11px">30日 ${o.p30>=0?"+":""}${o.p30}%</span>` : "";
       const gaptxt = o.gap!=null ? `<span class="badge b-opp" style="margin-left:6px">落差${o.gap}%</span>` : "";
       const isOppActive = expandedOpp === o.code;
+      // 獲利能力標示
+      const profitBadge = o.profit_ok === true
+        ? `<span style="font-size:10px;color:#4ade80;margin-left:6px">✅ 獲利</span>`
+        : o.profit_ok === false
+          ? `<span style="font-size:10px;color:#f87171;margin-left:6px">⚠️ 虧損</span>`
+          : `<span style="font-size:10px;color:var(--text3);margin-left:6px">獲利未知</span>`;
+      const epsTxt = (o.eps != null)
+        ? `<span style="font-size:10px;color:var(--text3)">EPS ${o.eps >= 0 ? "+" : ""}${o.eps}</span>`
+        : "";
       return `<div class="opp-card${isOppActive ? ' opp-active' : ''}" data-code="${o.code}" onclick="toggleOppDetail('${o.code}')">
         <div class="oc-code">${o.code} <span class="badge b-theme">${o.theme}</span>${gaptxt}</div>
-        <div class="oc-name">${o.name}</div>
+        <div class="oc-name">${o.name}${profitBadge}</div>
         ${ps}
-        ${p30txt}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">${p30txt}${epsTxt}</div>
         <div class="oc-reason" style="margin-top:6px">${o.reason}</div>
         <div class="oc-tag"><span class="badge b-opp">尚未啟動</span> <span style="color:var(--text3);font-size:11px;margin-left:6px">${isOppActive ? '▲ 收起' : '▼ 展開詳情'}</span></div>
       </div>`;

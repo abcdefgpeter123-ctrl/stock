@@ -232,24 +232,57 @@ def generate_stories(company_info, histories_json, all_prices, api_key, max_new=
     return company_info
 
 
+_yf_session = None
+_yf_crumb   = None
+
+def _get_yf_crumb():
+    """取得 Yahoo Finance crumb（新版 API 需要 cookie + crumb）"""
+    global _yf_session, _yf_crumb
+    if _yf_crumb:
+        return _yf_session, _yf_crumb
+    try:
+        s = requests.Session()
+        s.headers.update(HEADERS)
+        s.get("https://finance.yahoo.com/", timeout=10)
+        r = s.get("https://query1.finance.yahoo.com/v1/test/getcrumb", timeout=10)
+        if r.ok and r.text.strip() and len(r.text.strip()) < 50:
+            _yf_session = s
+            _yf_crumb   = r.text.strip()
+            return _yf_session, _yf_crumb
+    except Exception:
+        pass
+    return None, None
+
+
 def fetch_trailing_pe(code):
-    """從 Yahoo Finance 抓本益比（trailingPE）"""
+    """從 Yahoo Finance 抓本益比（trailingPE）與 EPS（trailingEps）"""
+    session, crumb = _get_yf_crumb()
+    if not session:
+        session = requests.Session()
+        session.headers.update(HEADERS)
+    crumb_param = f"&crumb={crumb}" if crumb else ""
+
     for suffix in [".TW", ".TWO"]:
         try:
             url = (f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/"
-                   f"{code}{suffix}?modules=defaultKeyStatistics,summaryDetail")
-            r = requests.get(url, headers=HEADERS, timeout=12)
-            data = r.json()["quoteSummary"]["result"][0]
-            pe = (data.get("summaryDetail", {})
-                      .get("trailingPE", {})
-                      .get("raw"))
-            eps = (data.get("defaultKeyStatistics", {})
-                       .get("trailingEps", {})
-                       .get("raw"))
-            if pe or eps:
+                   f"{code}{suffix}?modules=defaultKeyStatistics,summaryDetail{crumb_param}")
+            r = session.get(url, timeout=12)
+            if not r.ok:
+                continue
+            result = r.json().get("quoteSummary", {}).get("result") or []
+            if not result:
+                continue
+            d = result[0]
+            pe = (d.get("summaryDetail", {})
+                   .get("trailingPE", {})
+                   .get("raw"))
+            eps = (d.get("defaultKeyStatistics", {})
+                    .get("trailingEps", {})
+                    .get("raw"))
+            if pe is not None or eps is not None:
                 return {
-                    "pe":  round(pe,  1) if pe  else None,
-                    "eps": round(eps, 2) if eps else None,
+                    "pe":  round(pe,  1) if pe  is not None else None,
+                    "eps": round(eps, 2) if eps is not None else None,
                 }
         except Exception:
             continue
@@ -349,17 +382,39 @@ def fetch_price_history(code):
     return None, None, None
 
 
-def compute_opportunities(all_prices, extra_codes=None):
+def compute_opportunities(all_prices, extra_codes=None, company_info=None):
     """
     比較各題材龍頭 vs 成員的真實 30 日漲幅，
     自動找出「龍頭已大漲、但成員還沒動」的機會點。
     extra_codes: 額外保證抓歷史的代號清單（如監控清單 FALLBACK_CODES）
-    回傳 list of dict，每筆包含 code/name/theme/p30/p5/leader/leader_p30/gap/reason。
+    company_info: {code: {eps, pe, ...}} 用於過濾虧損股
+    回傳 list of dict，每筆包含 code/name/theme/p30/p5/leader/leader_p30/gap/reason/eps/profit_ok。
     """
     LEADER_THRESHOLD = 12   # 龍頭 30 日漲幅需 >= 12% 才算題材熱絡
     GAP_THRESHOLD    = 8    # 成員落後龍頭 >= 8% 才算有機會
     MAX_MEMBER_P30   = 7    # 成員 30 日漲幅 <= 7% 才算「尚未啟動」
     MIN_MEMBER_P30   = -3   # 成員 30 日跌幅不能超過 -3%（跌太多代表有基本面問題）
+
+    # 合併 stock_info.json（靜態）與 company_info（動態）取得 eps/pe
+    si_static = {}
+    try:
+        with open("stock_info.json", "r", encoding="utf-8") as f:
+            si_static = json.load(f)
+    except Exception:
+        pass
+    ci = company_info or {}
+
+    def get_eps(code):
+        """回傳最新 EPS（優先 company_info 動態值，再用 stock_info.json 靜態值）"""
+        return (ci.get(code, {}).get("eps")
+                or si_static.get(code, {}).get("eps")
+                if isinstance(si_static.get(code), dict) else None)
+
+    def get_pe(code):
+        """回傳最新 PE（同上）"""
+        return (ci.get(code, {}).get("pe")
+                or (si_static.get(code, {}).get("pe")
+                    if isinstance(si_static.get(code), dict) else None))
 
     # 收集所有需要歷史資料的代號（THEME_GROUPS + 額外監控股票）
     all_codes = set()
@@ -436,6 +491,21 @@ def compute_opportunities(all_prices, extra_codes=None):
 
             name = all_prices.get(code, {}).get("name", code)
 
+            # ── 獲利能力檢查（EPS / PE < 0 代表虧損）──────────────────
+            eps_val = get_eps(code)
+            pe_val  = get_pe(code)
+            if eps_val is not None and eps_val < 0:
+                continue   # 確認虧損，排除機會點
+            if pe_val is not None and pe_val < 0:
+                continue   # 負本益比 = 虧損，排除
+            # profit_ok: True=確認獲利, False=確認虧損, None=資料不足
+            if eps_val is not None:
+                profit_ok = eps_val > 0
+            elif pe_val is not None:
+                profit_ok = pe_val > 0
+            else:
+                profit_ok = None   # 未知，仍納入但前端標示
+
             # 動態產生原因說明
             direction = "漲" if m_p30 >= 0 else "跌"
             reason = (
@@ -454,6 +524,8 @@ def compute_opportunities(all_prices, extra_codes=None):
                 "leader_p30": leader_p30,
                 "gap":        gap,
                 "reason":     reason,
+                "eps":        eps_val,
+                "profit_ok":  profit_ok,
             })
 
     # 按落差由大到小排序
@@ -1164,19 +1236,6 @@ def main():
             "closes": twii_closes,
         }
         print(f"   ✅ 大盤歷史: {len(twii_closes)} 筆 ({twii_dates[0]} ~ {twii_dates[-1]})")
-        # 生成大盤摘要（需 API key）
-        today_summary_key = datetime.date.today().strftime("%Y/%m/%d")
-        old_summary = data.get("market_summary", "")
-        old_date    = data.get("market_summary_date", "")
-        if api_key and old_date != today_summary_key:
-            print("   📝 生成大盤走勢摘要...")
-            summary = _generate_twii_summary(twii_closes, twii_dates, twii['price'] if twii else twii_closes[-1], api_key)
-            if summary:
-                data["market_summary"]      = summary
-                data["market_summary_date"] = today_summary_key
-                print(f"   ✅ 大盤摘要: {summary[:40]}...")
-        elif not api_key:
-            print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過大盤摘要")
 
     # 2. 三大法人
     inst = fetch_institutional()
@@ -1220,7 +1279,8 @@ def main():
     # 5. 機會點自動偵測（同時收集30日歷史供圖表用）
     print("🔍 機會點偵測中...")
     # 傳入 FALLBACK_CODES 確保所有 29 支監控股票都能拿到歷史走勢
-    opps, histories = compute_opportunities(all_prices, extra_codes=FALLBACK_CODES)
+    # 傳入 company_info 供獲利能力過濾（EPS/PE）
+    opps, histories = compute_opportunities(all_prices, extra_codes=FALLBACK_CODES, company_info=company_info)
     data["opportunities"] = opps
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
