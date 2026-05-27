@@ -201,6 +201,33 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
 .tp-risk-item:before{content:"⚠";position:absolute;left:0;font-size:10px;color:#fbbf24;top:1px}
 @media(max-width:600px){.tp-stats-grid{grid-template-columns:repeat(3,1fr)}.tp-stat-cell:nth-child(5n){border-right:1px solid rgba(255,255,255,0.04)}.tp-stat-cell:nth-child(3n){border-right:none}.tp-price{font-size:20px}}
+/* ── TWII 大盤線圖 ─────────────────────────────────────── */
+.twii-chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;display:none}
+.twii-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.twii-chart-title{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.twii-chart-info{font-size:11px;color:var(--text3);font-family:var(--mono)}
+/* ── 均線切換 ───────────────────────────────────────────── */
+.ma-toggles{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap;padding:0 14px 6px}
+.ma-toggles-lbl{font-size:10px;color:var(--text3);margin-right:3px;font-family:var(--mono);letter-spacing:.04em}
+.ma-btn{background:none;border:1px solid rgba(255,255,255,0.1);border-radius:3px;padding:2px 9px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--mono);transition:all .15s}
+.ma-btn:hover{border-color:rgba(255,255,255,0.25);color:var(--text2)}
+.ma-5{}.ma-5.active{background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.5);color:#f97316}
+.ma-10.active{background:rgba(250,204,21,0.15);border-color:rgba(250,204,21,0.5);color:#facc15}
+.ma-20.active{background:rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.5);color:#38bdf8}
+.ma-30.active{background:rgba(192,132,252,0.15);border-color:rgba(192,132,252,0.5);color:#c084fc}
+.ma-60.active{background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.5);color:#4ade80}
+/* ── 主題展開 ────────────────────────────────────────────── */
+.theme-card2{cursor:pointer}
+.tc2-stocks{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.theme-card2.tc2-open .tc2-stocks{display:block}
+.tc2-stock-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
+.tc2-stock-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,0.03)}
+/* ── ETF 圓餅圖 ─────────────────────────────────────────── */
+.etf-pie-wrap{padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:8px;position:relative}
+.etf-data-warn{font-size:9px;color:#f59e0b;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:4px;padding:3px 8px;margin-bottom:8px;display:inline-flex;align-items:center;gap:4px}
+/* ── 漲停 / 跌停 格 ─────────────────────────────────────── */
+.limit-up-bg{background:rgba(239,68,68,0.2);border-radius:4px;padding:1px 6px;display:inline-block;font-weight:600}
+.limit-dn-bg{background:rgba(34,197,94,0.18);border-radius:4px;padding:1px 6px;display:inline-block;font-weight:600}
 </style>
 </head>
 <body>
@@ -229,6 +256,24 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div class="metric"><div class="lbl">資料來源</div><div class="val" id="m-source" style="font-size:14px">data.json</div><div class="chg neu">每日更新</div></div>
   </div>
 
+
+  <!-- 大盤走勢線圖 -->
+  <div class="twii-chart-wrap" id="twii-chart-wrap">
+    <div class="twii-chart-head">
+      <span class="twii-chart-title">📈 加權指數走勢</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="twii-chart-info" id="twii-chart-dr">—</span>
+        <div class="tp-periods">
+          <button class="tp-period" onclick="renderTwiiChart('近月',this)">近月</button>
+          <button class="tp-period active" onclick="renderTwiiChart('三月',this)">三月</button>
+          <button class="tp-period" onclick="renderTwiiChart('六月',this)">六月</button>
+          <button class="tp-period" onclick="renderTwiiChart('一年',this)">一年</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="twii-price-canvas" height="130" style="width:100%!important;display:block"></canvas>
+    <canvas id="twii-vol-canvas"   height="38"  style="width:100%!important;display:block;border-top:1px solid rgba(255,255,255,0.04)"></canvas>
+  </div>
 
   <!-- 大盤走勢一句話 -->
   <div id="market-summary-bar" style="display:none;margin:0 0 8px;padding:10px 16px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.14);border-radius:8px;font-size:13px;line-height:1.65;color:var(--text2)">
@@ -426,13 +471,29 @@ function renderMarketSummary() {
     const arrow  = t.avg > 8 ? "↑" : t.avg > 2 ? "↗" : t.avg < -2 ? "↘" : "→";
     const hotCls = t.avg > 5 ? "hot" : t.avg < -2 ? "cold" : "";
     const leaderTxt = t.leader
-      ? `最強：${t.leader.name} <span class="${cls}" style="font-size:11px">+${t.leader.p30}%</span>`
+      ? `最強：${t.leader.name} <span class="${cls}" style="font-size:11px">${t.leader.p30>=0?'+':''}${t.leader.p30}%</span>`
       : "";
-    return `<div class="theme-card2 ${hotCls}">
-      <div class="tc2-name">${t.name}</div>
+    // 展開的個股清單
+    const themeStocks = STOCKS.filter(s => s.theme === t.name && !s._extra)
+      .sort((a,b) => (b.p30??-999)-(a.p30??-999));
+    const stockRows = themeStocks.map(s => {
+      const pd = priceCache[s.code];
+      const p30txt = s.p30 != null ? `<span class="${s.p30>=0?'up':'dn'}" style="font-size:10px">${s.p30>=0?'+':''}${s.p30}%</span>` : `<span class="neu" style="font-size:10px">—</span>`;
+      const priceStr = pd ? `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${pd.price.toFixed(1)}</span>` : '';
+      return `<div class="tc2-stock-row">
+        <span style="color:var(--text3);font-family:var(--mono);font-size:10px;width:36px">${s.code}</span>
+        <span style="flex:1;color:var(--text2)">${s.name}</span>
+        ${priceStr}
+        <span style="width:52px;text-align:right">${p30txt}</span>
+      </div>`;
+    }).join("");
+    const isOpen = expandedTheme === t.name;
+    return `<div class="theme-card2 ${hotCls}${isOpen?' tc2-open':''}" onclick="toggleTheme('${t.name}')">
+      <div class="tc2-name">${t.name} <span style="float:right;font-size:9px;color:var(--text3)">${isOpen?'▲':'▼'}</span></div>
       <div class="tc2-pct ${cls}">${arrow} ${avgStr}</div>
       <div class="tc2-sub">近30日均 · ${t.hot}/${t.count} 支上漲</div>
       ${leaderTxt ? `<div class="tc2-leader">${leaderTxt}</div>` : ""}
+      <div class="tc2-stocks">${stockRows}</div>
     </div>`;
   }).join("");
 
@@ -718,7 +779,12 @@ function renderETFs() {
       + (etf.watchlist ? '<span class="etf-watchlist">📌 持股來源</span>' : '')
       + '</div>';
 
-    return `<div class="etf-card ${expandedETF===etf.code?'expanded':''}" onclick="toggleETF('${etf.code}')">
+    const dataWarnHtml = etf._holdingsLive
+      ? '<span style="font-size:9px;color:var(--teal);margin-bottom:6px;display:inline-block">● 即時資料（TWSE 每日更新）</span>'
+      : '<span class="etf-data-warn">⚠️ 靜態資料（手動輸入，非最新持股）各成分股比重僅供參考</span>';
+
+    const isExpanded = expandedETF === etf.code;
+    return `<div class="etf-card ${isExpanded?'expanded':''}" onclick="toggleETF('${etf.code}')">
       <div class="etf-head">
         <div>
           <div class="etf-code">${etf.code}</div>
@@ -728,17 +794,19 @@ function renderETFs() {
       </div>
       ${tagsHtml}
       <div class="etf-desc">${etf.desc}</div>
-      <div class="etf-expand-hint">${expandedETF===etf.code?'▲ 收合':'▼ 查看成份股'}</div>
+      <div class="etf-expand-hint">${isExpanded?'▲ 收合':'▼ 查看成份股'}</div>
       <div class="etf-holdings">
-        <div class="etf-holdings-title">前10大成份股
-          <span style="font-size:9px;margin-left:6px;color:${etf._holdingsLive?'var(--teal)':'var(--text3)'}">
-            ${etf._holdingsLive ? '● 即時' : '● 估算'}
-          </span>
+        ${dataWarnHtml}
+        <div class="etf-pie-wrap">
+          <canvas id="etf-pie-${etf.code}" height="160" style="display:block;max-width:100%"></canvas>
         </div>
+        <div class="etf-holdings-title">前10大成份股</div>
         ${holdingsHtml}
       </div>
     </div>`;
   }).join("");
+  // 初始化圓餅圖（展開中的那張）
+  if(expandedETF) setTimeout(() => initETFPieChart(expandedETF), 60);
 }
 
 function toggleETF(code) {
@@ -904,10 +972,16 @@ function renderDetail(code) {
   const core  = si.core_product || ci.core_products || "";
   const story = si.recent_story || ci.recent_story  || "";
   const risks = si.risks || [];
-  const pe    = si.pe ?? ci.pe ?? null;
+  const pe    = si.pe ?? ci.pe_ratio ?? ci.pe ?? null;
+  const eps   = si.eps ?? ci.eps ?? null;
   const peAvg = si.pe_avg ?? null;
   const peGap = (pe != null && peAvg != null) ? pe - peAvg : null;
-  const hasFundamentals = !!(core || story || risks.length || pe != null);
+  // 主動型ETF 持倉
+  const activeETFWeights = ETFS.filter(e => e.type === "國內主動式").map(etf => {
+    const h = etf.holdings.find(h => h.code === code);
+    return h ? { etfCode: etf.code, etfName: etf.name, weight: h.weight, live: etf._holdingsLive } : null;
+  }).filter(Boolean);
+  const hasFundamentals = !!(core || story || risks.length || pe != null || eps != null || activeETFWeights.length);
 
   return `<div class="tp-wrap">
     <!-- 頂部：代號 + 股價 -->
@@ -934,6 +1008,16 @@ function renderDetail(code) {
         </div>
         <span id="tp-dr-${code}" style="font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;padding-right:4px">—</span>
       </div>
+      <!-- 均線切換 -->
+      <div class="ma-toggles" id="ma-tog-${code}">
+        <span class="ma-toggles-lbl">MA</span>
+        <button class="ma-btn ma-5"  onclick="event.stopPropagation();toggleMALine('${code}','5',this)">5</button>
+        <button class="ma-btn ma-10" onclick="event.stopPropagation();toggleMALine('${code}','10',this)">10</button>
+        <button class="ma-btn ma-20" onclick="event.stopPropagation();toggleMALine('${code}','20',this)">20</button>
+        <button class="ma-btn ma-30" onclick="event.stopPropagation();toggleMALine('${code}','30',this)">30</button>
+        <button class="ma-btn ma-60" onclick="event.stopPropagation();toggleMALine('${code}','60',this)">60</button>
+        <span style="font-size:10px;color:var(--text3);margin-left:4px">日線</span>
+      </div>
     </div>
 
     <!-- 圖表區 -->
@@ -958,11 +1042,28 @@ function renderDetail(code) {
     ${hasFundamentals ? `<div class="tp-fundamentals">
       ${core  ? `<div class="tp-fund-block"><span class="tp-fund-lbl">核心產品</span><span class="tp-fund-text">${core}</span></div>` : ""}
       ${story ? `<div class="tp-fund-block"><span class="tp-fund-lbl">近期故事</span><span class="tp-fund-text">${story}</span></div>` : ""}
-      ${pe != null ? `<div class="tp-fund-block inline">
-        <span class="tp-fund-lbl">本益比</span>
-        <span class="tp-fund-val ${pe > (peAvg || 20) ? 'up' : 'dn'}">${pe.toFixed(1)}x</span>
-        ${peAvg ? `<span class="tp-fund-avg">同業均 ${peAvg.toFixed(1)}x</span>` : ""}
-        ${peGap != null ? `<span style="font-size:11px;margin-left:10px;color:${peGap>0?'var(--up)':'var(--dn)'}">${peGap>0?'⬆ 偏貴':'⬇ 偏便宜'} ${Math.abs(peGap).toFixed(1)} 倍</span>` : ""}
+      ${(pe != null || eps != null) ? `<div class="tp-fund-block inline" style="flex-wrap:wrap;gap:14px">
+        ${pe != null ? `<span><span class="tp-fund-lbl" style="min-width:auto;margin-right:4px">P/E</span>
+          <span class="tp-fund-val ${pe > (peAvg || 20) ? 'up' : 'dn'}">${pe.toFixed(1)}x</span>
+          ${peAvg ? `<span class="tp-fund-avg">均 ${peAvg.toFixed(1)}x</span>` : ""}
+          ${peGap != null ? `<span style="font-size:11px;margin-left:6px;color:${peGap>0?'var(--up)':'var(--dn)'}">${peGap>0?'偏貴':'偏便宜'}</span>` : ""}
+        </span>` : ""}
+        ${eps != null ? `<span><span class="tp-fund-lbl" style="min-width:auto;margin-right:4px">EPS</span>
+          <span class="tp-fund-val" style="font-size:14px">${eps.toFixed(2)}</span>
+          <span class="tp-fund-avg">元</span>
+        </span>` : ""}
+      </div>` : ""}
+      ${activeETFWeights.length ? `<div class="tp-fund-block">
+        <span class="tp-fund-lbl">主動ETF</span>
+        <div style="flex:1">
+          ${activeETFWeights.map(e => `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11px">
+            <span style="font-family:var(--mono);color:#60a5fa;font-size:10px">${e.etfCode}</span>
+            <span style="color:var(--text2)">${e.etfName}</span>
+            <span style="font-family:var(--mono);color:var(--teal);margin-left:auto">${e.weight.toFixed(1)}%</span>
+            ${!e.live ? '<span style="font-size:9px;color:#f59e0b">⚠️靜態</span>' : ''}
+          </div>`).join("")}
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">⚠️ 增減趨勢需歷史持倉資料，待後續實作</div>
+        </div>
       </div>` : ""}
       ${risks.length ? `<div class="tp-fund-block"><span class="tp-fund-lbl">風險</span><div style="flex:1">${risks.map(r=>`<div class="tp-risk-item">${r}</div>`).join("")}</div></div>` : ""}
     </div>` : ""}
@@ -1039,6 +1140,41 @@ function initTpCharts() {
     const color = isUp ? '#ef4444' : '#22c55e';
     const bgColor = isUp ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.07)';
 
+    // 均線 datasets（只在非當日模式下計算）
+    const h = histories[code];
+    const maDatasets = [];
+    const MA_COLORS = { '5':'#f97316','10':'#facc15','20':'#38bdf8','30':'#c084fc','60':'#4ade80' };
+    const period = _tpPeriods[code] || '近月';
+    if (period !== '當日' && h?.closes?.length) {
+      const fullCloses = h.closes;
+      const displayN = closes.length;
+      const activeMA = _maActive[code] || new Set();
+      for (const [maLen, maColor] of Object.entries(MA_COLORS)) {
+        if (!activeMA.has(maLen)) continue;
+        const maPeriod = Number(maLen);
+        const ma = computeMA(fullCloses, maPeriod);
+        const maSlice = ma.slice(fullCloses.length - displayN);
+        maDatasets.push({
+          label: `MA${maLen}`,
+          data: maSlice,
+          borderColor: maColor,
+          borderWidth: 1.2,
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          backgroundColor: 'transparent',
+        });
+      }
+      // 同步 MA 按鈕 active 狀態（re-render 後按鈕重建，需恢復外觀）
+      const togEl = document.getElementById('ma-tog-' + code);
+      if (togEl) {
+        togEl.querySelectorAll('.ma-btn').forEach(btn => {
+          const ma = btn.classList[1]?.replace('ma-','');
+          if (ma && activeMA.has(ma)) btn.classList.add('active');
+        });
+      }
+    }
+
     canvas.width  = canvas.parentElement.offsetWidth || 600;
     canvas.height = 165;
 
@@ -1051,7 +1187,7 @@ function initTpCharts() {
           borderColor: color, borderWidth: 1.5,
           pointRadius: 0, pointHoverRadius: 3,
           fill: true, backgroundColor: bgColor, tension: 0
-        }]
+        }, ...maDatasets]
       },
       options: {
         responsive: false, animation: false,
@@ -1146,8 +1282,137 @@ function toggleSection(id, btn) {
 let priceCache = {};
 let nameCache = {};   // code → 中文名稱（來自 data.json prices.name）
 let twiiData = {};
+let twiiHistoryData = null;  // { labels, closes } from data.json
 let etfSourceMap = {};  // code → 持有該股的國內主動式ETF代號陣列
 let activeTheme = "all", sortCol = "name", asc = true, sigFilter = "all", q = "";
+let expandedTheme = null;
+let _maActive = {};  // code → Set of active MA periods ('5','10','20','30','60')
+let _twiiChart = null, _twiiVolChart = null, _twiiPeriod = '三月';
+
+// ── 均線計算 ──────────────────────────────────────────────
+function computeMA(allCloses, period) {
+  const result = new Array(allCloses.length).fill(null);
+  for (let i = period - 1; i < allCloses.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += allCloses[j];
+    result[i] = +(sum / period).toFixed(2);
+  }
+  return result;
+}
+
+// ── 均線切換 ──────────────────────────────────────────────
+function toggleMALine(code, ma, btn) {
+  if (!_maActive[code]) _maActive[code] = new Set();
+  if (_maActive[code].has(ma)) {
+    _maActive[code].delete(ma);
+    btn.classList.remove('active');
+  } else {
+    _maActive[code].add(ma);
+    btn.classList.add('active');
+  }
+  setTimeout(initTpCharts, 50);
+}
+
+// ── 題材展開切換 ──────────────────────────────────────────
+function toggleTheme(name) {
+  expandedTheme = (expandedTheme === name) ? null : name;
+  renderMarketSummary();
+}
+
+// ── 大盤走勢線圖 ──────────────────────────────────────────
+const _twiiMA_COLORS = { '5':'#f97316','10':'#facc15','20':'#38bdf8','30':'#c084fc','60':'#4ade80' };
+
+function renderTwiiChart(period, btn) {
+  _twiiPeriod = period;
+  // 更新 active 按鈕
+  document.querySelectorAll('#twii-chart-wrap .tp-period').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (!twiiHistoryData || !twiiHistoryData.closes) return;
+  const allCloses = twiiHistoryData.closes;
+  const allLabels = twiiHistoryData.labels;
+  const n = period === '近月' ? 22 : period === '三月' ? 63 : period === '六月' ? 126 : 252;
+  const closes = allCloses.slice(-n);
+  const labels  = allLabels.slice(-n);
+  if (!closes.length) return;
+  const drEl = document.getElementById('twii-chart-dr');
+  if (drEl && labels.length >= 2) drEl.textContent = labels[0] + ' ~ ' + labels[labels.length-1];
+  const isUp = closes[closes.length-1] >= closes[0];
+  const color   = isUp ? '#ef4444' : '#22c55e';
+  const bgColor = isUp ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.07)';
+  const pCanvas = document.getElementById('twii-price-canvas');
+  const vCanvas = document.getElementById('twii-vol-canvas');
+  if (!pCanvas) return;
+  pCanvas.width = pCanvas.parentElement.offsetWidth || 900;
+  if (_twiiChart) _twiiChart.destroy();
+  _twiiChart = new Chart(pCanvas.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [{ data: closes, borderColor: color, borderWidth: 1.5,
+      pointRadius: 0, fill: true, backgroundColor: bgColor, tension: 0 }] },
+    options: {
+      responsive: false, animation: false,
+      layout: { padding: { right: 60, left: 4 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { displayColors: false, backgroundColor: 'rgba(10,20,35,0.95)',
+          borderColor: 'rgba(96,165,250,0.25)', borderWidth: 1,
+          titleColor: '#4a6a8a', bodyColor: '#e8edf5',
+          callbacks: { label: c => `${c.parsed.y.toLocaleString()}` } }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 7, font:{size:10}, color:'#a8bacf', maxRotation:0 },
+             grid: { display: false }, border: { display: false } },
+        y: { position: 'right', ticks: { font:{size:10}, color:'#a8bacf', maxTicksLimit:5,
+               callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0) },
+             grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false },
+             border: { display: false } }
+      }
+    }
+  });
+  // 成交量模擬（TWII 本身無成交量，用走勢振幅模擬）
+  if (vCanvas) {
+    vCanvas.width = vCanvas.parentElement.offsetWidth || 900;
+    if (_twiiVolChart) _twiiVolChart.destroy();
+    const vols = closes.map((c, i) => i === 0 ? 500 :
+      Math.round(Math.abs(c - closes[i-1]) / (closes[0]||1) * 5000 + 100));
+    const barColors = closes.map((c,i) => i===0 ? 'rgba(96,165,250,0.3)' :
+      c >= closes[i-1] ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)');
+    _twiiVolChart = new Chart(vCanvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels, datasets: [{ data: vols, backgroundColor: barColors, borderWidth: 0, borderRadius: 1 }] },
+      options: { responsive: false, animation: false,
+        plugins: { legend:{display:false}, tooltip:{displayColors:false, callbacks:{label:c=>`振幅指標`}} },
+        scales: { x:{display:false}, y:{display:false} } }
+    });
+  }
+}
+
+// ── ETF 圓餅圖 ────────────────────────────────────────────
+const _etfPieCharts = {};
+const PIE_COLORS = ['#60a5fa','#f97316','#4ade80','#a78bfa','#facc15','#f87171','#2dd4bf','#fb923c','#818cf8','#34d399'];
+
+function initETFPieChart(code) {
+  const etf = ETFS.find(e => e.code === code);
+  if (!etf || !etf.holdings.length) return;
+  const canvas = document.getElementById('etf-pie-' + code);
+  if (!canvas) return;
+  if (_etfPieCharts[code]) _etfPieCharts[code].destroy();
+  canvas.width  = canvas.parentElement.offsetWidth || 300;
+  const labels  = etf.holdings.map(h => h.name);
+  const data    = etf.holdings.map(h => h.weight);
+  _etfPieCharts[code] = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: PIE_COLORS.slice(0, data.length),
+      borderWidth: 1, borderColor: '#111827' }] },
+    options: {
+      responsive: false, animation: false, cutout: '58%',
+      plugins: {
+        legend: { position: 'right', labels: { color: '#a8bacf', font: {size:10},
+          boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed.toFixed(1)}%` } }
+      }
+    }
+  });
+}
 
 function pct(v){
   if(v==null||isNaN(v)) return `<span class="neu">—</span>`;
@@ -1159,7 +1424,11 @@ function fmtPrice(code){
   const d = priceCache[code];
   if(!d || !d.price) return `<span class="neu" style="font-size:11px">—</span>`;
   const c = d.change>=0?"up":"dn", sign = d.change>=0?"+":"";
-  return `<span class="${c}" style="font-family:var(--mono);font-weight:500">${d.price.toFixed(1)}</span><span class="${c}" style="font-size:11px;margin-left:5px">${sign}${d.changeP.toFixed(1)}%</span>`;
+  const isLimitUp = d.changeP >= 9.9;
+  const isLimitDn = d.changeP <= -9.9;
+  const wrapCls   = isLimitUp ? 'limit-up-bg' : isLimitDn ? 'limit-dn-bg' : '';
+  const inner = `<span class="${c}" style="font-family:var(--mono);font-weight:500">${d.price.toFixed(1)}</span><span class="${c}" style="font-size:11px;margin-left:5px">${sign}${d.changeP.toFixed(1)}%</span>`;
+  return wrapCls ? `<span class="${wrapCls}">${inner}</span>` : inner;
 }
 
 // 從 histories 動態補算 p5/p30（對靜態 null 值）
@@ -1422,6 +1691,12 @@ async function loadData(){
         if(!etfSourceMap[h.code].includes(etf.code)) etfSourceMap[h.code].push(etf.code);
       });
     });
+    // 大盤走勢線圖
+    if(data.twii_history){
+      twiiHistoryData = data.twii_history;
+      document.getElementById('twii-chart-wrap').style.display = 'block';
+      setTimeout(() => renderTwiiChart(_twiiPeriod), 80);
+    }
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
