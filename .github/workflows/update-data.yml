@@ -16,18 +16,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: Install dependencies
-        run: pip install requests yfinance anthropic
+        run: pip3 install requests yfinance anthropic --break-system-packages --quiet
 
       - name: Fetch stock data
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python fetch_data_full.py
+        run: python3 fetch_data_full.py
 
       - name: Commit and push if changed
         run: |
