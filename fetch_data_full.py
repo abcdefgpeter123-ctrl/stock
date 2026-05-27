@@ -341,10 +341,11 @@ def fetch_price_history(code):
     return None, None
 
 
-def compute_opportunities(all_prices):
+def compute_opportunities(all_prices, extra_codes=None):
     """
     比較各題材龍頭 vs 成員的真實 30 日漲幅，
     自動找出「龍頭已大漲、但成員還沒動」的機會點。
+    extra_codes: 額外保證抓歷史的代號清單（如監控清單 FALLBACK_CODES）
     回傳 list of dict，每筆包含 code/name/theme/p30/p5/leader/leader_p30/gap/reason。
     """
     LEADER_THRESHOLD = 12   # 龍頭 30 日漲幅需 >= 12% 才算題材熱絡
@@ -352,11 +353,13 @@ def compute_opportunities(all_prices):
     MAX_MEMBER_P30   = 7    # 成員 30 日漲幅 <= 7% 才算「尚未啟動」
     MIN_MEMBER_P30   = -3   # 成員 30 日跌幅不能超過 -3%（跌太多代表有基本面問題）
 
-    # 收集所有需要歷史資料的代號
+    # 收集所有需要歷史資料的代號（THEME_GROUPS + 額外監控股票）
     all_codes = set()
     for g in THEME_GROUPS.values():
         all_codes.update(g["leaders"])
         all_codes.update(g["members"])
+    if extra_codes:
+        all_codes.update(extra_codes)   # 保證監控清單全部有歷史
 
     # 批次抓取歷史收盤價
     histories      = {}        # code → closes list（用於 pct 計算）
@@ -810,81 +813,113 @@ ETF_TRACK_CODES = [
     "00992A", "00981A", "00988A", "00990A",
 ]
 
+def _parse_etf_basket_items(raw_items):
+    """解析 ETF 申購買回清單 list，回傳 {etf_code: [{code,name,weight}]} dict"""
+    result = {}
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        etf_code = (
+            item.get("基金代號") or item.get("ETFid") or item.get("fund_id") or ""
+        ).strip()
+        if etf_code not in ETF_TRACK_CODES:
+            continue
+        comp_code = (
+            item.get("成分股代號") or item.get("ComponentStockCode") or ""
+        ).strip()
+        comp_name = (
+            item.get("成分股名稱") or item.get("ComponentStockName") or ""
+        ).strip()
+        w_raw = (
+            item.get("比重(%)") or item.get("Ratio") or item.get("比重") or "0"
+        )
+        try:
+            w = float(str(w_raw).replace(",", "").strip())
+        except ValueError:
+            w = 0.0
+        if not comp_code:
+            continue
+        result.setdefault(etf_code, []).append(
+            {"code": comp_code, "name": comp_name, "weight": w}
+        )
+    return result
+
+
 def fetch_etf_holdings():
     """
     從 TWSE OpenAPI 抓取 ETF 申購/買回清單（日常籃子 = 成分股 + 比重）。
-    台灣所有掛牌 ETF（含主動型）均需每日公告，設計開放給境外存取。
+    依序嘗試多個端點，GitHub Actions 境外伺服器 openapi 有時回傳空，rwd 端點通常可用。
     回傳: { "0050": [{code, name, weight}, ...前10大...], ... }
     """
     result = {}
+    headers_rwd = {**HEADERS, "Referer": "https://www.twse.com.tw/"}
 
-    # ① TWSE OpenAPI — 每日申購買回清單（主要來源）
+    # ① TWSE OpenAPI（境外設計，但偶爾空回應）
     try:
         url = "https://openapi.twse.com.tw/v1/ETF/DAILYBASKETContent"
         r = requests.get(url, headers=HEADERS, timeout=25)
-        if r.ok:
-            raw = r.json()
-            for item in raw:
-                # 相容多種欄位名稱（API 版本不同可能有差異）
-                etf_code = (
-                    item.get("基金代號") or item.get("ETFid") or
-                    item.get("fund_id") or ""
-                ).strip()
-                if etf_code not in ETF_TRACK_CODES:
-                    continue
-                comp_code = (
-                    item.get("成分股代號") or item.get("ComponentStockCode") or ""
-                ).strip()
-                comp_name = (
-                    item.get("成分股名稱") or item.get("ComponentStockName") or ""
-                ).strip()
-                w_raw = (
-                    item.get("比重(%)") or item.get("Ratio") or
-                    item.get("比重") or "0"
-                )
-                try:
-                    w = float(str(w_raw).replace(",", "").strip())
-                except ValueError:
-                    w = 0.0
-                if not comp_code:
-                    continue
-                result.setdefault(etf_code, []).append(
-                    {"code": comp_code, "name": comp_name, "weight": w}
-                )
-            print(f"   TWSE OpenAPI ETF 持股: {len(result)} 檔有資料")
+        if r.ok and r.text.strip():
+            result = _parse_etf_basket_items(r.json())
+            if result:
+                print(f"   ✅ OpenAPI ETF 持股: {len(result)} 檔")
     except Exception as e:
-        print(f"   ⚠️ TWSE OpenAPI ETF 失敗: {e}")
+        print(f"   ⚠️ OpenAPI ETF: {e}")
 
-    # ② 備用：TWSE 舊版 TWT84U（僅 0050 等被動型）
+    # ② TWSE rwd 端點（上市 ETF，與 T86 同源，通常可用）
     if not result:
-        for code in ETF_TRACK_CODES[:10]:          # 舊端點只支援台灣指數型
+        for url in [
+            "https://www.twse.com.tw/rwd/zh/ETF/DAILYBASKETContent?response=json",
+            "https://www.twse.com.tw/ETF/DAILYBASKETContent?response=json",
+        ]:
             try:
-                url = (
-                    f"https://www.twse.com.tw/fund/TWT84U"
-                    f"?response=json&strDate=&fundNo={code}"
-                )
-                r = requests.get(url, headers=HEADERS, timeout=15)
-                if not r.ok:
+                r = requests.get(url, headers=headers_rwd, timeout=25)
+                if not r.ok or not r.text.strip():
                     continue
-                data = r.json()
-                rows = data.get("data") or []
-                holdings = []
-                for row in rows[:10]:
-                    if len(row) >= 4:
-                        holdings.append({
-                            "code": str(row[0]).strip(),
-                            "name": str(row[1]).strip(),
-                            "weight": safe_float(row[3]),
-                        })
-                if holdings:
-                    result[code] = holdings
-                time.sleep(0.3)
+                body = r.json()
+                rows = body if isinstance(body, list) else (body.get("data") or [])
+                result = _parse_etf_basket_items(rows)
+                if result:
+                    print(f"   ✅ rwd ETF 持股: {len(result)} 檔")
+                    break
             except Exception as e:
-                print(f"   ⚠️ TWT84U {code}: {e}")
+                print(f"   ⚠️ rwd ETF {url[-40:]}: {e}")
+
+    # ③ TWT84U 逐檔備援（被動型）— 試 rwd 和舊端點
+    if not result:
+        for code in ETF_TRACK_CODES[:10]:
+            for url in [
+                f"https://www.twse.com.tw/rwd/zh/fund/TWT84U?response=json&strDate=&fundNo={code}",
+                f"https://www.twse.com.tw/fund/TWT84U?response=json&strDate=&fundNo={code}",
+            ]:
+                try:
+                    r = requests.get(url, headers=headers_rwd, timeout=15)
+                    if not r.ok or not r.text.strip():
+                        continue
+                    body = r.json()
+                    rows = body.get("data") or []
+                    holdings = []
+                    for row in rows[:10]:
+                        if len(row) >= 4:
+                            holdings.append({
+                                "code": str(row[0]).strip(),
+                                "name": str(row[1]).strip(),
+                                "weight": safe_float(row[3]),
+                            })
+                    if holdings:
+                        result[code] = holdings
+                        break
+                except Exception as e:
+                    print(f"   ⚠️ TWT84U {code}: {e}")
+            time.sleep(0.3)
+        if result:
+            print(f"   ✅ TWT84U 備援 ETF 持股: {len(result)} 檔")
 
     # 按比重排序，保留前10
     for code in result:
         result[code] = sorted(result[code], key=lambda x: -x["weight"])[:10]
+
+    if not result:
+        print("   ⚠️ ETF 持股所有端點均失敗，將保留前次資料")
 
     return result
 
@@ -943,10 +978,10 @@ def fetch_inst_stocks(all_prices, target_days=5):
                         f_net = pg("ForeignInvestmentNetBuySell", "外陸資買賣超股數")
                         t_net = pg("InvestmentTrustNetBuySell",   "投信買賣超股數")
                         s_net = pg("DealerNetBuySell",            "自營商買賣超股數")
-                        price = all_prices.get(code, {}).get("price", 0) or 0
-                        acc[code]["f"] += f_net * price / 1e8
-                        acc[code]["t"] += t_net * price / 1e8
-                        acc[code]["s"] += s_net * price / 1e8
+                        # 直接以「萬股」儲存，不再乘以股價（避免 price=0 導致全歸零）
+                        acc[code]["f"] += f_net / 1e4
+                        acc[code]["t"] += t_net / 1e4
+                        acc[code]["s"] += s_net / 1e4
                     parsed = bool(rows)
 
                 else:
@@ -982,10 +1017,10 @@ def fetch_inst_stocks(all_prices, target_days=5):
                         if len(row) < 5:
                             continue
                         code  = str(row[i_code]).strip()
-                        price = all_prices.get(code, {}).get("price", 0) or 0
-                        acc[code]["f"] += pn(row, i_f_net) * price / 1e8
-                        acc[code]["t"] += pn(row, i_t_net) * price / 1e8
-                        acc[code]["s"] += (pn(row, i_s1) + pn(row, i_s2)) * price / 1e8
+                        # 直接以「萬股」儲存，不再乘以股價（避免 price=0 導致全歸零）
+                        acc[code]["f"] += pn(row, i_f_net) / 1e4
+                        acc[code]["t"] += pn(row, i_t_net) / 1e4
+                        acc[code]["s"] += (pn(row, i_s1) + pn(row, i_s2)) / 1e4
                     parsed = True
 
                 if parsed:
@@ -1070,7 +1105,8 @@ def main():
 
     # 5. 機會點自動偵測（同時收集30日歷史供圖表用）
     print("🔍 機會點偵測中...")
-    opps, histories = compute_opportunities(all_prices)
+    # 傳入 FALLBACK_CODES 確保所有 29 支監控股票都能拿到歷史走勢
+    opps, histories = compute_opportunities(all_prices, extra_codes=FALLBACK_CODES)
     data["opportunities"] = opps
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
@@ -1078,8 +1114,12 @@ def main():
     # 5b. ETF 持股比重（TWSE OpenAPI）
     print("📊 ETF 成分股持股抓取中...")
     etf_holdings = fetch_etf_holdings()
-    data["etf_holdings"] = etf_holdings
-    print(f"   ✅ {len(etf_holdings)} 檔 ETF 持股已更新")
+    if etf_holdings:
+        data["etf_holdings"] = etf_holdings
+        print(f"   ✅ {len(etf_holdings)} 檔 ETF 持股已更新")
+    else:
+        prev = len(data.get("etf_holdings") or {})
+        print(f"   ⚠️ 今日 ETF 持股抓取失敗，保留前次資料（{prev} 檔）")
 
     # 5c. 個股三大法人（T86，最近5個交易日累計）
     print("📊 個股三大法人資料（T86）...")
