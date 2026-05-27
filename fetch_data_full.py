@@ -462,6 +462,87 @@ def compute_opportunities(all_prices, extra_codes=None):
     return opportunities, histories_json
 
 
+# ── 加權指數歷史（用於大盤走勢摘要）────────────────────────
+
+def fetch_twii_history():
+    """
+    從 Yahoo Finance 抓大盤（^TWII）近1年日線。
+    回傳 (closes, dates)，失敗回傳 (None, None)。
+    """
+    try:
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?interval=1d&range=1y"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        result = r.json()["chart"]["result"][0]
+        timestamps = result.get("timestamp", [])
+        closes_raw = result["indicators"]["quote"][0].get("close", [])
+        pairs = [(t, c) for t, c in zip(timestamps, closes_raw) if c is not None]
+        if len(pairs) >= 10:
+            closes = [round(c, 1) for c in [c for _, c in pairs]]
+            dates  = [datetime.datetime.utcfromtimestamp(t).strftime("%Y/%m/%d")
+                      for t, _ in pairs]
+            return closes, dates
+    except Exception as e:
+        print(f"   ⚠️ TWII 歷史: {e}")
+    return None, None
+
+
+def _generate_twii_summary(closes, dates, cur_price, api_key):
+    """用 Claude Haiku 生成大盤走勢一句話摘要"""
+    if not api_key or not closes or len(closes) < 20:
+        return None
+
+    # 計算關鍵統計
+    cur   = closes[-1]
+    p3m   = closes[-63:] if len(closes) >= 63 else closes
+    p6m   = closes[-126:] if len(closes) >= 126 else closes
+    low3  = min(p3m);  low3_d  = dates[closes.index(min(p3m, key=lambda x: x)) + max(0, len(closes)-63)]
+    high3 = max(p3m);  high3_d = dates[closes.index(max(p3m, key=lambda x: x)) + max(0, len(closes)-63)]
+    chg3  = round((cur - p3m[0]) / p3m[0] * 100, 1) if p3m[0] else 0
+    drop  = round((high3 - low3) / high3 * 100, 1) if high3 else 0
+
+    # 更簡單的計算方式
+    idx_base = max(0, len(closes) - 63)
+    p3_base   = closes[idx_base]
+    chg3      = round((cur - p3_base) / p3_base * 100, 1) if p3_base else 0
+    low3      = min(closes[idx_base:])
+    high3     = max(closes[idx_base:])
+    low3_d    = dates[idx_base + closes[idx_base:].index(low3)]
+    high3_d   = dates[idx_base + closes[idx_base:].index(high3)]
+    drop_from_high = round((high3 - low3) / high3 * 100, 1) if high3 else 0
+    rally         = round((cur - low3) / low3 * 100, 1) if low3 else 0
+
+    today_str = datetime.date.today().strftime("%Y年%m月%d日")
+    prompt = (
+        f"今天是 {today_str}，台灣加權指數（^TWII）目前 {cur:,.0f} 點。\n"
+        f"近三個月：起點 {p3_base:,.0f} 點（{dates[idx_base]}），"
+        f"區間最低 {low3:,.0f} 點（{low3_d}，跌幅 {drop_from_high}%），"
+        f"區間最高 {high3:,.0f} 點（{high3_d}），"
+        f"三個月整體漲跌 {chg3:+.1f}%，"
+        f"從低點反彈 {rally:+.1f}%。\n"
+        "請用繁體中文寫 2 句話：第一句描述三個月內的重大走勢（重挫或大漲、關鍵點位），"
+        "第二句描述目前狀態與近期趨勢。直接輸出文字，不要引號或標題。"
+    )
+    try:
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 200,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=20,
+        )
+        return resp.json()["content"][0]["text"].strip()
+    except Exception as e:
+        print(f"   ⚠️ 大盤摘要生成失敗: {e}")
+        return None
+
+
 # ── 加權指數 ──────────────────────────────────────────────
 
 def fetch_twii():
@@ -1066,11 +1147,36 @@ def main():
     except FileNotFoundError:
         data = {"twii": {}, "institutional": {}, "prices": {}}
 
-    # 1. 加權指數
+    # API Key（提前取得，供大盤摘要與 AI 功能使用）
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+    # 1. 加權指數 + 歷史走勢
     twii = fetch_twii()
     if twii:
         data["twii"] = twii
         print(f"✅ 加權指數: {twii['price']} ({twii['chg']:+.2f})")
+
+    print("📈 大盤歷史走勢...")
+    twii_closes, twii_dates = fetch_twii_history()
+    if twii_closes:
+        data["twii_history"] = {
+            "labels": [d[5:] for d in twii_dates],   # 存 "MM/DD" 格式
+            "closes": twii_closes,
+        }
+        print(f"   ✅ 大盤歷史: {len(twii_closes)} 筆 ({twii_dates[0]} ~ {twii_dates[-1]})")
+        # 生成大盤摘要（需 API key）
+        today_summary_key = datetime.date.today().strftime("%Y/%m/%d")
+        old_summary = data.get("market_summary", "")
+        old_date    = data.get("market_summary_date", "")
+        if api_key and old_date != today_summary_key:
+            print("   📝 生成大盤走勢摘要...")
+            summary = _generate_twii_summary(twii_closes, twii_dates, twii['price'] if twii else twii_closes[-1], api_key)
+            if summary:
+                data["market_summary"]      = summary
+                data["market_summary_date"] = today_summary_key
+                print(f"   ✅ 大盤摘要: {summary[:40]}...")
+        elif not api_key:
+            print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過大盤摘要")
 
     # 2. 三大法人
     inst = fetch_institutional()
@@ -1105,7 +1211,6 @@ def main():
 
     # 4. 公司基本資料 / 自動生成
     print("🏢 公司資料更新中...")
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     company_info = load_company_info()
     company_info = update_company_info(all_prices, company_info, api_key)
     with open("company_info.json", "w", encoding="utf-8") as f:
