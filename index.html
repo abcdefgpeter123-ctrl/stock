@@ -565,7 +565,10 @@ function renderFavorites() {
       <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}')">
         <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
         <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
-        <td class="name-cell">${s.name}</td>
+        <td class="name-cell">
+          <div>${s.name}</div>
+          ${etfSourceMap[s.code]?.length ? `<div style="margin-top:2px">${etfSourceMap[s.code].map(c=>`<span style="font-size:9.5px;background:rgba(96,165,250,0.13);color:var(--blue);border-radius:3px;padding:1px 4px;margin-right:3px;font-weight:500">${c}</span>`).join('')}</div>` : ''}
+        </td>
         <td><span class="badge b-theme">${s.theme}</span></td>
         <td>${fmtPrice(s.code)}</td>
         <td>${pct(s.p5)}</td>
@@ -1712,9 +1715,9 @@ async function loadData(){
       });
       console.log("ETF 持股已從 data.json 動態更新");
     }
-    // 建立國內主動式ETF持股反查表（stock code → ETF codes）
+    // 建立 ETF 持股反查表（stock code → ETF codes），含所有 watchlist ETF
     etfSourceMap = {};
-    ETFS.filter(e => e.type === "國內主動式").forEach(etf => {
+    ETFS.filter(e => e.watchlist).forEach(etf => {
       etf.holdings.forEach(h => {
         if(!etfSourceMap[h.code]) etfSourceMap[h.code] = [];
         if(!etfSourceMap[h.code].includes(etf.code)) etfSourceMap[h.code].push(etf.code);
