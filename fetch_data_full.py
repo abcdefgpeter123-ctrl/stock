@@ -11,6 +11,11 @@ import os
 import requests
 import datetime
 import time
+try:
+    import yfinance as yf
+    _YF_AVAILABLE = True
+except Exception:
+    _YF_AVAILABLE = False
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -270,6 +275,23 @@ def _get_yf_crumb():
 
 def fetch_trailing_pe(code):
     """從 Yahoo Finance 抓本益比（trailingPE）與 EPS（trailingEps）"""
+    # 優先用 yfinance（自動處理 cookie/crumb，較穩定）
+    if _YF_AVAILABLE:
+        for suffix in [".TW", ".TWO"]:
+            try:
+                t = yf.Ticker(f"{code}{suffix}")
+                info = t.info
+                pe  = info.get("trailingPE")
+                eps = info.get("trailingEps")
+                if pe is not None or eps is not None:
+                    return {
+                        "pe":  round(pe,  1) if pe  is not None else None,
+                        "eps": round(eps, 2) if eps is not None else None,
+                    }
+            except Exception:
+                continue
+
+    # fallback：手動 crumb + quoteSummary API
     session, crumb = _get_yf_crumb()
     if not session:
         session = requests.Session()

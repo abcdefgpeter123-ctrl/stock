@@ -488,5 +488,12 @@
     "industry": "航太業",
     "major_clients": "低軌衛星設備廠",
     "generated": "2026/05/22"
+  },
+  "2454": {
+    "core_products": "IC設計（手機SoC、AI晶片）",
+    "business_desc": "全球第二大IC設計廠，天璣系列SoC主導Android中高階市場，積極布局AI on-device、車用及AIoT。",
+    "industry": "半導體業",
+    "major_clients": "三星、小米、OPPO、vivo",
+    "generated": "2026/05/31"
   }
 }

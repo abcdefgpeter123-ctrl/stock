@@ -1,6 +1,18 @@
 {
   "_comment": "個股詳細資訊。修改後 commit 到 GitHub，Vercel 會自動更新。",
   "_fields": "core_product=核心產品；recent_story=近期故事；pe=本益比；pe_avg=同業平均本益比；risks=風險（陣列）",
+  "2454": {
+    "core_product": "全球第二大IC設計公司，主力產品為智慧型手機SoC（天璣系列），並積極布局AI PC、車用、AIoT晶片",
+    "recent_story": "2026年天璣9400系列搭載旗艦AI推理引擎，在三星、小米、OPPO等Android旗艦機熱賣帶動下營收強勁。AI on-device需求加速推升ASP，並切入汽車AI SoC市場。",
+    "pe": 65.4,
+    "pe_avg": 35.0,
+    "risks": [
+      "客戶集中於Android陣營，受中國手機市場景氣影響大",
+      "高通競爭激烈，旗艦SoC市占持續拉鋸",
+      "AI PC/車用晶片仍處早期，貢獻營收比重有限"
+    ],
+    "eps": 65.94
+  },
   "2330": {
     "core_product": "全球最大晶圓代工廠，3奈米/5奈米先進製程市占率超過90%，主要客戶含蘋果、輝達、AMD、高通",
     "recent_story": "2026年AI伺服器需求爆發，CoWoS先進封裝產能持續滿載，亞利桑那廠2奈米製程量產順利，海外擴產規劃符合進度。法說會釋出全年營收年增18-20%樂觀指引。",

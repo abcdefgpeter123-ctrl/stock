@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 check_data.py*)",
+      "Bash(python3 fetch_data_full.py*)",
+      "Bash(pip3 install *)",
+      "Bash(gh workflow run *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
