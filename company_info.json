@@ -495,5 +495,75 @@
     "industry": "半導體業",
     "major_clients": "三星、小米、OPPO、vivo",
     "generated": "2026/05/31"
+  },
+  "3443": {
+    "core_products": "ASIC/IC設計服務、IP授權",
+    "business_desc": "全球最大矽智財（IP）供應商之一，台積電最大IP合作夥伴，承接雲端大廠AI ASIC客製化設計。",
+    "industry": "半導體業",
+    "major_clients": "Google、Amazon、Meta、台積電",
+    "generated": "2026/05/31"
+  },
+  "6239": {
+    "core_products": "半導體封裝測試（記憶體）",
+    "business_desc": "台灣重要記憶體封測廠，主力服務DRAM/Flash封測，受惠AI伺服器HBM需求成長。",
+    "industry": "半導體業",
+    "major_clients": "三星、SK海力士、美光",
+    "generated": "2026/05/31"
+  },
+  "2404": {
+    "core_products": "半導體廠務工程（超純水、潔淨室）",
+    "business_desc": "台灣最大半導體廠務工程承包商，台積電擴廠最直接受惠者，業績能見度高。",
+    "industry": "半導體業",
+    "major_clients": "台積電、聯電",
+    "generated": "2026/05/31"
+  },
+  "3105": {
+    "core_products": "GaAs化合物半導體代工（PA晶片）",
+    "business_desc": "砷化鎵PA晶片主要代工廠，5G手機與低軌衛星PA核心供應商，穩懋為Skyworks、Qorvo主要代工夥伴。",
+    "industry": "半導體業",
+    "major_clients": "Skyworks、Qorvo、村田",
+    "generated": "2026/05/31"
+  },
+  "2301": {
+    "core_products": "電源供應器、光電模組、連接器",
+    "business_desc": "AI伺服器電源供應器（PSU）重要供應商，受惠GB200/GB300平台放量，同時布局光通訊模組。",
+    "industry": "電子零組件業",
+    "major_clients": "Dell、HP、雲端大廠",
+    "generated": "2026/05/31"
+  },
+  "2059": {
+    "core_products": "伺服器機架滑軌",
+    "business_desc": "全球高階伺服器滑軌市占率逾70%，近乎壟斷地位。AI伺服器機架需求爆量直接帶動業績，訂單能見度超18個月。",
+    "industry": "電子零組件業",
+    "major_clients": "Dell、HP、Super Micro、雲端大廠",
+    "generated": "2026/05/31"
+  },
+  "8996": {
+    "core_products": "工業熱交換器、液冷模組",
+    "business_desc": "數據中心液冷散熱關鍵設備廠，冷卻水塔與熱交換器為AI機房必備，受惠液冷滲透率快速提升。",
+    "industry": "電機機械業",
+    "major_clients": "國內外資料中心、科技廠",
+    "generated": "2026/05/31"
+  },
+  "2885": {
+    "core_products": "證券、銀行、人壽（金融控股）",
+    "business_desc": "元大金控旗下元大證券為台灣最大券商，台股成交量熱絡直接受惠，手續費收入占比高。",
+    "industry": "金融業",
+    "major_clients": "零售與法人投資人",
+    "generated": "2026/05/31"
+  },
+  "3044": {
+    "core_products": "高階PCB（汽車板、伺服器板）",
+    "business_desc": "專注高毛利率利基PCB，汽車電子與AI伺服器板比重持續提升，為台灣高階PCB代表廠。",
+    "industry": "電子零組件業",
+    "major_clients": "車廠Tier-1、伺服器品牌廠",
+    "generated": "2026/05/31"
+  },
+  "3036": {
+    "core_products": "IC通路（代理TI、Infineon、NXP等）",
+    "business_desc": "台灣最大IC通路商之一，代理逾百家國際原廠，AI伺服器功率元件需求帶動量價齊升。",
+    "industry": "電子通路業",
+    "major_clients": "台灣電子製造業",
+    "generated": "2026/05/31"
   }
 }
