@@ -795,7 +795,7 @@ function renderETFs() {
       + '</div>';
 
     const dataWarnHtml = etf._holdingsLive
-      ? '<span style="font-size:9px;color:var(--teal);margin-bottom:6px;display:inline-block">● 即時資料（TWSE 每日更新）</span>'
+      ? '<span style="font-size:9px;color:var(--teal);margin-bottom:6px;display:inline-block">● 每日自動更新（etfinfo.tw）</span>'
       : `<span class="etf-data-warn">⚠️ ${etf.holdingsDate ? `資料日期：${etf.holdingsDate}・來源：${etf.holdingsSource||'手動輸入'}` : '靜態資料（手動輸入，非最新持股）'}・成分股比重僅供參考</span>`;
 
     const isExpanded = expandedETFs.has(etf.code);

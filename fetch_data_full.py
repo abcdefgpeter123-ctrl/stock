@@ -980,7 +980,105 @@ def fetch_fallback_list():
     return prices
 
 
-# ── ETF 持股比重（TWSE OpenAPI）────────────────────────────
+# ── ETF 持股比重（TWSE OpenAPI / etfinfo.tw）─────────────────
+
+# etfinfo.tw 支援的被動型 ETF（台股上市）
+ETF_ETFINFO_CODES = ["0050", "0056", "00929", "00891"]
+
+def _fetch_etfinfo_holdings(etf_code, top_n=10):
+    """從 etfinfo.tw 抓取 ETF 前 N 大成分股（SSR 頁面，requests 可直接解析）"""
+    url = f"https://www.etfinfo.tw/etf/{etf_code}/holdings"
+    try:
+        r = requests.get(url, headers={**HEADERS, "Accept": "text/html"}, timeout=25)
+        if not r.ok:
+            return None
+        html = r.text
+
+        # ── 策略 1：__NEXT_DATA__ JSON（Next.js SSR）──
+        m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.DOTALL)
+        if m:
+            try:
+                page_data = json.loads(m.group(1))
+                props = page_data.get("props", {}).get("pageProps", {})
+                raw = (props.get("holdings") or props.get("etfHoldings") or
+                       props.get("stockList") or props.get("components"))
+                if raw and isinstance(raw, list):
+                    result = []
+                    for h in raw:
+                        code = str(h.get("code") or h.get("stockCode") or h.get("id") or "").strip()
+                        name = str(h.get("name") or h.get("stockName") or h.get("n") or "").strip()
+                        weight = float(h.get("weight") or h.get("ratio") or h.get("w") or 0)
+                        if code and code not in ("C_NTD", "CASH") and weight > 0:
+                            result.append({"code": code, "name": name, "weight": round(weight, 2)})
+                    if result:
+                        result.sort(key=lambda x: -x["weight"])
+                        return result[:top_n]
+            except Exception:
+                pass
+
+        # ── 策略 2：BeautifulSoup HTML table 解析 ──
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(html, "html.parser")
+            result = []
+            seen = set()
+            for tr in soup.find_all("tr"):
+                stock_link = tr.find("a", href=re.compile(r"/stock/\d+"))
+                if not stock_link:
+                    continue
+                m2 = re.search(r"/stock/(\d+)", stock_link.get("href", ""))
+                if not m2:
+                    continue
+                code = m2.group(1)
+                if code in seen:
+                    continue
+                seen.add(code)
+                # 名稱（td 裡去除 code 數字後的文字）
+                td = stock_link.find_parent("td")
+                name = td.get_text(strip=True).replace(code, "").strip()[:10] if td else ""
+                # 比重：找該 row 裡第一個純數字百分比的 <strong>（不含 +/-）
+                weight = 0.0
+                for strong in tr.find_all("strong"):
+                    t = strong.get_text().strip()
+                    if re.match(r"^[\d.]+%$", t):
+                        weight = float(t.rstrip("%"))
+                        break
+                if weight > 0 and code not in ("C_NTD", "CASH"):
+                    result.append({"code": code, "name": name, "weight": weight})
+            if result:
+                result.sort(key=lambda x: -x["weight"])
+                return result[:top_n]
+        except ImportError:
+            pass  # beautifulsoup4 未安裝，改用 regex
+
+        # ── 策略 3：regex fallback ──
+        code_pattern = re.compile(
+            r'href="(?:https://www\.etfinfo\.tw)?/stock/(\d+)"[^>]*>(?:\d+)</a>\s*([^<\n]{1,12})'
+        )
+        weight_pattern = re.compile(r"<strong>([\d.]+)%</strong>")
+        result = []
+        seen = set()
+        for mc in code_pattern.finditer(html):
+            code = mc.group(1).strip()
+            if code in seen or code in ("C_NTD", "CASH"):
+                continue
+            seen.add(code)
+            name = mc.group(2).strip()
+            after = html[mc.end(): mc.end() + 2000]
+            mw = weight_pattern.search(after)
+            if mw:
+                weight = float(mw.group(1))
+                if weight > 0:
+                    result.append({"code": code, "name": name, "weight": weight})
+        if result:
+            result.sort(key=lambda x: -x["weight"])
+            return result[:top_n]
+
+        return None
+    except Exception as e:
+        print(f"   ⚠️ etfinfo.tw {etf_code}: {e}")
+        return None
+
 
 # 要追蹤的 ETF 代號（含主動型）
 ETF_TRACK_CODES = [
@@ -1093,6 +1191,19 @@ def fetch_etf_holdings():
     # 按比重排序，保留前10
     for code in result:
         result[code] = sorted(result[code], key=lambda x: -x["weight"])[:10]
+
+    # ④ etfinfo.tw（被動型 ETF 備援，SSR 解析，台灣自架 runner 可連線）
+    missing = [c for c in ETF_ETFINFO_CODES if c not in result]
+    if missing:
+        print(f"   🌐 etfinfo.tw 補抓: {missing}")
+        for code in missing:
+            holdings = _fetch_etfinfo_holdings(code, top_n=10)
+            if holdings:
+                result[code] = holdings
+                print(f"      ✅ {code}: {len(holdings)} 檔（etfinfo.tw）")
+            else:
+                print(f"      ⚠️ {code}: etfinfo.tw 失敗")
+            time.sleep(1.0)
 
     if not result:
         print("   ⚠️ ETF 持股所有端點均失敗，將保留前次資料")
