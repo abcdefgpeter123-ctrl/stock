@@ -384,22 +384,31 @@ const STOCKS=[
   {code:"2330",name:"台積電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3711",name:"日月光投控",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2454",name:"聯發科",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2303",name:"聯電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"3661",name:"世芯-KY",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"6488",name:"環球晶",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2449",name:"京元電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"3034",name:"聯詠",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"2379",name:"瑞昱",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2344",name:"華邦電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6223",name:"旺矽",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  // ── ABF載板 ──
+  {code:"2383",name:"台光電",theme:"ABF載板",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3037",name:"欣興",theme:"ABF載板",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── AI伺服器 ──
   {code:"2382",name:"廣達",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"6669",name:"緯穎",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2356",name:"英業達",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2376",name:"技嘉",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3231",name:"緯創",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2357",name:"華碩",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2324",name:"仁寶",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"2308",name:"台達電",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2317",name:"鴻海",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 液冷散熱 ──
   {code:"3017",name:"奇鋐",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 網通 ──
+  {code:"2345",name:"智邦",theme:"網通",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 海運 ──
   {code:"2603",name:"長榮",theme:"海運",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 傳產 ──
@@ -570,7 +579,7 @@ function renderFavorites() {
 }
 
 
-// ETF 清單 + 前10大成份股（資料來源：各 ETF 官方文件 2026年5月）
+// ETF 清單 + 前10大成份股（資料來源：ETF資訊網 etfinfo.tw 快照 2026-05-29）
 // type: "主動型" = 動態選股高息型 | "市值型" = 純被動市值加權 | "指數型" = 追蹤海外指數
 // watchlist: true = 持股已納入個股監控清單
 const ETFS = [
@@ -579,16 +588,16 @@ const ETFS = [
     type: "市值型", watchlist: true,  // 純市值加權被動追蹤
     desc: "追蹤台灣市值前50大個股，台股最具代表性 ETF",
     holdings: [
-      {code:"2330",name:"台積電",weight:54.2},
-      {code:"2317",name:"鴻海",weight:5.1},
-      {code:"2454",name:"聯發科",weight:3.8},
-      {code:"2308",name:"台達電",weight:2.5},
-      {code:"3711",name:"日月光投控",weight:1.8},
-      {code:"2382",name:"廣達",weight:1.7},
-      {code:"6505",name:"台塑化",weight:1.4},
-      {code:"2891",name:"中信金",weight:1.3},
-      {code:"2882",name:"國泰金",weight:1.2},
-      {code:"2881",name:"富邦金",weight:1.2}
+      {code:"2330",name:"台積電",weight:58.28},
+      {code:"2454",name:"聯發科",weight:6.42},
+      {code:"2308",name:"台達電",weight:4.81},
+      {code:"2317",name:"鴻海",weight:3.57},
+      {code:"3711",name:"日月光投控",weight:2.04},
+      {code:"2303",name:"聯電",weight:1.70},
+      {code:"2383",name:"台光電",weight:1.49},
+      {code:"3037",name:"欣興",weight:1.43},
+      {code:"2345",name:"智邦",weight:1.22},
+      {code:"2891",name:"中信金",weight:1.09}
     ]
   },
   {
@@ -596,16 +605,16 @@ const ETFS = [
     type: "高息型", watchlist: true,
     desc: "鎖定殖利率前30名高息股，國民級存股 ETF",
     holdings: [
-      {code:"2382",name:"廣達",weight:5.2},
-      {code:"3711",name:"日月光投控",weight:4.8},
-      {code:"2308",name:"台達電",weight:4.5},
-      {code:"3231",name:"緯創",weight:4.3},
-      {code:"2603",name:"長榮",weight:4.1},
-      {code:"2356",name:"英業達",weight:3.9},
-      {code:"2376",name:"技嘉",weight:3.7},
-      {code:"2324",name:"仁寶",weight:3.5},
-      {code:"2002",name:"中鋼",weight:3.3},
-      {code:"3034",name:"聯詠",weight:3.1}
+      {code:"2454",name:"聯發科",weight:9.18},
+      {code:"2303",name:"聯電",weight:8.70},
+      {code:"3711",name:"日月光投控",weight:5.64},
+      {code:"2891",name:"中信金",weight:3.96},
+      {code:"2357",name:"華碩",weight:3.83},
+      {code:"2382",name:"廣達",weight:3.72},
+      {code:"2885",name:"元大金",weight:3.26},
+      {code:"2301",name:"光寶科",weight:3.22},
+      {code:"2603",name:"長榮",weight:2.84},
+      {code:"3231",name:"緯創",weight:2.77}
     ]
   },
   {
@@ -613,16 +622,16 @@ const ETFS = [
     type: "高息型", watchlist: true,
     desc: "月配息、科技題材，受年輕投資人青睞",
     holdings: [
-      {code:"3711",name:"日月光投控",weight:7.8},
-      {code:"2382",name:"廣達",weight:7.2},
-      {code:"2308",name:"台達電",weight:6.5},
-      {code:"3034",name:"聯詠",weight:5.8},
-      {code:"2376",name:"技嘉",weight:5.2},
-      {code:"3231",name:"緯創",weight:4.9},
-      {code:"2356",name:"英業達",weight:4.6},
-      {code:"3017",name:"奇鋐",weight:4.3},
-      {code:"2454",name:"聯發科",weight:4.0},
-      {code:"6669",name:"緯穎",weight:3.8}
+      {code:"2303",name:"聯電",weight:14.05},
+      {code:"2454",name:"聯發科",weight:10.02},
+      {code:"6239",name:"力成",weight:6.02},
+      {code:"2357",name:"華碩",weight:6.01},
+      {code:"3008",name:"大立光",weight:4.42},
+      {code:"6488",name:"環球晶",weight:4.41},
+      {code:"2404",name:"漢唐",weight:4.02},
+      {code:"3036",name:"文曄",weight:3.18},
+      {code:"3044",name:"健鼎",weight:3.03},
+      {code:"3034",name:"聯詠",weight:2.69}
     ]
   },
   {
@@ -664,16 +673,16 @@ const ETFS = [
     type: "產業型", watchlist: true,
     desc: "聚焦半導體核心供應鏈，產業最純度高",
     holdings: [
-      {code:"2330",name:"台積電",weight:20.0},
-      {code:"3711",name:"日月光投控",weight:10.5},
-      {code:"2454",name:"聯發科",weight:9.8},
-      {code:"3034",name:"聯詠",weight:7.2},
-      {code:"2308",name:"台達電",weight:6.5},
-      {code:"2379",name:"瑞昱",weight:5.8},
-      {code:"3661",name:"世芯-KY",weight:4.5},
-      {code:"6488",name:"環球晶",weight:4.2},
-      {code:"3661",name:"世芯",weight:3.8},
-      {code:"2449",name:"京元電",weight:3.5}
+      {code:"2330",name:"台積電",weight:36.94},
+      {code:"2454",name:"聯發科",weight:16.26},
+      {code:"3711",name:"日月光投控",weight:5.24},
+      {code:"2303",name:"聯電",weight:4.86},
+      {code:"2344",name:"華邦電",weight:2.83},
+      {code:"6223",name:"旺矽",weight:2.58},
+      {code:"2408",name:"南亞科",weight:2.46},
+      {code:"3443",name:"創意電子",weight:2.24},
+      {code:"2449",name:"京元電",weight:2.12},
+      {code:"3661",name:"世芯-KY",weight:2.02}
     ]
   },
   // ── 國內主動式 ETF ──
