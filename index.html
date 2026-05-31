@@ -389,7 +389,7 @@ const STOCKS=[
   {code:"6488",name:"環球晶",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2449",name:"京元電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"3034",name:"聯詠",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2379",name:"瑞昱",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2379",name:"瑞昱",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"2344",name:"華邦電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"6223",name:"旺矽",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"2408",name:"南亞科",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
@@ -403,11 +403,11 @@ const STOCKS=[
   // ── AI伺服器 ──
   {code:"2382",name:"廣達",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"6669",name:"緯穎",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2356",name:"英業達",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2376",name:"技嘉",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2356",name:"英業達",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2376",name:"技嘉",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3231",name:"緯創",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2357",name:"華碩",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2324",name:"仁寶",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2324",name:"仁寶",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   {code:"2308",name:"台達電",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2317",name:"鴻海",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2301",name:"光寶科",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
@@ -420,11 +420,11 @@ const STOCKS=[
   // ── 海運 ──
   {code:"2603",name:"長榮",theme:"海運",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 傳產 ──
-  {code:"2002",name:"中鋼",theme:"傳產",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"6505",name:"台塑化",theme:"傳產",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2002",name:"中鋼",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6505",name:"台塑化",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   // ── 金融 ──
-  {code:"2881",name:"富邦金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2882",name:"國泰金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2881",name:"富邦金",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2882",name:"國泰金",theme:"額外關注",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2891",name:"中信金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2885",name:"元大金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
   // ── PCB ──
@@ -712,7 +712,7 @@ const ETFS = [
   // ── 國內主動式 ETF ──
   {
     code: "00992A", name: "群益科技創新",
-    type: "國內主動式", watchlist: false,
+    type: "國內主動式", watchlist: true,
     holdingsDate: "2026/05/28", holdingsSource: "群益投信官網",
     desc: "聚焦AI與科技趨勢主動選股，今年以來漲幅一度超過40%，表現搶眼",
     holdings: [
@@ -730,7 +730,7 @@ const ETFS = [
   },
   {
     code: "00981A", name: "統一台股增長",
-    type: "國內主動式", watchlist: false,
+    type: "國內主動式", watchlist: true,
     holdingsDate: "2026/05/27", holdingsSource: "統一投信官網",
     desc: "主打成長集中策略，績效穩居前段班，定期定額熱門標的",
     holdings: [
