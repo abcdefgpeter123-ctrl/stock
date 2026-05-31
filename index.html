@@ -974,16 +974,21 @@ function renderDetail(code) {
   const core  = si.core_product || ci.core_products || "";
   const story = si.recent_story || ci.recent_story  || "";
   const risks = si.risks || [];
-  const pe    = si.pe ?? ci.pe_ratio ?? ci.pe ?? null;
-  const eps   = si.eps ?? ci.eps ?? null;
-  const peAvg = si.pe_avg ?? null;
+  const pe     = si.pe ?? ci.pe_ratio ?? ci.pe ?? null;
+  const epsRaw = si.eps ?? ci.eps ?? null;
+  // 若無明確 EPS，用 Price÷PE 推算（標示為估算）
+  const epsCalc = (epsRaw == null && pe != null && price != null && pe > 0)
+    ? +(price / pe).toFixed(2) : null;
+  const eps    = epsRaw ?? epsCalc;
+  const epsEst = (epsRaw == null && epsCalc != null);  // true = 為估算值
+  const peAvg  = si.pe_avg ?? null;
   const peGap = (pe != null && peAvg != null) ? pe - peAvg : null;
   // 主動型ETF 持倉
   const activeETFWeights = ETFS.filter(e => e.type === "國內主動式").map(etf => {
     const h = etf.holdings.find(h => h.code === code);
     return h ? { etfCode: etf.code, etfName: etf.name, weight: h.weight, live: etf._holdingsLive } : null;
   }).filter(Boolean);
-  const hasFundamentals = !!(core || story || risks.length || pe != null || eps != null || activeETFWeights.length);
+  const hasFundamentals = !!(core || story || risks.length || pe != null || epsRaw != null || epsCalc != null || activeETFWeights.length);
 
   return `<div class="tp-wrap">
     <!-- 頂部：代號 + 股價 -->
@@ -1053,6 +1058,7 @@ function renderDetail(code) {
         ${eps != null ? `<span><span class="tp-fund-lbl" style="min-width:auto;margin-right:4px">EPS</span>
           <span class="tp-fund-val" style="font-size:14px">${eps.toFixed(2)}</span>
           <span class="tp-fund-avg">元</span>
+          ${epsEst ? '<span class="tp-stat-est" style="margin-left:4px">估算</span>' : ""}
         </span>` : ""}
       </div>` : ""}
       ${activeETFWeights.length ? `<div class="tp-fund-block">
