@@ -1413,6 +1413,18 @@ def main():
     else:
         all_prices = {**otc, **twse}   # 上市優先
 
+    # 安全網：FALLBACK_CODES 裡缺少或股價為 0 的股票，用 Yahoo Finance 補抓
+    missing = [c for c in FALLBACK_CODES
+               if not all_prices.get(c) or all_prices[c].get("price", 0) == 0]
+    if missing:
+        print(f"   ⚠️  補抓 {len(missing)} 支缺漏股票（Yahoo Finance）: {missing}")
+        for code in missing:
+            p = fetch_yahoo(code)
+            if p:
+                all_prices[code] = p
+                print(f"      ✅ {code} = {p['price']}")
+            time.sleep(0.3)
+
     print(f"✅ 全市場合計 {len(all_prices)} 支")
 
     data["prices"] = all_prices
