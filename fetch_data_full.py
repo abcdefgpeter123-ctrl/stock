@@ -1141,6 +1141,78 @@ def _parse_etf_basket_items(raw_items):
     return result
 
 
+def fetch_0050_by_mktcap(all_prices=None, top_n=50):
+    """
+    用 TWSE 上市公司已發行股數 × 收盤價 估算市值，取前 top_n 支重建 0050 成份。
+    回傳 [{code, name, weight}, ...]，weight 為相對佔比（百分比）。
+    """
+    try:
+        # 已發行股數
+        r1 = requests.get(
+            "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
+            headers=HEADERS, timeout=20
+        )
+        if not r1.ok:
+            return None
+        company_list = r1.json()
+        shares_map = {}
+        name_map = {}
+        for x in company_list:
+            code = x.get("公司代號", "").strip()
+            shares_str = x.get("已發行普通股數或TDR原股發行股數", "").replace(",", "").strip()
+            name = x.get("公司簡稱", code).strip()
+            if code and shares_str.isdigit():
+                shares_map[code] = int(shares_str)
+                name_map[code] = name
+
+        # 收盤價（優先 all_prices，備用 BWIBBU_d）
+        price_map = {}
+        if all_prices:
+            for code, p in all_prices.items():
+                if p.get("price"):
+                    price_map[code] = p["price"]
+        if not price_map:
+            r2 = requests.get(
+                "https://openapi.twse.com.tw/v1/exchangeReport/BWIBBU_d",
+                headers=HEADERS, timeout=20
+            )
+            if r2.ok:
+                for x in r2.json():
+                    c = x.get("Code", "").strip()
+                    p = x.get("ClosePrice", "")
+                    try:
+                        price_map[c] = float(p)
+                    except ValueError:
+                        pass
+
+        # 計算市值，過濾：只留 4 位數字代號的普通股（排除 ETF、特別股、KDR）
+        mktcap = {}
+        for code, shares in shares_map.items():
+            if not re.fullmatch(r"\d{4}", code):
+                continue
+            if code not in price_map:
+                continue
+            mktcap[code] = price_map[code] * shares
+
+        # 取前 top_n，計算相對比重
+        top = sorted(mktcap.items(), key=lambda x: -x[1])[:top_n]
+        if not top:
+            return None
+        total_cap = sum(v for _, v in top)
+        result = []
+        for code, cap in top:
+            result.append({
+                "code":   code,
+                "name":   name_map.get(code, code),
+                "weight": round(cap / total_cap * 100, 2),
+            })
+        print(f"   📊 0050 市值重建: {len(result)} 支 (前3: {[r['code'] for r in result[:3]]})")
+        return result
+    except Exception as e:
+        print(f"   ⚠️ 0050 市值重建失敗: {e}")
+        return None
+
+
 def fetch_etf_holdings():
     """
     從 TWSE OpenAPI 抓取 ETF 申購/買回清單（日常籃子 = 成分股 + 比重）。
@@ -1453,6 +1525,19 @@ def main():
     else:
         prev = len(data.get("etf_holdings") or {})
         print(f"   ⚠️ 今日 ETF 持股抓取失敗，保留前次資料（{prev} 檔）")
+        etf_holdings = data.get("etf_holdings", {})
+
+    # 0050 市值重建：若 etfinfo 只有前15支，用市值排名補到完整 50 支
+    holdings_0050 = (etf_holdings or {}).get("0050", [])
+    if len(holdings_0050) < 40:
+        print("   📊 0050 持股不足40支，用市值排名補全...")
+        full_0050 = fetch_0050_by_mktcap(all_prices=all_prices, top_n=50)
+        if full_0050:
+            if not etf_holdings:
+                etf_holdings = {}
+            etf_holdings["0050"] = full_0050
+            data["etf_holdings"] = etf_holdings
+            print(f"   ✅ 0050 補全至 {len(full_0050)} 支")
 
     # 5c. 個股三大法人（T86，最近5個交易日累計）
     print("📊 個股三大法人資料（T86）...")
