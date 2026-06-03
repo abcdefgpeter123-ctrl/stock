@@ -8,6 +8,7 @@ GitHub Actions 從 GitHub 伺服器（美國）執行，開放資料 API 設計�
 
 import json
 import os
+import re
 import requests
 import datetime
 import time
