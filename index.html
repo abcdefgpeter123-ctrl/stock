@@ -79,6 +79,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .fav-btn.active{color:#fbbf24}
 .fav-section{margin-bottom:24px}
 /* ── 題材回顧 ── */
+.theme-period-tabs{display:flex;gap:6px;margin-bottom:10px}
+.theme-period-tab{padding:4px 14px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text3);transition:all .15s}
+.theme-period-tab.active{background:var(--up-bg);color:var(--up);border-color:var(--up)}
 .theme-review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-bottom:12px}
 .theme-card2{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;transition:border-color .15s}
 .theme-card2:hover{border-color:var(--border2)}
@@ -283,6 +286,11 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 
   <!-- 題材回顧 + 機會點摘要 -->
   <div class="sec-hd" id="theme-review-hd">📈 近期大盤題材回顧</div>
+  <div class="theme-period-tabs">
+    <button class="theme-period-tab active" data-period="p5" onclick="switchThemePeriod('p5',this)">一週</button>
+    <button class="theme-period-tab" data-period="p30" onclick="switchThemePeriod('p30',this)">一個月</button>
+    <button class="theme-period-tab" data-period="p180" onclick="switchThemePeriod('p180',this)">半年</button>
+  </div>
   <div class="theme-review-grid" id="theme-review-grid"></div>
   <div class="sec-hd" style="margin-top:4px">🎯 機會點快覽<span class="src-tag">點擊直接展開個股詳情</span></div>
   <div class="mkt-opp-row" id="mkt-opp-row"></div>
@@ -381,60 +389,60 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 // 監控清單：主動型 ETF 前10大持股（29支台股）
 const STOCKS=[
   // ── 半導體 ──
-  {code:"2330",name:"台積電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3711",name:"日月光投控",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2454",name:"聯發科",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2303",name:"聯電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3661",name:"世芯-KY",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6488",name:"環球晶",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2449",name:"京元電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3034",name:"聯詠",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2379",name:"瑞昱",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2344",name:"華邦電",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"6223",name:"旺矽",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2408",name:"南亞科",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3443",name:"創意電子",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6239",name:"力成",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2404",name:"漢唐",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3105",name:"穩懋",theme:"半導體",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2330",name:"台積電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3711",name:"日月光投控",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2454",name:"聯發科",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2303",name:"聯電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"3661",name:"世芯-KY",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6488",name:"環球晶",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2449",name:"京元電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"3034",name:"聯詠",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2379",name:"瑞昱",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2344",name:"華邦電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6223",name:"旺矽",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2408",name:"南亞科",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3443",name:"創意電子",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6239",name:"力成",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2404",name:"漢唐",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3105",name:"穩懋",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── ABF載板 ──
-  {code:"2383",name:"台光電",theme:"ABF載板",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3037",name:"欣興",theme:"ABF載板",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2383",name:"台光電",theme:"ABF載板",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3037",name:"欣興",theme:"ABF載板",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── AI伺服器 ──
-  {code:"2382",name:"廣達",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6669",name:"緯穎",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2356",name:"英業達",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2376",name:"技嘉",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3231",name:"緯創",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2357",name:"華碩",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2324",name:"仁寶",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2308",name:"台達電",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2317",name:"鴻海",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2301",name:"光寶科",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2059",name:"川湖",theme:"AI伺服器",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2382",name:"廣達",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6669",name:"緯穎",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2356",name:"英業達",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2376",name:"技嘉",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3231",name:"緯創",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2357",name:"華碩",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2324",name:"仁寶",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2308",name:"台達電",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2317",name:"鴻海",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2301",name:"光寶科",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2059",name:"川湖",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 液冷散熱 ──
-  {code:"3017",name:"奇鋐",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"8996",name:"高力",theme:"液冷散熱",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3017",name:"奇鋐",theme:"液冷散熱",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"8996",name:"高力",theme:"液冷散熱",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 網通 ──
-  {code:"2345",name:"智邦",theme:"網通",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2345",name:"智邦",theme:"網通",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 海運 ──
-  {code:"2603",name:"長榮",theme:"海運",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2603",name:"長榮",theme:"海運",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 傳產 ──
-  {code:"2002",name:"中鋼",theme:"傳產",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6505",name:"台塑化",theme:"傳產",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2002",name:"中鋼",theme:"傳產",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6505",name:"台塑化",theme:"傳產",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 金融 ──
-  {code:"2881",name:"富邦金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2882",name:"國泰金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2891",name:"中信金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2885",name:"元大金",theme:"金融",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2881",name:"富邦金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2882",name:"國泰金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2891",name:"中信金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2885",name:"元大金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── PCB ──
-  {code:"3044",name:"健鼎",theme:"PCB",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3044",name:"健鼎",theme:"PCB",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── IC通路 ──
-  {code:"3036",name:"文曄",theme:"IC通路",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3036",name:"文曄",theme:"IC通路",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 光學 ──
-  {code:"3008",name:"大立光",theme:"光學",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3008",name:"大立光",theme:"光學",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 被動元件 ──
-  {code:"2327",name:"國巨",theme:"被動元件",p5:null,p30:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
+  {code:"2327",name:"國巨",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
 let opps = [];
 
@@ -480,13 +488,16 @@ function renderMarketSummary() {
     themeMap[s.theme].push(s);
   });
 
+  const pKey = themePeriod || "p5";
+  const periodLabel = pKey === "p5" ? "近5日" : pKey === "p30" ? "近30日" : "近半年";
+  const hotThreshold = pKey === "p180" ? 20 : pKey === "p30" ? 5 : 2;
+
   const themes = Object.entries(themeMap).map(([name, stocks]) => {
-    const valid = stocks.filter(s => s.p30 != null);
-    const avg   = valid.length ? +(valid.reduce((a, s) => a + s.p30, 0) / valid.length).toFixed(1) : null;
-    // 最強 / 最弱
-    const sorted = [...valid].sort((a, b) => b.p30 - a.p30);
+    const valid = stocks.filter(s => s[pKey] != null);
+    const avg   = valid.length ? +(valid.reduce((a, s) => a + s[pKey], 0) / valid.length).toFixed(1) : null;
+    const sorted = [...valid].sort((a, b) => b[pKey] - a[pKey]);
     const leader = sorted[0] || null;
-    const hot    = valid.filter(s => s.p30 > 0).length;
+    const hot    = valid.filter(s => s[pKey] > 0).length;
     return { name, avg, leader, count: stocks.length, hot };
   }).sort((a, b) => (b.avg ?? -999) - (a.avg ?? -999));
 
@@ -494,30 +505,31 @@ function renderMarketSummary() {
   if(grid) grid.innerHTML = themes.map(t => {
     const avgStr = t.avg != null ? (t.avg >= 0 ? "+" : "") + t.avg + "%" : "—";
     const cls    = t.avg > 0 ? "up" : t.avg < 0 ? "dn" : "neu";
-    const arrow  = t.avg > 8 ? "↑" : t.avg > 2 ? "↗" : t.avg < -2 ? "↘" : "→";
-    const hotCls = t.avg > 5 ? "hot" : t.avg < -2 ? "cold" : "";
-    const leaderTxt = t.leader
-      ? `最強：${t.leader.name} <span class="${cls}" style="font-size:11px">${t.leader.p30>=0?'+':''}${t.leader.p30}%</span>`
+    const arrow  = t.avg > hotThreshold*1.6 ? "↑" : t.avg > hotThreshold*0.4 ? "↗" : t.avg < -hotThreshold*0.4 ? "↘" : "→";
+    const hotCls = t.avg > hotThreshold ? "hot" : t.avg < -hotThreshold*0.4 ? "cold" : "";
+    const leaderVal = t.leader ? t.leader[pKey] : null;
+    const leaderTxt = t.leader && leaderVal != null
+      ? `最強：${t.leader.name} <span class="${cls}" style="font-size:11px">${leaderVal>=0?'+':''}${leaderVal}%</span>`
       : "";
-    // 展開的個股清單
     const themeStocks = STOCKS.filter(s => s.theme === t.name && !s._extra)
-      .sort((a,b) => (b.p30??-999)-(a.p30??-999));
+      .sort((a,b) => (b[pKey]??-999)-(a[pKey]??-999));
     const stockRows = themeStocks.map(s => {
       const pd = priceCache[s.code];
-      const p30txt = s.p30 != null ? `<span class="${s.p30>=0?'up':'dn'}" style="font-size:10px">${s.p30>=0?'+':''}${s.p30}%</span>` : `<span class="neu" style="font-size:10px">—</span>`;
+      const pv = s[pKey];
+      const ptxt = pv != null ? `<span class="${pv>=0?'up':'dn'}" style="font-size:10px">${pv>=0?'+':''}${pv}%</span>` : `<span class="neu" style="font-size:10px">—</span>`;
       const priceStr = pd ? `<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${pd.price.toFixed(1)}</span>` : '';
       return `<div class="tc2-stock-row">
         <span style="color:var(--text3);font-family:var(--mono);font-size:10px;width:36px">${s.code}</span>
         <span style="flex:1;color:var(--text2)">${s.name}</span>
         ${priceStr}
-        <span style="width:52px;text-align:right">${p30txt}</span>
+        <span style="width:52px;text-align:right">${ptxt}</span>
       </div>`;
     }).join("");
     const isOpen = expandedTheme === t.name;
     return `<div class="theme-card2 ${hotCls}${isOpen?' tc2-open':''}" onclick="toggleTheme('${t.name}')">
       <div class="tc2-name">${t.name} <span style="float:right;font-size:9px;color:var(--text3)">${isOpen?'▲':'▼'}</span></div>
       <div class="tc2-pct ${cls}">${arrow} ${avgStr}</div>
-      <div class="tc2-sub">近30日均 · ${t.hot}/${t.count} 支上漲</div>
+      <div class="tc2-sub">${periodLabel}均 · ${t.hot}/${t.count} 支上漲</div>
       ${leaderTxt ? `<div class="tc2-leader">${leaderTxt}</div>` : ""}
       <div class="tc2-stocks">${stockRows}</div>
     </div>`;
@@ -1471,7 +1483,7 @@ function fmtPrice(code){
   return wrapCls ? `<span class="${wrapCls}">${inner}</span>` : inner;
 }
 
-// 從 histories 動態補算 p5/p30（對靜態 null 值）
+// 從 histories 動態補算 p5/p30/p180
 function computeReturns(){
   STOCKS.forEach(s => {
     const h = histories[s.code];
@@ -1487,7 +1499,20 @@ function computeReturns(){
       const base = closes[closes.length - 1 - n];
       if(base > 0) s.p30 = Math.round((cur - base) / base * 1000) / 10;
     }
+    if(s.p180 == null){
+      const n = Math.min(126, closes.length - 1);
+      const base = closes[closes.length - 1 - n];
+      if(base > 0) s.p180 = Math.round((cur - base) / base * 1000) / 10;
+    }
   });
+}
+
+let themePeriod = "p5";
+function switchThemePeriod(period, el){
+  themePeriod = period;
+  document.querySelectorAll(".theme-period-tab").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  renderMarketSummary();
 }
 
 // 取個股法人數值：優先 inst_stocks（動態），fallback 靜態 i5f/i5t/i5s
