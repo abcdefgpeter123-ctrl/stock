@@ -1006,7 +1006,7 @@ def fetch_fallback_list():
 # etfinfo.tw 支援的被動型 ETF（台股上市）
 ETF_ETFINFO_CODES = ["0050", "0056", "00929", "00891"]
 
-def _fetch_etfinfo_holdings(etf_code, top_n=10):
+def _fetch_etfinfo_holdings(etf_code, top_n=50):
     """從 etfinfo.tw 抓取 ETF 前 N 大成分股（SSR 頁面，requests 可直接解析）"""
     url = f"https://www.etfinfo.tw/etf/{etf_code}/holdings"
     try:
@@ -1218,7 +1218,7 @@ def fetch_etf_holdings():
     if missing:
         print(f"   🌐 etfinfo.tw 補抓: {missing}")
         for code in missing:
-            holdings = _fetch_etfinfo_holdings(code, top_n=10)
+            holdings = _fetch_etfinfo_holdings(code, top_n=50)
             if holdings:
                 result[code] = holdings
                 print(f"      ✅ {code}: {len(holdings)} 檔（etfinfo.tw）")

@@ -1740,6 +1740,27 @@ async function loadData(){
         if(!etfSourceMap[h.code].includes(etf.code)) etfSourceMap[h.code].push(etf.code);
       });
     });
+    // 動態從 ETF holdings 補充 STOCKS
+    if(data.etf_holdings){
+      const existingCodes = new Set(STOCKS.map(s => s.code));
+      const watchlistEtfs = ETFS.filter(e => e.watchlist);
+      watchlistEtfs.forEach(etf => {
+        const holdings = data.etf_holdings[etf.code] || etf.holdings || [];
+        holdings.forEach(h => {
+          if(!existingCodes.has(h.code) && h.code && h.code.match(/^\d{4}$/)){
+            STOCKS.push({
+              code: h.code,
+              name: h.name || h.code,
+              theme: "ETF成份",
+              p5: null, p30: null, i5f: 0, i5t: 0, i5s: 0,
+              sig: "up",
+              _fromEtf: etf.code
+            });
+            existingCodes.add(h.code);
+          }
+        });
+      });
+    }
     // 大盤走勢線圖
     if(data.twii_history){
       twiiHistoryData = data.twii_history;
