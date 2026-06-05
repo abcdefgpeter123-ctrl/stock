@@ -451,6 +451,7 @@ const STOCKS=[
   {code:"2472",name:"立隆電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
 let opps = [];
+let oppCodes = new Set();
 
 
 // 我的最愛邏輯（用 localStorage 儲存）
@@ -1555,28 +1556,45 @@ function computeSig(s){
   const iv  = getInst(s);
   const net = iv.f + iv.t + iv.s;
   const p30 = s.p30;
-  if(net>=8) return "up";           // 強力法人買超（最優先）
-  if(p30!==null && p30<0 && net<=0) return "weak"; // 跌勢+無支撐
-  // 趨勢反轉：跌破 MA20 或 MA30
+  if(net>=8) return "up";
+  if(p30!==null && p30<0 && net<=0) return "weak";
+  if(oppCodes.has(s.code)) return "opp";
   const h = histories[s.code];
   const price = priceCache[s.code]?.price;
-  if (h?.closes?.length >= 20 && price) {
+  if(h?.closes?.length >= 20 && price){
     const c = h.closes;
     const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
     const ma30 = c.length >= 30 ? c.slice(-30).reduce((a,b)=>a+b,0) / 30 : null;
-    if (price < ma20 || (ma30 && price < ma30)) return "rev";
+    if(price < ma20 || (ma30 && price < ma30)) return "rev";
   }
-  if(p30===null && net===0) return "watch";         // 無數據
-  return "opp";                     // 題材成員，有動能或資金
+  if(p30===null && net===0) return "watch";
+  return "done";
+}
+function isSell(s){
+  const iv = getInst(s);
+  return (iv.f + iv.t + iv.s) <= -8;
+}
+function isRev(s){
+  const h = histories[s.code];
+  const price = priceCache[s.code]?.price;
+  if(!h?.closes?.length || !price) return false;
+  const c = h.closes;
+  if(c.length < 20) return false;
+  const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
+  const ma30 = c.length >= 30 ? c.slice(-30).reduce((a,b)=>a+b,0) / 30 : null;
+  return price < ma20 || (ma30 && price < ma30);
 }
 function sigBadge(s){
   const sig = computeSig(s);
-  if(sig==="up")    return `<span class="badge b-up">買超中</span>`;
-  if(sig==="dn")    return `<span class="badge b-dn">賣超中</span>`;
-  if(sig==="weak")  return `<span class="badge b-weak">待加強</span>`;
-  if(sig==="rev")   return `<span class="badge b-rev">趨勢反轉</span>`;
-  if(sig==="watch") return `<span class="badge b-neu">觀察中</span>`;
-  return `<span class="badge b-opp">機會點</span>`;
+  const badges = [];
+  if(sig==="up")   badges.push(`<span class="badge b-up">買超中</span>`);
+  else if(sig==="weak") badges.push(`<span class="badge b-weak">待加強</span>`);
+  else if(sig==="opp")  badges.push(`<span class="badge b-opp">機會點</span>`);
+  else if(sig==="watch") badges.push(`<span class="badge b-neu">觀察中</span>`);
+  else              badges.push(`<span class="badge b-neu">已反映</span>`);
+  if(isSell(s)) badges.push(`<span class="badge b-dn">賣超中</span>`);
+  if(isRev(s)) badges.push(`<span class="badge b-rev">趨勢反轉</span>`);
+  return badges.join(" ");
 }
 
 function updateMetrics(){
@@ -1747,6 +1765,7 @@ async function loadData(){
     }
     if(data.opportunities){
       opps = data.opportunities;
+      oppCodes = new Set(opps.map(o => o.code));
     }
     if(data.histories){
       histories = data.histories;
