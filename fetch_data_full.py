@@ -680,6 +680,28 @@ def fetch_twii():
         return None
 
 
+# ── VIX 恐慌指數 ─────────────────────────────────────────
+
+def fetch_vix():
+    """Yahoo Finance — ^VIX，境外可用"""
+    try:
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d"
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        meta = r.json()["chart"]["result"][0]["meta"]
+        price = meta["regularMarketPrice"]
+        prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
+        if not price or not prev:
+            return None
+        return {
+            "price": round(price, 2),
+            "chg":   round(price - prev, 2),
+            "chgP":  round((price - prev) / prev * 100, 2),
+        }
+    except Exception as e:
+        print(f"   ⚠️ VIX: {e}")
+        return None
+
+
 # ── 三大法人 ──────────────────────────────────────────────
 
 def fetch_institutional():
@@ -1452,6 +1474,13 @@ def main():
     if twii:
         data["twii"] = twii
         print(f"✅ 加權指數: {twii['price']} ({twii['chg']:+.2f})")
+
+    vix = fetch_vix()
+    if vix:
+        data["vix"] = vix
+        print(f"✅ VIX: {vix['price']} ({vix['chg']:+.2f})")
+    else:
+        print(f"   ⚠️ VIX 抓取失敗，保留前次資料（{data.get('vix', {}).get('price', '無')}）")
 
     print("📈 大盤歷史走勢...")
     twii_closes, twii_dates = fetch_twii_history()

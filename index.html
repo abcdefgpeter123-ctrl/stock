@@ -29,6 +29,10 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
 .metric .lbl{font-size:14px;color:#cbd5e1;margin-bottom:6px;letter-spacing:.03em;font-weight:500}
 .metric .val{font-size:20px;font-weight:500;font-family:var(--mono);color:var(--text)}
 .metric .chg{font-size:12px;margin-top:4px}
+.vix-tooltip{position:relative;cursor:help}
+.vix-tooltip .vix-tip{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--border);border-radius:8px;padding:12px 14px;width:260px;font-size:12px;line-height:1.6;color:var(--text2);z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.vix-tooltip:hover .vix-tip{display:block}
+.vix-tip-title{font-weight:600;color:var(--text);margin-bottom:6px;font-size:13px}
 .up{color:var(--up)}.dn{color:var(--dn)}.neu{color:var(--text2)}
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .pill{font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:transparent;font-family:var(--font)}
@@ -256,6 +260,21 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div class="metric"><div class="lbl">外資 <span id="inst-date-lbl" style="color:var(--text3)">—</span></div><div class="val" id="m-foreign">—</div><div class="chg" id="m-foreign-chg">—</div></div>
     <div class="metric"><div class="lbl">投信</div><div class="val" id="m-trust">—</div><div class="chg" id="m-trust-chg">—</div></div>
     <div class="metric"><div class="lbl">自營商</div><div class="val" id="m-dealer">—</div><div class="chg" id="m-dealer-chg">—</div></div>
+    <div class="metric vix-tooltip">
+      <div class="lbl">VIX 恐慌指數 ⓘ</div>
+      <div class="val" id="m-vix">—</div>
+      <div class="chg" id="m-vix-chg">—</div>
+      <div class="vix-tip">
+        <div class="vix-tip-title">VIX 是什麼？</div>
+        VIX（CBOE Volatility Index）衡量市場對未來 30 天 S&P 500 波動性的預期，由芝加哥期權交易所根據 S&P 500 選擇權的隱含波動率計算而來。<br><br>
+        <b>解讀參考：</b><br>
+        🟢 &lt; 15：市場平靜，情緒樂觀<br>
+        🟡 15–25：正常波動區間<br>
+        🟠 25–35：市場緊張，需留意風險<br>
+        🔴 &gt; 35：恐慌情緒高漲（歷史危機常見）<br><br>
+        <span style="color:var(--text3)">資料來源：Yahoo Finance（^VIX）</span>
+      </div>
+    </div>
     <div class="metric"><div class="lbl">資料來源</div><div class="val" id="m-source" style="font-size:14px">data.json</div><div class="chg neu">每日更新</div></div>
   </div>
 
@@ -1607,6 +1626,19 @@ function updateMetrics(){
   }
 }
 
+function updateVix(vix){
+  if(!vix || vix.price == null) return;
+  const el = document.getElementById("m-vix");
+  const chgEl = document.getElementById("m-vix-chg");
+  if(!el) return;
+  const v = vix.price;
+  el.textContent = v.toFixed(2);
+  el.style.color = v < 15 ? "var(--up)" : v < 25 ? "var(--text)" : v < 35 ? "#fb923c" : "var(--dn)";
+  const sign = vix.chg >= 0 ? "+" : "";
+  const lvl = v < 15 ? "平靜" : v < 25 ? "正常" : v < 35 ? "緊張" : "恐慌";
+  chgEl.innerHTML = `<span class="${vix.chg>=0?'dn':'up'}">${sign}${vix.chg.toFixed(2)}</span> <span style="color:var(--text3)">${lvl}</span>`;
+}
+
 function setInstMetrics(data){
   if(!data) return;
   const fmt = v => {
@@ -1760,6 +1792,7 @@ async function loadData(){
     if(data.institutional){
       setInstMetrics(data.institutional);
     }
+    if(data.vix) updateVix(data.vix);
     if(data.prices){
       priceCache = data.prices;
       nameCache = {};
