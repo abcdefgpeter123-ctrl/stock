@@ -287,7 +287,8 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <!-- 題材回顧 + 機會點摘要 -->
   <div class="sec-hd" id="theme-review-hd">📈 近期大盤題材回顧</div>
   <div class="theme-period-tabs">
-    <button class="theme-period-tab active" data-period="p5" onclick="switchThemePeriod('p5',this)">一週</button>
+    <button class="theme-period-tab active" data-period="p1" onclick="switchThemePeriod('p1',this)">一天</button>
+    <button class="theme-period-tab" data-period="p5" onclick="switchThemePeriod('p5',this)">一週</button>
     <button class="theme-period-tab" data-period="p30" onclick="switchThemePeriod('p30',this)">一個月</button>
     <button class="theme-period-tab" data-period="p180" onclick="switchThemePeriod('p180',this)">半年</button>
   </div>
@@ -389,65 +390,65 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 // 監控清單：主動型 ETF 前10大持股（29支台股）
 const STOCKS=[
   // ── 半導體 ──
-  {code:"2330",name:"台積電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3711",name:"日月光投控",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2454",name:"聯發科",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2303",name:"聯電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3661",name:"世芯-KY",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6488",name:"環球晶",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2449",name:"京元電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3034",name:"聯詠",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2379",name:"瑞昱",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2344",name:"華邦電",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"6223",name:"旺矽",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2408",name:"南亞科",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3443",name:"創意電子",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6239",name:"力成",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2404",name:"漢唐",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3105",name:"穩懋",theme:"半導體",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2330",name:"台積電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3711",name:"日月光投控",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2454",name:"聯發科",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2303",name:"聯電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"3661",name:"世芯-KY",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6488",name:"環球晶",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2449",name:"京元電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"3034",name:"聯詠",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2379",name:"瑞昱",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2344",name:"華邦電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6223",name:"旺矽",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2408",name:"南亞科",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3443",name:"創意電子",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6239",name:"力成",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2404",name:"漢唐",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3105",name:"穩懋",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── ABF載板 ──
-  {code:"2383",name:"台光電",theme:"ABF載板",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3037",name:"欣興",theme:"ABF載板",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2383",name:"台光電",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3037",name:"欣興",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── AI伺服器 ──
-  {code:"2382",name:"廣達",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6669",name:"緯穎",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2356",name:"英業達",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2376",name:"技嘉",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3231",name:"緯創",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2357",name:"華碩",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2324",name:"仁寶",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2308",name:"台達電",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2317",name:"鴻海",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2301",name:"光寶科",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2059",name:"川湖",theme:"AI伺服器",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2382",name:"廣達",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6669",name:"緯穎",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2356",name:"英業達",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2376",name:"技嘉",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3231",name:"緯創",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2357",name:"華碩",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2324",name:"仁寶",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2308",name:"台達電",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2317",name:"鴻海",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2301",name:"光寶科",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2059",name:"川湖",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 液冷散熱 ──
-  {code:"3017",name:"奇鋐",theme:"液冷散熱",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"8996",name:"高力",theme:"液冷散熱",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3017",name:"奇鋐",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"8996",name:"高力",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 網通 ──
-  {code:"2345",name:"智邦",theme:"網通",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2345",name:"智邦",theme:"網通",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 海運 ──
-  {code:"2603",name:"長榮",theme:"海運",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2603",name:"長榮",theme:"海運",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 傳產 ──
-  {code:"2002",name:"中鋼",theme:"傳產",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6505",name:"台塑化",theme:"傳產",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2002",name:"中鋼",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6505",name:"台塑化",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 金融 ──
-  {code:"2881",name:"富邦金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2882",name:"國泰金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2891",name:"中信金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2885",name:"元大金",theme:"金融",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2881",name:"富邦金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2882",name:"國泰金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2891",name:"中信金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2885",name:"元大金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── PCB ──
-  {code:"3044",name:"健鼎",theme:"PCB",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3044",name:"健鼎",theme:"PCB",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── IC通路 ──
-  {code:"3036",name:"文曄",theme:"IC通路",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3036",name:"文曄",theme:"IC通路",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 光學 ──
-  {code:"3008",name:"大立光",theme:"光學",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3008",name:"大立光",theme:"光學",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 被動元件 ──
-  {code:"2327",name:"國巨",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2492",name:"華新科",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3026",name:"禾伸堂",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6173",name:"信昌電",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3090",name:"日電貿",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2472",name:"立隆電",theme:"被動元件",p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
+  {code:"2327",name:"國巨",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2492",name:"華新科",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3026",name:"禾伸堂",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6173",name:"信昌電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3090",name:"日電貿",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2472",name:"立隆電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
 let opps = [];
 
@@ -493,9 +494,9 @@ function renderMarketSummary() {
     themeMap[s.theme].push(s);
   });
 
-  const pKey = themePeriod || "p5";
-  const periodLabel = pKey === "p5" ? "近5日" : pKey === "p30" ? "近30日" : "近半年";
-  const hotThreshold = pKey === "p180" ? 20 : pKey === "p30" ? 5 : 2;
+  const pKey = themePeriod || "p1";
+  const periodLabel = pKey === "p1" ? "今日" : pKey === "p5" ? "近5日" : pKey === "p30" ? "近30日" : "近半年";
+  const hotThreshold = pKey === "p180" ? 20 : pKey === "p30" ? 5 : pKey === "p5" ? 2 : 1;
 
   const themes = Object.entries(themeMap).map(([name, stocks]) => {
     const valid = stocks.filter(s => s[pKey] != null);
@@ -1488,9 +1489,11 @@ function fmtPrice(code){
   return wrapCls ? `<span class="${wrapCls}">${inner}</span>` : inner;
 }
 
-// 從 histories 動態補算 p5/p30/p180
+// 從 histories 動態補算 p1/p5/p30/p180
 function computeReturns(){
   STOCKS.forEach(s => {
+    const pd = priceCache[s.code];
+    if(s.p1 == null && pd) s.p1 = Math.round(pd.changeP * 10) / 10;
     const h = histories[s.code];
     if(!h || !h.closes || h.closes.length < 2) return;
     const closes = h.closes;
@@ -1512,7 +1515,7 @@ function computeReturns(){
   });
 }
 
-let themePeriod = "p5";
+let themePeriod = "p1";
 function switchThemePeriod(period, el){
   themePeriod = period;
   document.querySelectorAll(".theme-period-tab").forEach(b => b.classList.remove("active"));
