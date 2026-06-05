@@ -1470,6 +1470,12 @@ def main():
               f"外{inst['foreign']/1e8:+.0f}億 "
               f"投{inst['trust']/1e8:+.0f}億 "
               f"自{inst['dealer']/1e8:+.0f}億")
+    else:
+        prev = data.get("institutional", {})
+        if prev:
+            print(f"   ⚠️ 法人數據抓取失敗，保留前次資料（{prev.get('date','?')}）")
+        else:
+            print("   ⚠️ 法人數據抓取失敗，無前次資料可保留")
 
     # 3. 全台個股 — 優先用開放 API
     print("📊 TWSE 開放 API — 上市股票...")
