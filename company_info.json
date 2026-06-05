@@ -4,28 +4,36 @@
     "business_desc": "全球最大晶圓代工廠，製程領先（3nm/2nm），主要客戶涵蓋 Apple、NVIDIA、AMD，AI 算力需求帶動先進製程訂單大幅成長。",
     "industry": "半導體業",
     "major_clients": "Apple、NVIDIA、AMD、Qualcomm",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 32.1,
+    "eps": 73.7
   },
   "2317": {
     "core_products": "電子組裝代工（EMS）",
     "business_desc": "全球最大電子代工廠，負責 Apple iPhone 及 AI 伺服器組裝，積極布局 AI 伺服器供應鏈，與 NVIDIA 深度合作。",
     "industry": "電子零組件業",
     "major_clients": "Apple、NVIDIA、Microsoft",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 21.2,
+    "eps": 13.39
   },
   "3711": {
     "core_products": "IC 封裝測試",
     "business_desc": "全球最大 IC 封測廠，先進封裝（SiP、CoWoS 相容）為 AI 晶片需求受惠股，客戶涵蓋各大半導體廠。",
     "industry": "半導體業",
     "major_clients": "Qualcomm、MediaTek、Apple",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 56.6,
+    "eps": 10.2
   },
   "6669": {
     "core_products": "AI 伺服器整機",
     "business_desc": "台灣 AI 伺服器 ODM 龍頭，專攻 NVIDIA GPU 伺服器，受 AI 資料中心建設潮帶動，出貨量高速成長。",
     "industry": "伺服器業",
     "major_clients": "Meta、Google、Microsoft",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 21.3,
+    "eps": 265.69
   },
   "5274": {
     "core_products": "BMC 管理晶片",
@@ -39,7 +47,9 @@
     "business_desc": "台灣 IC 設計公司，專攻 AI 推論 ASIC 客製化設計，與雲端巨頭合作開發專用 AI 晶片，高毛利模式。",
     "industry": "半導體業",
     "major_clients": "Amazon、Google",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 63.3,
+    "eps": 67.7
   },
   "4863": {
     "core_products": "銅箔基板（CCL）",
@@ -60,7 +70,9 @@
     "business_desc": "台灣中型 IC 測試廠，AI 晶片需求帶動測試訂單成長，積極擴充先進製程測試產能。",
     "industry": "半導體業",
     "major_clients": "MediaTek、聯發科、瑞昱",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 47.6,
+    "eps": 6.5
   },
   "2458": {
     "core_products": "觸控/指紋 IC",
@@ -95,14 +107,18 @@
     "business_desc": "台灣 DRAM 製造廠，生產 DDR5 記憶體，AI 伺服器對 HBM 與 DDR5 需求爆發，帶動記憶體報價大幅回升。",
     "industry": "半導體業",
     "major_clients": "伺服器廠、PC 廠",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 172.2,
+    "eps": 2.09
   },
   "2344": {
     "core_products": "NOR Flash / DRAM",
     "business_desc": "台灣記憶體廠，生產 NOR Flash 及 DRAM，受益 AI 邊緣裝置對 NOR Flash 需求增加及記憶體景氣回升。",
     "industry": "半導體業",
     "major_clients": "手機廠、IoT 裝置廠",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 184.1,
+    "eps": 0.88
   },
   "2369": {
     "core_products": "IC 封裝測試",
@@ -172,21 +188,27 @@
     "business_desc": "全球前三大被動元件廠，MLCC 為核心產品，AI 伺服器、電動車帶動高端 MLCC 需求，毛利率持續改善。",
     "industry": "電子零組件業",
     "major_clients": "Apple、車廠、AI 伺服器廠",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 66.8,
+    "eps": 11.52
   },
   "2492": {
     "core_products": "電阻器",
     "business_desc": "台灣被動元件廠，以電阻器為主，AI 伺服器建置潮帶動電阻需求，受國巨帶動整體被動元件題材走揚。",
     "industry": "電子零組件業",
     "major_clients": "電子製造廠",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 87.8,
+    "eps": 4.74
   },
   "3034": {
     "core_products": "顯示驅動 IC",
     "business_desc": "台灣顯示驅動 IC 設計廠，OLED 面板驅動 IC 市場龍頭，受 AI 裝置面板滲透率提升帶動需求。",
     "industry": "半導體業",
     "major_clients": "Samsung、LG、BOE",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 18.3,
+    "eps": 26.85
   },
   "6274": {
     "core_products": "高頻高速 PCB",
@@ -200,7 +222,9 @@
     "business_desc": "台灣最大散熱模組廠，液冷散熱系統為 AI 資料中心剛需，AI GPU 功耗激增帶動液冷滲透率快速提升。",
     "industry": "電子零組件業",
     "major_clients": "緯穎、廣達、英業達、Dell",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 43.4,
+    "eps": 59.89
   },
   "3230": {
     "core_products": "液冷散熱系統",
@@ -249,7 +273,9 @@
     "business_desc": "台灣最大貨櫃航運公司，受全球貿易量回升、紅海危機帶動運費大幅走揚，為海運題材龍頭股。",
     "industry": "航運業",
     "major_clients": "全球貿易商",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 7.3,
+    "eps": 31.65
   },
   "2609": {
     "core_products": "貨櫃航運",
@@ -375,7 +401,9 @@
     "business_desc": "台灣最大鋼鐵廠，受全球鋼價與中國鋼材傾銷影響，AI 資料中心建設帶動鋼結構需求為新題材。",
     "industry": "鋼鐵業",
     "major_clients": "建設業、製造業",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": null,
+    "eps": -0.29
   },
   "1301": {
     "core_products": "石化基礎原料",
@@ -396,14 +424,18 @@
     "business_desc": "台灣最大金控，旗下富邦人壽、台北富邦銀行，受利率環境與股市上漲帶動淨值回升，為金融股龍頭。",
     "industry": "金融業",
     "major_clients": "一般消費者、企業",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 14.1,
+    "eps": 8.37
   },
   "2882": {
     "core_products": "壽險 / 金控",
     "business_desc": "台灣大型金控，旗下國泰人壽、國泰世華銀行，資產規模龐大，利率與股市表現為獲利主要驅動力。",
     "industry": "金融業",
     "major_clients": "一般消費者、企業",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 14.2,
+    "eps": 7.06
   },
   "2412": {
     "core_products": "電信服務",
@@ -417,7 +449,9 @@
     "business_desc": "全球前三大矽晶圓廠，AI 先進製程帶動大矽晶圓需求，長約訂單保障穩定收益，為半導體基礎材料廠。",
     "industry": "半導體材料業",
     "major_clients": "台積電、三星、英特爾",
-    "generated": "2026/05/22"
+    "generated": "2026/05/22",
+    "pe": 53.3,
+    "eps": 15.23
   },
   "1626": {
     "core_products": "液冷系統元件",
@@ -494,63 +528,81 @@
     "business_desc": "全球第二大IC設計廠，天璣系列SoC主導Android中高階市場，積極布局AI on-device、車用及AIoT。",
     "industry": "半導體業",
     "major_clients": "三星、小米、OPPO、vivo",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 65.1,
+    "eps": 66.01
   },
   "3443": {
     "core_products": "ASIC/IC設計服務、IP授權",
     "business_desc": "全球最大矽智財（IP）供應商之一，台積電最大IP合作夥伴，承接雲端大廠AI ASIC客製化設計。",
     "industry": "半導體業",
     "major_clients": "Google、Amazon、Meta、台積電",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 156.6,
+    "eps": 28.16
   },
   "6239": {
     "core_products": "半導體封裝測試（記憶體）",
     "business_desc": "台灣重要記憶體封測廠，主力服務DRAM/Flash封測，受惠AI伺服器HBM需求成長。",
     "industry": "半導體業",
     "major_clients": "三星、SK海力士、美光",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 45.5,
+    "eps": 7.43
   },
   "2404": {
     "core_products": "半導體廠務工程（超純水、潔淨室）",
     "business_desc": "台灣最大半導體廠務工程承包商，台積電擴廠最直接受惠者，業績能見度高。",
     "industry": "半導體業",
     "major_clients": "台積電、聯電",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 25.3,
+    "eps": 47.72
   },
   "3105": {
     "core_products": "GaAs化合物半導體代工（PA晶片）",
     "business_desc": "砷化鎵PA晶片主要代工廠，5G手機與低軌衛星PA核心供應商，穩懋為Skyworks、Qorvo主要代工夥伴。",
     "industry": "半導體業",
     "major_clients": "Skyworks、Qorvo、村田",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 120.9,
+    "eps": 4.0
   },
   "2301": {
     "core_products": "電源供應器、光電模組、連接器",
     "business_desc": "AI伺服器電源供應器（PSU）重要供應商，受惠GB200/GB300平台放量，同時布局光通訊模組。",
     "industry": "電子零組件業",
     "major_clients": "Dell、HP、雲端大廠",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 34.9,
+    "eps": 6.59
   },
   "2059": {
     "core_products": "伺服器機架滑軌",
     "business_desc": "全球高階伺服器滑軌市占率逾70%，近乎壟斷地位。AI伺服器機架需求爆量直接帶動業績，訂單能見度超18個月。",
     "industry": "電子零組件業",
     "major_clients": "Dell、HP、Super Micro、雲端大廠",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 55.9,
+    "eps": 100.58
   },
   "8996": {
     "core_products": "工業熱交換器、液冷模組",
     "business_desc": "數據中心液冷散熱關鍵設備廠，冷卻水塔與熱交換器為AI機房必備，受惠液冷滲透率快速提升。",
     "industry": "電機機械業",
     "major_clients": "國內外資料中心、科技廠",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 125.6,
+    "eps": 8.96
   },
   "2885": {
     "core_products": "證券、銀行、人壽（金融控股）",
     "business_desc": "元大金控旗下元大證券為台灣最大券商，台股成交量熱絡直接受惠，手續費收入占比高。",
     "industry": "金融業",
     "major_clients": "零售與法人投資人",
-    "generated": "2026/05/31"
+    "generated": "2026/05/31",
+    "pe": 23.8,
+    "eps": 2.74
   },
   "3044": {
     "core_products": "高階PCB（汽車板、伺服器板）",
@@ -565,5 +617,110 @@
     "industry": "電子通路業",
     "major_clients": "台灣電子製造業",
     "generated": "2026/05/31"
+  },
+  "2308": {
+    "generated": "2026/06/05",
+    "pe": 99.8,
+    "eps": 23.04
+  },
+  "2345": {
+    "generated": "2026/06/05",
+    "pe": 53.3,
+    "eps": 46.69
+  },
+  "3037": {
+    "generated": "2026/06/05",
+    "pe": 213.5,
+    "eps": 4.37
+  },
+  "2891": {
+    "generated": "2026/06/05",
+    "pe": 16.4,
+    "eps": 4.06
+  },
+  "3374": {
+    "generated": "2026/06/05",
+    "pe": 49.8,
+    "eps": 4.95
+  },
+  "6173": {
+    "generated": "2026/06/05",
+    "pe": 68.8,
+    "eps": 3.25
+  },
+  "3090": {
+    "generated": "2026/06/05",
+    "pe": 40.9,
+    "eps": 5.41
+  },
+  "2356": {
+    "generated": "2026/06/05",
+    "pe": 31.9,
+    "eps": 2.41
+  },
+  "6223": {
+    "generated": "2026/06/05",
+    "pe": 172.7,
+    "eps": 33.39
+  },
+  "2376": {
+    "generated": "2026/06/05",
+    "pe": 21.5,
+    "eps": 17.17
+  },
+  "3026": {
+    "generated": "2026/06/05",
+    "pe": 95.9,
+    "eps": 6.53
+  },
+  "5347": {
+    "generated": "2026/06/05",
+    "pe": 38.3,
+    "eps": 4.22
+  },
+  "2382": {
+    "generated": "2026/06/05",
+    "pe": 20.7,
+    "eps": 18.91
+  },
+  "2472": {
+    "generated": "2026/06/05",
+    "pe": 41.7,
+    "eps": 8.72
+  },
+  "2324": {
+    "generated": "2026/06/05",
+    "pe": 30.2,
+    "eps": 1.37
+  },
+  "2357": {
+    "generated": "2026/06/05",
+    "pe": 15.1,
+    "eps": 59.5
+  },
+  "6505": {
+    "generated": "2026/06/05",
+    "pe": 53.2,
+    "eps": 1.04
+  },
+  "2383": {
+    "generated": "2026/06/05",
+    "pe": 106.5,
+    "eps": 45.89
+  },
+  "2303": {
+    "generated": "2026/06/05",
+    "pe": 33.4,
+    "eps": 3.94
+  },
+  "2379": {
+    "generated": "2026/06/05",
+    "pe": 22.9,
+    "eps": 28.08
+  },
+  "3231": {
+    "generated": "2026/06/05",
+    "pe": 20.4,
+    "eps": 8.4
   }
 }
