@@ -155,7 +155,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .expand-icon{display:inline-block;margin-right:4px;color:var(--text3);font-size:10px;transition:transform .2s}
 .stock-row.expanded .expand-icon{transform:rotate(90deg)}
 
-@media(max-width:600px){body{padding:16px 14px 40px}.metrics{grid-template-columns:repeat(2,1fr)}.header h1{font-size:18px}}
+@media(max-width:600px){body{padding:16px 14px 40px}.metrics{grid-template-columns:repeat(2,1fr)}.header h1{font-size:18px}.tp-pros-cons{grid-template-columns:1fr}}
 
 /* ── 區塊收合按鈕 ─────────────────────────────────────── */
 .sec-toggle{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font);transition:all .15s}
@@ -207,6 +207,13 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-fund-avg{font-size:11px;color:#a8bacf;margin-left:8px}
 .tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
 .tp-risk-item:before{content:"⚠";position:absolute;left:0;font-size:10px;color:#fbbf24;top:1px}
+.tp-pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);background:#07101e}
+.tp-pc-col{display:flex;flex-direction:column;gap:6px}
+.tp-pc-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.tp-pc-title.pro{color:#4ade80}.tp-pc-title.con{color:#f87171}
+.tp-pc-item{font-size:12px;line-height:1.5;padding-left:16px;position:relative;color:var(--text2)}
+.tp-pc-item.pro:before{content:"✓";position:absolute;left:0;color:#4ade80;font-weight:700}
+.tp-pc-item.con:before{content:"✗";position:absolute;left:0;color:#f87171;font-weight:700}
 @media(max-width:600px){.tp-stats-grid{grid-template-columns:repeat(3,1fr)}.tp-stat-cell:nth-child(5n){border-right:1px solid rgba(255,255,255,0.04)}.tp-stat-cell:nth-child(3n){border-right:none}.tp-price{font-size:20px}}
 /* ── TWII 大盤線圖 ─────────────────────────────────────── */
 .twii-chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;display:none}
@@ -1047,6 +1054,8 @@ function renderDetail(code) {
   const core  = si.core_product || ci.core_products || "";
   const story = si.recent_story || ci.recent_story  || "";
   const risks = si.risks || [];
+  const pros  = ci.pros  || [];
+  const cons  = ci.cons  || [];
   const pe     = si.pe ?? ci.pe_ratio ?? ci.pe ?? null;
   const epsRaw = si.eps ?? ci.eps ?? null;
   // 若無明確 EPS，用 Price÷PE 推算（標示為估算）
@@ -1147,6 +1156,16 @@ function renderDetail(code) {
         </div>
       </div>` : ""}
       ${risks.length ? `<div class="tp-fund-block"><span class="tp-fund-lbl">風險</span><div style="flex:1">${risks.map(r=>`<div class="tp-risk-item">${r}</div>`).join("")}</div></div>` : ""}
+    </div>` : ""}
+    ${(pros.length || cons.length) ? `<div class="tp-pros-cons">
+      <div class="tp-pc-col">
+        <div class="tp-pc-title pro">利多</div>
+        ${pros.map(p=>`<div class="tp-pc-item pro">${p}</div>`).join("")}
+      </div>
+      <div class="tp-pc-col">
+        <div class="tp-pc-title con">風險</div>
+        ${cons.map(c=>`<div class="tp-pc-item con">${c}</div>`).join("")}
+      </div>
     </div>` : ""}
   </div>`;
 }

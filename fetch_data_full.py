@@ -177,14 +177,18 @@ def _call_claude(code, name, api_key):
 
 
 def _generate_story(code, name, theme, p5, p30, api_key):
-    """用 Claude Haiku 生成個股近期股價故事（2-3句純文字）"""
+    """用 Claude Haiku 生成個股近期故事 + 優缺點，回傳 dict {story, pros, cons}"""
     p5_txt  = (f"+{p5}%" if p5 and p5 > 0 else f"{p5}%") if p5 is not None else "持平"
     p30_txt = (f"+{p30}%" if p30 and p30 > 0 else f"{p30}%") if p30 is not None else "持平"
     prompt = (
         f"台股代號 {code}，公司名稱「{name}」，所屬題材：{theme}。\n"
         f"近5日漲幅：{p5_txt}，近30日漲幅：{p30_txt}。\n"
-        "請用繁體中文 2-3 句，描述這支股票近期股價表現原因、題材催化劑與未來展望。\n"
-        "直接輸出純文字，不要 JSON，不要引號，不要標題。"
+        "請用繁體中文，以 JSON 格式回傳以下三個欄位：\n"
+        "- story: 2-3 句描述近期股價表現原因與題材催化劑（純文字）\n"
+        "- pros: 3-4 點利多（字串陣列，每點 15 字以內）\n"
+        "- cons: 3-4 點風險（字串陣列，每點 15 字以內）\n"
+        "只輸出 JSON，不要其他文字。範例：\n"
+        '{"story":"...", "pros":["點1","點2","點3"], "cons":["點1","點2","點3"]}'
     )
     try:
         resp = requests.post(
@@ -196,12 +200,14 @@ def _generate_story(code, name, theme, p5, p30, api_key):
             },
             json={
                 "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 200,
+                "max_tokens": 400,
                 "messages": [{"role": "user", "content": prompt}],
             },
-            timeout=20,
+            timeout=25,
         )
-        return resp.json()["content"][0]["text"].strip()
+        text = resp.json()["content"][0]["text"].strip()
+        start = text.find("{"); end = text.rfind("}") + 1
+        return json.loads(text[start:end]) if start >= 0 else None
     except Exception as e:
         print(f"   ⚠️ Story {code}: {e}")
         return None
@@ -229,13 +235,13 @@ def generate_stories(company_info, histories_json, all_prices, api_key, max_new=
         return round((cur - base) / base * 100, 1) if base > 0 else None
 
     generated = 0
-    print(f"   📝 生成個股故事（最多 {max_new} 筆）...")
+    print(f"   📝 生成個股故事 + 優缺點（最多 {max_new} 筆）...")
     for code, theme in code_theme.items():
         if generated >= max_new:
             break
         entry = company_info.get(code, {})
-        # 今天已生成就跳過
-        if entry.get("story_date") == today_str:
+        # 今天已生成且有 pros/cons 就跳過
+        if entry.get("story_date") == today_str and entry.get("pros") and entry.get("cons"):
             continue
         hist = histories_json.get(code)
         if not hist:
@@ -244,16 +250,18 @@ def generate_stories(company_info, histories_json, all_prices, api_key, max_new=
         name   = all_prices.get(code, {}).get("name", code)
         p5     = pct(closes, 5)
         p30    = pct(closes, 30)
-        story  = _generate_story(code, name, theme, p5, p30, api_key)
-        if story:
+        result = _generate_story(code, name, theme, p5, p30, api_key)
+        if result and isinstance(result, dict):
             entry = company_info.setdefault(code, {"generated": today_str})
-            entry["recent_story"] = story
+            entry["recent_story"] = result.get("story", "")
+            entry["pros"]         = result.get("pros", [])
+            entry["cons"]         = result.get("cons", [])
             entry["story_date"]   = today_str
             company_info[code]    = entry
             generated += 1
             time.sleep(0.5)
 
-    print(f"   ✅ 生成 {generated} 筆近期故事")
+    print(f"   ✅ 生成 {generated} 筆近期故事 + 優缺點")
     return company_info
 
 
