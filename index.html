@@ -1623,8 +1623,7 @@ function isRev(s){
   const c = h.closes;
   if(c.length < 20) return false;
   const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
-  const ma30 = c.length >= 30 ? c.slice(-30).reduce((a,b)=>a+b,0) / 30 : null;
-  return price < ma20 || (ma30 && price < ma30);
+  return price < ma20;
 }
 function sigBadge(s){
   const sig = computeSig(s);
@@ -1635,7 +1634,7 @@ function sigBadge(s){
   else if(sig==="watch") badges.push(`<span class="badge b-neu">觀察中</span>`);
   else              badges.push(`<span class="badge b-neu">已反映</span>`);
   if(isSell(s)) badges.push(`<span class="badge b-dn">賣超中</span>`);
-  if(isRev(s)) badges.push(`<span class="badge b-rev">趨勢反轉</span>`);
+  if(isRev(s)) badges.push(`<span class="badge b-rev">趨勢反轉20</span>`);
   return badges.join(" ");
 }
 
