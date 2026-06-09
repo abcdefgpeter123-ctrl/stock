@@ -1619,11 +1619,21 @@ function isSell(s){
 function isRev(s){
   const h = histories[s.code];
   const price = priceCache[s.code]?.price;
-  if(!h?.closes?.length || !price) return false;
+  if(!h?.closes?.length || !price) return null;
   const c = h.closes;
-  if(c.length < 20) return false;
-  const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
-  return price < ma20;
+  if(c.length >= 60){
+    const ma60 = c.slice(-60).reduce((a,b)=>a+b,0) / 60;
+    if(price < ma60) return 60;
+  }
+  if(c.length >= 30){
+    const ma30 = c.slice(-30).reduce((a,b)=>a+b,0) / 30;
+    if(price < ma30) return 30;
+  }
+  if(c.length >= 20){
+    const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
+    if(price < ma20) return 20;
+  }
+  return null;
 }
 function sigBadge(s){
   const sig = computeSig(s);
@@ -1634,7 +1644,8 @@ function sigBadge(s){
   else if(sig==="watch") badges.push(`<span class="badge b-neu">觀察中</span>`);
   else              badges.push(`<span class="badge b-neu">已反映</span>`);
   if(isSell(s)) badges.push(`<span class="badge b-dn">賣超中</span>`);
-  if(isRev(s)) badges.push(`<span class="badge b-rev">趨勢反轉20</span>`);
+  const revN = isRev(s);
+  if(revN) badges.push(`<span class="badge b-rev">趨勢反轉${revN}</span>`);
   return badges.join(" ");
 }
 
