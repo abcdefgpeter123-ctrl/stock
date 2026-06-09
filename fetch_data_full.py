@@ -1450,6 +1450,54 @@ def fetch_inst_stocks(all_prices, target_days=5):
                 print(f"   ⚠️ T86 {url[-50:]}: {e}")
                 continue
 
+    # ── 補抓 TPEX（上櫃）三大法人 ──────────────────────────────
+    tpex_collected = 0
+    for i in range(14):
+        if tpex_collected >= target_days:
+            break
+        d = datetime.date.today() - datetime.timedelta(days=i)
+        # TPEX 日期格式：民國年/月/日
+        tw_date = f"{d.year - 1911}/{d.month:02d}/{d.day:02d}"
+        url = (f"https://www.tpex.org.tw/web/stock/3insti/daily_trade/"
+               f"3itrade_hedge_result.php?l=zh-tw&t=D&d={tw_date}&s=0,asc,0&_=1")
+        try:
+            r = requests.get(url, headers={**HEADERS, "Referer": "https://www.tpex.org.tw/"}, timeout=25)
+            resp = r.json()
+            tables = resp.get("tables", [])
+            if not tables:
+                continue
+            rows = tables[0].get("data", [])
+            if not rows:
+                continue
+            # TPEX 欄位順序：0=代號, 1=名稱,
+            # 2=外買, 3=外賣, 4=外超,  5=外資自營買, 6=外資自營賣, 7=外資自營超,
+            # 8=外陸資合計買, 9=外陸資合計賣, 10=外陸資合計超,
+            # 11=投信買, 12=投信賣, 13=投信超,
+            # 14=自營(自行)買, 15=自營(自行)賣, 16=自營(自行)超,
+            # 17=自營(避險)買, 18=自營(避險)賣, 19=自營(避險)超,
+            # 20=自營合計買, 21=自營合計賣, 22=自營合計超, 23=三大法人
+            def pn_tpex(row, idx):
+                try:
+                    return int(str(row[idx]).replace(",", ""))
+                except Exception:
+                    return 0
+            for row in rows:
+                if len(row) < 14:
+                    continue
+                code = str(row[0]).strip()
+                f_net = pn_tpex(row, 10)   # 外陸資合計超
+                t_net = pn_tpex(row, 13)   # 投信超
+                s_net = pn_tpex(row, 22)   # 自營合計超
+                acc[code]["f"] += f_net / 1e4
+                acc[code]["t"] += t_net / 1e4
+                acc[code]["s"] += s_net / 1e4
+            tpex_collected += 1
+            print(f"   ✅ TPEX 法人 {d.strftime('%Y/%m/%d')} 完成（{tpex_collected}/{target_days}）")
+            time.sleep(0.3)
+        except Exception as e:
+            print(f"   ⚠️ TPEX 法人 {tw_date}: {e}")
+            continue
+
     result = {
         code: {
             "f": round(v["f"], 1),
@@ -1458,7 +1506,7 @@ def fetch_inst_stocks(all_prices, target_days=5):
         }
         for code, v in acc.items()
     }
-    print(f"   📊 個股法人資料：{len(result)} 支，累計 {collected} 個交易日")
+    print(f"   📊 個股法人資料：{len(result)} 支，累計 TWSE {collected} + TPEX {tpex_collected} 個交易日")
     return result
 
 
