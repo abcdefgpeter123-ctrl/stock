@@ -1340,8 +1340,8 @@ function initTpCharts() {
         );
     const isUp = chartData.closes[n-1] >= chartData.closes[0];
     const barColors = chartData.closes.map((c,i) =>
-      i === 0 ? 'rgba(96,165,250,0.35)' :
-      c >= chartData.closes[i-1] ? 'rgba(239,68,68,0.35)' : 'rgba(34,197,94,0.35)'
+      i === 0 ? 'rgba(96,165,250,0.4)' :
+      c >= chartData.closes[i-1] ? 'rgba(96,165,250,0.55)' : 'rgba(148,163,184,0.3)'
     );
 
     canvas.width  = canvas.parentElement.offsetWidth || 600;
@@ -1475,8 +1475,8 @@ function renderTwiiChart(period, btn) {
     if (_twiiVolChart) _twiiVolChart.destroy();
     const vols = closes.map((c, i) => i === 0 ? 500 :
       Math.round(Math.abs(c - closes[i-1]) / (closes[0]||1) * 5000 + 100));
-    const barColors = closes.map((c,i) => i===0 ? 'rgba(96,165,250,0.3)' :
-      c >= closes[i-1] ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)');
+    const barColors = closes.map((c,i) => i===0 ? 'rgba(96,165,250,0.4)' :
+      c >= closes[i-1] ? 'rgba(96,165,250,0.55)' : 'rgba(148,163,184,0.3)');
     _twiiVolChart = new Chart(vCanvas.getContext('2d'), {
       type: 'bar',
       data: { labels, datasets: [{ data: vols, backgroundColor: barColors, borderWidth: 0, borderRadius: 1 }] },
