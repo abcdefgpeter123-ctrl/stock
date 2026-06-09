@@ -637,7 +637,7 @@ function renderFavorites() {
         <td>${fmtPrice(s.code)}</td>
         <td>${pct(s.p5)}</td>
         <td>${pct(s.p30)}</td>
-        <td>${instBar(s.i5f, s.i5t, s.i5s)}</td>
+        <td>${(()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s);})()}</td>
         <td>${sigBadge(s)}</td>
       </tr>
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
@@ -919,7 +919,9 @@ function toggleStockDetail(code) {
   renderFavorites();   // 讓我的最愛也能展開看盤面板
   if (expandedStock) {
     setTimeout(() => {
-      const row = document.querySelector(`tr[data-detail="${code}"]`);
+      // 優先找主表（data-main-detail），避免捲到最愛區塊
+      const row = document.querySelector(`tr[data-main-detail="${code}"]`)
+               || document.querySelector(`tr[data-detail="${code}"]`);
       if (row) row.scrollIntoView({behavior:"smooth", block:"center"});
     }, 50);
   }
@@ -1736,7 +1738,7 @@ function render(){
         <td>${s._extra ? '<span class="neu" style="font-size:11px">—</span>' : (()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s);})()}</td>
         <td>${s._extra ? '' : sigBadge(s)}</td>
       </tr>
-      ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
+      ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("");
 
   const filtOpps = opps.filter(o => activeTheme==="all" || o.theme===activeTheme);
