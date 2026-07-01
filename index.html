@@ -1745,8 +1745,8 @@ function render(){
         <td>${fmtPrice(s.code)}</td>
         <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
         <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
-        <td>${s._extra ? '<span class="neu" style="font-size:11px">—</span>' : (()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s);})()}</td>
-        <td>${s._extra ? '' : sigBadge(s)}</td>
+        <td>${(()=>{const iv=getInst(s);return (iv.f||iv.t||iv.s) ? instBar(iv.f,iv.t,iv.s) : '<span class="neu" style="font-size:11px">—</span>';})()}</td>
+        <td>${sigBadge(s)}</td>
       </tr>
       ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("");
