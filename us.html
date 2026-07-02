@@ -103,10 +103,15 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .theme-card.t-up{border-left:3px solid var(--up)}
 .theme-card.t-dn{border-left:3px solid var(--dn)}
 .theme-card.t-flat{border-left:3px solid var(--text3)}
-.theme-name{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:500}
+.theme-card{cursor:pointer}
+.theme-name{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
 .theme-pct{font-size:22px;font-weight:600;font-family:var(--mono);line-height:1}
 .theme-meta{font-size:11px;color:var(--text3);margin-top:5px}
 .theme-best{font-size:11px;margin-top:3px}
+.theme-stocks{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.theme-card.tc-open .theme-stocks{display:block}
+.theme-stock-row{display:flex;align-items:center;padding:3px 0;font-size:11px;gap:6px}
+.theme-stock-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,0.03)}
 .tp-company-info{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:8px}
 .tp-info-row{display:flex;gap:10px;align-items:flex-start}
 .tp-info-icon{font-size:13px;line-height:1.6;flex-shrink:0}
@@ -408,32 +413,52 @@ let activeThemePeriod = "p1";
 const nameMap   = Object.fromEntries(STOCKS.map(s=>[s.code, s.name]));
 
 // ── 題材回顧 ──────────────────────────────────────────────
+let expandedThemeCard = null;
 function setThemePeriod(p, el){
   activeThemePeriod = p;
   document.querySelectorAll("#theme-period-btns .pill").forEach(b=>b.classList.remove("active"));
   el.classList.add("active");
   renderThemeRecap();
 }
+function toggleThemeCard(theme){
+  expandedThemeCard = expandedThemeCard===theme ? null : theme;
+  renderThemeRecap();
+}
 function renderThemeRecap(){
   const themes = [...new Set(STOCKS.map(s=>s.theme))];
   const grid = document.getElementById("theme-recap-grid");
   if(!grid) return;
+  const periodLabel = {p1:"今日均",p5:"週均",p30:"月均",p180:"半年均"}[activeThemePeriod];
   grid.innerHTML = themes.map(theme=>{
     const group = STOCKS.filter(s=>s.theme===theme);
     const vals  = group.map(s=>s[activeThemePeriod]).filter(v=>v!=null);
-    if(!vals.length) return `<div class="theme-card t-flat"><div class="theme-name">${theme}</div><div class="theme-pct neu">—</div></div>`;
-    const avg  = vals.reduce((a,b)=>a+b,0)/vals.length;
-    const upCnt= vals.filter(v=>v>0).length;
-    const cls  = avg>=1?"t-up":avg<=-1?"t-dn":"t-flat";
-    const clr  = avg>=1?"var(--up)":avg<=-1?"var(--dn)":"var(--text2)";
-    const arrow= avg>=2?"↑":avg>=0.5?"↗":avg<=-2?"↓":avg<=-0.5?"↘":"→";
-    const best = group.filter(s=>s[activeThemePeriod]!=null).sort((a,b)=>b[activeThemePeriod]-a[activeThemePeriod])[0];
-    const periodLabel = {p1:"今日均",p5:"週均",p30:"月均",p180:"半年均"}[activeThemePeriod];
-    return `<div class="theme-card ${cls}">
-      <div class="theme-name">${theme}</div>
+    if(!vals.length) return `<div class="theme-card t-flat" onclick="toggleThemeCard('${theme}')"><div class="theme-name">${theme}<span>▼</span></div><div class="theme-pct neu">—</div></div>`;
+    const avg   = vals.reduce((a,b)=>a+b,0)/vals.length;
+    const upCnt = vals.filter(v=>v>0).length;
+    const cls   = avg>=1?"t-up":avg<=-1?"t-dn":"t-flat";
+    const clr   = avg>=1?"var(--up)":avg<=-1?"var(--dn)":"var(--text2)";
+    const arrow = avg>=2?"↑":avg>=0.5?"↗":avg<=-2?"↓":avg<=-0.5?"↘":"→";
+    const best  = group.filter(s=>s[activeThemePeriod]!=null).sort((a,b)=>b[activeThemePeriod]-a[activeThemePeriod])[0];
+    const isOpen = expandedThemeCard===theme;
+    const sorted = [...group].filter(s=>s[activeThemePeriod]!=null).sort((a,b)=>b[activeThemePeriod]-a[activeThemePeriod]);
+    const stockRows = sorted.map(s=>{
+      const v = s[activeThemePeriod];
+      const sc = v>=0?"var(--up)":"var(--dn)";
+      const pd = priceCache[s.code];
+      const priceStr = pd?`<span style="color:var(--text3);font-family:var(--mono)">${pd.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`:"";
+      return `<div class="theme-stock-row">
+        <span style="color:var(--text3);font-family:var(--mono);font-size:10px;width:40px">${s.code}</span>
+        <span style="flex:1;color:var(--text2)">${s.name}</span>
+        ${priceStr}
+        <span style="width:52px;text-align:right;color:${sc}">${v>=0?"+":""}${v.toFixed(1)}%</span>
+      </div>`;
+    }).join("");
+    return `<div class="theme-card ${cls}${isOpen?" tc-open":""}" onclick="toggleThemeCard('${theme}')">
+      <div class="theme-name">${theme}<span style="font-size:9px;color:var(--text3)">${isOpen?"▲":"▼"}</span></div>
       <div class="theme-pct" style="color:${clr}">${arrow} ${avg>=0?"+":""}${avg.toFixed(1)}%</div>
       <div class="theme-meta">${periodLabel} · ${upCnt}/${vals.length}支上漲</div>
       ${best?`<div class="theme-best" style="color:${clr}">最強：${best.name} ${best[activeThemePeriod]>=0?"+":""}${best[activeThemePeriod].toFixed(1)}%</div>`:""}
+      <div class="theme-stocks">${stockRows}</div>
     </div>`;
   }).join("");
 }
