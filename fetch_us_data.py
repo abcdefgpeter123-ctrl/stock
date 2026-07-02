@@ -122,12 +122,15 @@ def fetch_history(code, period="1y"):
         if h.empty:
             return [], [], []
         closes  = [round(float(c), 2) for c in h["Close"]]
+        opens   = [round(float(c), 2) for c in h["Open"]]
+        highs   = [round(float(c), 2) for c in h["High"]]
+        lows    = [round(float(c), 2) for c in h["Low"]]
         volumes = [int(v) for v in h["Volume"]]
         labels  = [d.strftime("%Y/%m/%d") for d in h.index]
-        return closes, labels, volumes
+        return closes, labels, volumes, opens, highs, lows
     except Exception as e:
         print(f"   ⚠️ history {code}: {e}")
-        return [], [], []
+        return [], [], [], [], [], []
 
 
 def fetch_etf_holdings():
@@ -241,12 +244,15 @@ def main():
     print(f"📉 抓取歷史走勢...")
     histories = {}
     for i, code in enumerate(codes, 1):
-        closes, labels, volumes = fetch_history(code)
+        closes, labels, volumes, opens, highs, lows = fetch_history(code)
         if closes:
             histories[code] = {
                 "labels":  labels,
                 "closes":  closes,
                 "volumes": volumes,
+                "opens":   opens,
+                "highs":   highs,
+                "lows":    lows,
             }
         time.sleep(0.2)
         if i % 5 == 0:

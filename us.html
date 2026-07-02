@@ -98,6 +98,12 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .stock-row.expanded .expand-icon{transform:rotate(90deg)}
 .empty{text-align:center;padding:40px;color:var(--text3);font-size:14px}
 .footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.tp-company-info{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:8px}
+.tp-info-row{display:flex;gap:10px;align-items:flex-start}
+.tp-info-icon{font-size:13px;line-height:1.6;flex-shrink:0}
+.tp-info-text{font-size:12px;line-height:1.65;color:var(--text2)}
+.tp-bull-text{color:#86efac}
+.tp-risk-text{color:#fca5a5}
 /* ── 看盤介面樣式 ─────────────────────────────────────── */
 .tp-wrap{background:#07101e;border-radius:0 0 var(--r) var(--r);overflow:hidden}
 .tp-top{background:#0c1829;border-bottom:1px solid rgba(96,165,250,0.12);padding:10px 14px 8px}
@@ -251,26 +257,86 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 <script>
 // ── 股票清單 ──────────────────────────────────────────────
 const STOCKS = [
-  {code:"MSFT",  name:"微軟",       theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null},
-  {code:"AAPL",  name:"蘋果",       theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null},
-  {code:"GOOGL", name:"Alphabet",   theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null},
-  {code:"AMZN",  name:"亞馬遜",     theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null},
-  {code:"META",  name:"Meta",       theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null},
-  {code:"NVDA",  name:"輝達",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null},
-  {code:"AVGO",  name:"博通",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null},
-  {code:"AMD",   name:"超微",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null},
-  {code:"ANET",  name:"Arista網路", theme:"AI半導體", p1:null,p5:null,p30:null,p180:null},
-  {code:"TSLA",  name:"特斯拉",     theme:"電動車",   p1:null,p5:null,p30:null,p180:null},
-  {code:"V",     name:"Visa",       theme:"金融消費", p1:null,p5:null,p30:null,p180:null},
-  {code:"COST",  name:"好市多",     theme:"金融消費", p1:null,p5:null,p30:null,p180:null},
-  {code:"NFLX",  name:"Netflix",    theme:"串流媒體", p1:null,p5:null,p30:null,p180:null},
-  {code:"NOW",   name:"ServiceNow", theme:"企業軟體", p1:null,p5:null,p30:null,p180:null},
-  {code:"CRM",   name:"Salesforce", theme:"企業軟體", p1:null,p5:null,p30:null,p180:null},
-  {code:"INTU",  name:"Intuit",     theme:"企業軟體", p1:null,p5:null,p30:null,p180:null},
-  {code:"PANW",  name:"Palo Alto",  theme:"網路安全", p1:null,p5:null,p30:null,p180:null},
-  {code:"ISRG",  name:"直覺外科",   theme:"醫療科技", p1:null,p5:null,p30:null,p180:null},
-  {code:"LLY",   name:"禮來",       theme:"醫療科技", p1:null,p5:null,p30:null,p180:null},
-  {code:"ADBE",  name:"Adobe",      theme:"企業軟體", p1:null,p5:null,p30:null,p180:null},
+  {code:"MSFT",  name:"微軟",       theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null,
+   desc:"全球最大軟體公司，旗下有 Windows、Office 365、Azure 雲端平台及 GitHub，並大力押注 OpenAI/Copilot AI 整合。",
+   bull:"Azure 雲端市佔持續追上 AWS；Copilot 滲透企業後每座位授權大幅提升 ARPU；Teams 與 Office 綁定黏性高。",
+   risk:"AI 資本支出龐大壓縮短期自由現金流；反壟斷審查加劇；企業 IT 預算緊縮時訂閱成長可能放緩。"},
+  {code:"AAPL",  name:"蘋果",       theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null,
+   desc:"全球市值最大消費電子公司，iPhone 佔收入約 50%，服務（App Store、訂閱）已成第二大引擎，Apple Silicon 強化垂直整合。",
+   bull:"服務收入毛利率超 70% 且持續雙位數成長；Apple Intelligence 帶動換機潮；印度製造分散地緣風險。",
+   risk:"iPhone 在中國市佔面臨華為競爭；App Store 反壟斷訴訟可能壓縮服務毛利；AI 功能落後 Android 競品疑慮。"},
+  {code:"GOOGL", name:"Alphabet",   theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null,
+   desc:"Google 母公司，搜尋廣告佔收入約 57%，GCP 雲端第三名，YouTube 廣告持續成長，Waymo 自駕為長期選擇權。",
+   bull:"Gemini AI 整合 Search 捍衛廣告護城河；GCP 成長加速；YouTube Shorts 廣告貨幣化提升。",
+   risk:"AI 搜尋顛覆傳統廣告模式；DOJ 反壟斷判決可能拆分業務；中國市場缺席限制規模。"},
+  {code:"AMZN",  name:"亞馬遜",     theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null,
+   desc:"電商龍頭兼 AWS 雲端市佔第一（約 31%），廣告業務是第三大獲利引擎，物流網路自建降低成本。",
+   bull:"AWS 仍是雲端最大份額且 AI 算力需求爆發；廣告業務毛利率高且成長快；零售業務轉虧為盈。",
+   risk:"AWS AI 基礎建設資本支出超 1,000 億美元壓縮現金流；電商競爭 Temu/Shein；監管反壟斷風險。"},
+  {code:"META",  name:"Meta",       theme:"科技巨頭", p1:null,p5:null,p30:null,p180:null,
+   desc:"Facebook、Instagram、WhatsApp 母公司，全球社群廣告收入第二，Llama 開源 AI 及 Reality Labs AR/VR 為長期佈局。",
+   bull:"廣告 AI 優化 ROI 提升吸引廣告主；Threads 持續成長搶 X 用戶；Llama 生態圈提升開發者黏性。",
+   risk:"Reality Labs 持續燒錢（年虧超 150 億美元）；青少年用戶流失；歐盟數位市場法規罰款風險。"},
+  {code:"NVDA",  name:"輝達",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
+   desc:"AI 加速運算晶片霸主，H100/H200/Blackwell GPU 主導資料中心 AI 訓練市場，CUDA 生態圈構建深厚護城河。",
+   bull:"Blackwell 架構需求遠超供給；推論市場爆發帶動 GB200 NVL72 超強需求；軟體護城河 CUDA 難以替代。",
+   risk:"客戶（微軟、Google、亞馬遜）加速自研 AI 晶片；出口管制限制中國市場；估值高本益比承壓。"},
+  {code:"AVGO",  name:"博通",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
+   desc:"半導體與基礎設施軟體雙引擎，網路晶片（Tomahawk、Jericho）主導 AI 叢集互連，VMware 併購強化軟體訂閱收入。",
+   bull:"Google、Meta 等超大規模客戶自研 XPU 大量採用博通網路晶片；VMware 訂閱轉型提升毛利。",
+   risk:"高度依賴少數超大規模客戶；VMware 整合風險；中國出口管制影響部分業務。"},
+  {code:"AMD",   name:"超微",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
+   desc:"CPU（Ryzen/EPYC）與 GPU（MI300/MI350）兩線競爭英特爾與輝達，EPYC 伺服器市佔突破 30%。",
+   bull:"MI300X 成為 NVIDIA H100 最主要替代方案；EPYC 伺服器份額持續蠶食英特爾；ROCm 生態圈改善。",
+   risk:"AI GPU 技術與軟體生態圈仍大幅落後 NVIDIA；出口管制限制中國 AI 晶片銷售；PC 市場成長平緩。"},
+  {code:"ANET",  name:"Arista網路", theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
+   desc:"雲端網路交換機龍頭，EOS 作業系統穩定性高受大型雲端客戶青睞，AI 叢集 400G/800G 網路架構首選供應商。",
+   bull:"AI 叢集對高速乙太網路需求爆炸；微軟、Meta 大量採購 800G 方案；競爭對手 Cisco 轉型緩慢。",
+   risk:"高度集中於少數超大規模客戶（微軟、Meta）；InfiniBand（Mellanox）在訓練叢集互連競爭；估值偏高。"},
+  {code:"TSLA",  name:"特斯拉",     theme:"電動車",   p1:null,p5:null,p30:null,p180:null,
+   desc:"全球電動車銷售龍頭，Supercharger 網路、FSD 全自動駕駛軟體及 Optimus 人形機器人為長期成長催化劑。",
+   bull:"FSD v13 訂閱滲透率提升；Robotaxi 商業化帶來高毛利軟體收入；能源儲存業務（Megapack）高速成長。",
+   risk:"電動車價格戰壓縮毛利；中國比亞迪市佔擴張；馬斯克投入政治活動影響品牌形象；FSD 監管風險。"},
+  {code:"V",     name:"Visa",       theme:"金融消費", p1:null,p5:null,p30:null,p180:null,
+   desc:"全球最大支付網路，不承擔信用風險的純平台商業模式，從每筆交易收取手續費，網路效應構成極深護城河。",
+   bull:"全球現金轉向無卡支付長期趨勢；新興市場滲透率仍低；跨境交易費率較高且旅遊復甦受益。",
+   risk:"中央銀行數位貨幣（CBDC）長期威脅；監管機構壓低手續費率；即時支付（FedNow）分流部分交易。"},
+  {code:"COST",  name:"好市多",     theme:"金融消費", p1:null,p5:null,p30:null,p180:null,
+   desc:"會員制倉儲零售商，以低毛利商品吸引高續約率（>90%）會員，會員費為主要利潤來源，自有品牌 Kirkland 深受歡迎。",
+   bull:"會員費漲價直接增厚利潤；電商業務高速成長；高收入族群抗通膨消費黏性強。",
+   risk:"本益比偏高（>50x）；實體展店速度有限；消費景氣下行若高收入族群縮減開支影響客流。"},
+  {code:"NFLX",  name:"Netflix",    theme:"串流媒體", p1:null,p5:null,p30:null,p180:null,
+   desc:"全球最大串流平台，訂閱用戶超 3 億，廣告支援方案（AVOD）開拓新收入流，自製內容護城河持續加深。",
+   bull:"廣告層訂閱變現空間大；帳號共享管制完成後付費用戶大增；直播體育（NFL、WWE）提升黏性。",
+   risk:"內容成本居高不下；迪士尼+/Apple TV+ 競爭加劇；廣告市場景氣影響 AVOD 收入。"},
+  {code:"NOW",   name:"ServiceNow", theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
+   desc:"企業 IT 流程自動化平台龍頭，Now Platform 整合 IT、HR、客服等工作流，AI 功能「Now Assist」加速滲透。",
+   bull:"AI Agent 功能大幅提升自動化效率，推動升級高階方案；企業數位轉型需求剛性強；客戶留存率超 99%。",
+   risk:"估值高（本益比 60x+）；企業 IT 預算凍結時訂閱成長放緩；Salesforce、Microsoft 功能重疊競爭。"},
+  {code:"CRM",   name:"Salesforce", theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
+   desc:"全球最大 CRM 軟體公司，Sales Cloud/Service Cloud 為核心，Agentforce AI 自主代理人是最新成長引擎。",
+   bull:"Agentforce 代理人平台開創新收入層；數據雲（Data Cloud）免費整合推動升級；盈利改善股東回報提升。",
+   risk:"競爭對手 Microsoft Dynamics 和 HubSpot 搶佔市場；AI 代理人尚未大規模貢獻收入；成長趨緩估值壓力。"},
+  {code:"INTU",  name:"Intuit",     theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
+   desc:"TurboTax 個人報稅與 QuickBooks 中小企業財務軟體雙品牌，Credit Karma 提供貸款媒合，AI 整合加速自動化。",
+   bull:"AI 功能提升報稅與記帳效率吸引留存；中小企業財務 SaaS 黏性極高；Credit Karma 貸款媒合受益降息。",
+   risk:"IRS 免費報稅計畫「Direct File」威脅 TurboTax；利率高位壓縮 Credit Karma 貸款媒合量；成長趨緩。"},
+  {code:"PANW",  name:"Palo Alto",  theme:"網路安全", p1:null,p5:null,p30:null,p180:null,
+   desc:"企業網路安全平台龍頭，以「平台化」策略整合防火牆、雲端安全（Prisma）、端點安全（Cortex），AI SOC 是新焦點。",
+   bull:"平台化策略讓客戶整合供應商、減少支出，PANW 反受益；AI 驅動威脅偵測競爭優勢強；遞延收入高能見度高。",
+   risk:"「平台化免費贈送」短期壓縮帳單收入成長率引發市場疑慮；網安預算緊縮；競爭對手 CrowdStrike 積極進攻。"},
+  {code:"ISRG",  name:"直覺外科",   theme:"醫療科技", p1:null,p5:null,p30:null,p180:null,
+   desc:"達文西手術機器人全球霸主，裝機基數超 9,000 台，刀頭耗材與服務形成高毛利重複性收入，da Vinci 5 是最新世代。",
+   bull:"da Vinci 5 升級推動大型醫院換機；軟組織手術適應症擴增（泌尿、婦科、普外）；中國市場逐步開放。",
+   risk:"競爭對手 Medtronic Hugo 和 J&J Ottava 進場；手術量成長受醫院人力短缺限制；估值高本益比 60x+。"},
+  {code:"LLY",   name:"禮來",       theme:"醫療科技", p1:null,p5:null,p30:null,p180:null,
+   desc:"GLP-1 藥物（Mounjaro 糖尿病 / Zepbound 減重）引領全球熱潮，阿茲海默症新藥 Kisunla 開拓新市場。",
+   bull:"全球肥胖症治療市場超 1,000 億美元潛力；GLP-1 心血管保護適應症擴大報銷範圍；產能持續擴充滿足需求。",
+   risk:"Novo Nordisk（Ozempic）競爭激烈；GLP-1 仿製藥上市時程提前；產能瓶頸影響銷售增長；政治藥價壓力。"},
+  {code:"ADBE",  name:"Adobe",      theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
+   desc:"創意軟體訂閱（Photoshop/Premiere/Illustrator）與行銷數位體驗平台（AEM）雙引擎，Firefly AI 生成模型商用化。",
+   bull:"Firefly AI 整合 Creative Cloud 強化護城河；企業行銷數位化需求剛性；訂閱模式現金流穩定。",
+   risk:"Canva/Figma 等新興工具搶奪中低階創意用戶；AI 生成圖片降低專業設計需求；Figma 收購被否後成長策略待觀察。"},
 ];
 
 const ETFS = [
@@ -522,7 +588,7 @@ function toggleStockDetail(code, from){
 
 // ── 股票詳情面板 ─────────────────────────────────────────
 const _tpPeriods = {
-  "當日": 1, "五日": 5, "近月": 30, "三月": 90, "六月": 180, "一年": 365, "五年": 1825
+  "當日": 1, "五日": 5, "近月": 30, "三月": 90, "六月": 180, "一年": 365, "五年": 1825, "日K": -1
 };
 const MA_COLORS = {"5":"#f97316","10":"#facc15","20":"#38bdf8","30":"#c084fc","60":"#4ade80"};
 
@@ -553,7 +619,6 @@ function renderDetail(code){
     <div class="ma-toggles">
       <span class="ma-toggles-lbl">MA</span>
       ${Object.keys(MA_COLORS).map(n=>`<button class="ma-btn ma-${n}" onclick="toggleMA('${code}','${n}',this)">${n}</button>`).join("")}
-      <span style="font-size:10px;color:var(--text3);margin-left:4px">日線</span>
     </div>
     <div id="tp-dr-${code}" class="tp-chart-dr"></div>
     <div class="tp-stats-grid">
@@ -563,6 +628,11 @@ function renderDetail(code){
       <div class="tp-stat-cell"><span class="tp-stat-lbl">最低</span><span class="tp-stat-val">${pd?'$'+pd.low.toFixed(2):"—"}</span></div>
       <div class="tp-stat-cell"><span class="tp-stat-lbl">成交量</span><span class="tp-stat-val">${vol}</span></div>
     </div>
+    ${s?.desc?`<div class="tp-company-info">
+      <div class="tp-info-row"><span class="tp-info-icon">🏢</span><span class="tp-info-text">${s.desc}</span></div>
+      ${s.bull?`<div class="tp-info-row"><span class="tp-info-icon tp-bull">📈</span><span class="tp-info-text tp-bull-text">${s.bull}</span></div>`:""}
+      ${s.risk?`<div class="tp-info-row"><span class="tp-info-icon tp-risk">⚠️</span><span class="tp-info-text tp-risk-text">${s.risk}</span></div>`:""}
+    </div>`:""}
   </div>`;
 }
 
@@ -583,7 +653,61 @@ function toggleMA(code, n, el){
   drawTpChart(code, activePeriod);
 }
 
+function drawCandleChart(code, n){
+  const h = histories[code];
+  if(!h?.opens?.length) return;
+  const canvas = document.getElementById(`tp-canvas-${code}`);
+  const vCanvas = document.getElementById(`tp-vol-${code}`);
+  if(!canvas) return;
+  if(_tpCharts[code]) { _tpCharts[code].destroy(); delete _tpCharts[code]; }
+  if(_tpCharts[code+'_v']) { _tpCharts[code+'_v'].destroy(); delete _tpCharts[code+'_v']; }
+
+  const total = h.closes.length;
+  const cnt = Math.min(n>0?n:total, total);
+  const closes  = h.closes.slice(-cnt);
+  const opens   = h.opens.slice(-cnt);
+  const highs   = h.highs.slice(-cnt);
+  const lows    = h.lows.slice(-cnt);
+  const volumes = (h.volumes||[]).slice(-cnt);
+  const labels  = (h.labels||[]).slice(-cnt);
+
+  const drEl = document.getElementById(`tp-dr-${code}`);
+  if(drEl&&labels.length>=2) drEl.textContent = labels[0]+' ~ '+labels[labels.length-1];
+
+  const upClr   = 'rgba(239,68,68,0.85)';
+  const dnClr   = 'rgba(34,197,94,0.85)';
+  const wickClr = closes.map((c,i)=>c>=opens[i]?'rgba(239,68,68,0.5)':'rgba(34,197,94,0.5)');
+  const bodyClr = closes.map((c,i)=>c>=opens[i]?upClr:dnClr);
+
+  canvas.width = canvas.parentElement.offsetWidth||600;
+  canvas.height = 165;
+  _tpCharts[code] = new Chart(canvas.getContext("2d"),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'wick', data:lows.map((l,i)=>[l,highs[i]]), backgroundColor:wickClr, borderWidth:0, barPercentage:0.15, categoryPercentage:1},
+        {label:'body', data:opens.map((o,i)=>[Math.min(o,closes[i]),Math.max(o,closes[i])]), backgroundColor:bodyClr, borderWidth:0, barPercentage:0.6, categoryPercentage:1},
+      ]
+    },
+    options:{responsive:false,animation:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{displayColors:false,titleColor:'#4a6a8a',bodyColor:'#e8edf5',backgroundColor:'rgba(10,20,40,0.92)',borderColor:'rgba(96,165,250,0.2)',borderWidth:1,
+        callbacks:{title:i=>labels[i[0]?.dataIndex]||'',label:i=>{const idx=i.dataIndex;return [`開 $${opens[idx]?.toFixed(2)}  收 $${closes[idx]?.toFixed(2)}`,`高 $${highs[idx]?.toFixed(2)}  低 $${lows[idx]?.toFixed(2)}`];}}}},
+      scales:{x:{display:false},y:{position:'right',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#4a6a8a',font:{size:10},maxTicksLimit:5,callback:v=>`$${v}`}}}}
+  });
+
+  if(vCanvas&&volumes.length){
+    const barColors = closes.map((c,i)=>c>=opens[i]?'rgba(239,68,68,0.4)':'rgba(34,197,94,0.3)');
+    vCanvas.width = vCanvas.parentElement.offsetWidth||600;
+    _tpCharts[code+'_v'] = new Chart(vCanvas.getContext('2d'),{
+      type:'bar', data:{labels,datasets:[{data:volumes,backgroundColor:barColors,borderWidth:0,borderRadius:1}]},
+      options:{responsive:false,animation:false,plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{label:c=>`Vol: ${(c.parsed.y/1e6).toFixed(2)}M`}}},scales:{x:{display:false},y:{display:false}}}
+    });
+  }
+}
+
 function drawTpChart(code, period){
+  if(period==="日K"){ drawCandleChart(code, 120); return; }
   const h = histories[code];
   if(!h||!h.closes||h.closes.length<2) return;
   const days = _tpPeriods[period]||30;
