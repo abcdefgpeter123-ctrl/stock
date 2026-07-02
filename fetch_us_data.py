@@ -114,7 +114,7 @@ def fetch_stock_prices(codes):
     return prices
 
 
-def fetch_history(code, period="1y"):
+def fetch_history(code, period="5y"):
     """抓取個股一年歷史收盤價"""
     try:
         t = yf.Ticker(code)

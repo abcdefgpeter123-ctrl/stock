@@ -667,7 +667,7 @@ function toggleStockDetail(code, from){
 
 // ── 股票詳情面板 ─────────────────────────────────────────
 const _tpPeriods = {
-  "當日": 1, "五日": 5, "近月": 30, "三月": 90, "六月": 180, "一年": 365, "五年": 1825
+  "當日": 1, "五日": 5, "近月": 30, "三月": 90, "六月": 180, "一年": 252, "五年": null
 };
 const MA_COLORS = {"5":"#f97316","10":"#facc15","20":"#38bdf8","30":"#c084fc","60":"#4ade80"};
 
@@ -798,8 +798,8 @@ function drawTpChart(code, period){
   if(period==="日K"){ drawCandleChart(code, 120); return; }
   const h = histories[code];
   if(!h||!h.closes||h.closes.length<2) return;
-  const days = _tpPeriods[period]||30;
-  const n = Math.min(days, h.closes.length);
+  const days = _tpPeriods[period];
+  const n = (days == null) ? h.closes.length : Math.min(days, h.closes.length);
   const closes = h.closes.slice(-n);
   const labels  = h.labels?.slice(-n)||[];
   const volumes = h.volumes?.slice(-n)||[];

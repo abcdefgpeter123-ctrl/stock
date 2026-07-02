@@ -407,7 +407,7 @@ def fetch_price_history(code):
     for suffix in [".TW", ".TWO"]:
         try:
             url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
-                   f"{code}{suffix}?interval=1d&range=1y")
+                   f"{code}{suffix}?interval=1d&range=5y")
             r = requests.get(url, headers=HEADERS, timeout=15)
             result = r.json()["chart"]["result"][0]
             timestamps  = result.get("timestamp", [])
@@ -423,7 +423,7 @@ def fetch_price_history(code):
             ]
             if len(triples) >= 6:
                 closes  = [c for _, c, _ in triples]
-                dates   = [datetime.datetime.utcfromtimestamp(t).strftime("%m/%d")
+                dates   = [datetime.datetime.utcfromtimestamp(t).strftime("%Y/%m/%d")
                            for t, _, _ in triples]
                 volumes = [int(v) if v is not None else 0 for _, _, v in triples]
                 return closes, dates, volumes
@@ -592,7 +592,7 @@ def fetch_twii_history():
     回傳 (closes, dates)，失敗回傳 (None, None)。
     """
     try:
-        url = "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?interval=1d&range=1y"
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?interval=1d&range=5y"
         r = requests.get(url, headers=HEADERS, timeout=15)
         result = r.json()["chart"]["result"][0]
         timestamps = result.get("timestamp", [])
