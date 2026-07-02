@@ -20,11 +20,14 @@ jobs:
       - name: Install dependencies
         run: pip3 install requests yfinance anthropic beautifulsoup4 --break-system-packages --quiet
 
-      - name: Fetch stock data
+      - name: Fetch Taiwan stock data
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python3 fetch_data_full.py
         
+      - name: Fetch US stock data
+        run: python3 fetch_us_data.py
+
       - name: Fetch US stock data
         run: python3 fetch_us_data.py
 

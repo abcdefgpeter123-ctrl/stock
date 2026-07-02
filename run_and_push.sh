@@ -13,6 +13,7 @@ echo "========================================="
 
 # 1. 執行資料抓取
 python3 fetch_data_full.py
+python3 fetch_us_data.py
 
 echo ""
 echo "--- Git 推送 ---"
@@ -23,7 +24,7 @@ git pull origin main --no-rebase --quiet || true
 git stash pop --quiet 2>/dev/null || true
 
 # 3. 加入變動檔案
-git add data.json company_info.json
+git add data.json company_info.json us_data.json
 
 # 4. 若有變動才 commit + push
 if git diff --staged --quiet; then
