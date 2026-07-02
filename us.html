@@ -588,7 +588,7 @@ function toggleStockDetail(code, from){
 
 // ── 股票詳情面板 ─────────────────────────────────────────
 const _tpPeriods = {
-  "當日": 1, "五日": 5, "近月": 30, "三月": 90, "六月": 180, "一年": 365, "五年": 1825, "日K": -1
+  "當日": 1, "五日": 5, "近月": 30, "三月": 90, "六月": 180, "一年": 365, "五年": 1825
 };
 const MA_COLORS = {"5":"#f97316","10":"#facc15","20":"#38bdf8","30":"#c084fc","60":"#4ade80"};
 
@@ -619,6 +619,7 @@ function renderDetail(code){
     <div class="ma-toggles">
       <span class="ma-toggles-lbl">MA</span>
       ${Object.keys(MA_COLORS).map(n=>`<button class="ma-btn ma-${n}" onclick="toggleMA('${code}','${n}',this)">${n}</button>`).join("")}
+      <span style="font-size:10px;color:var(--text3);margin-left:4px">日線</span>
     </div>
     <div id="tp-dr-${code}" class="tp-chart-dr"></div>
     <div class="tp-stats-grid">
