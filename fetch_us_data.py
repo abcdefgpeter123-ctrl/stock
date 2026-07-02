@@ -260,7 +260,29 @@ def main():
     data["histories"] = histories
     print(f"   ✅ {len(histories)} 支歷史已儲存")
 
-    # 5. ETF 持股
+    # 5. 機構持股比例
+    print("🏦 抓取機構持股比例...")
+    inst_data = {}
+    for i, code in enumerate(codes, 1):
+        try:
+            info = yf.Ticker(code).info
+            inst_pct   = info.get("heldPercentInstitutions")
+            short_pct  = info.get("shortPercentOfFloat")
+            insider_pct= info.get("heldPercentInsiders")
+            inst_data[code] = {
+                "inst":    round(inst_pct * 100, 1)   if inst_pct   else None,
+                "short":   round(short_pct * 100, 1)  if short_pct  else None,
+                "insider": round(insider_pct * 100, 1) if insider_pct else None,
+            }
+            time.sleep(0.15)
+        except Exception as e:
+            print(f"   ⚠️ {code}: {e}")
+        if i % 5 == 0:
+            print(f"   進度 {i}/{len(codes)}...")
+    data["inst_data"] = inst_data
+    print(f"   ✅ {len(inst_data)} 支機構持股已儲存")
+
+    # 6. ETF 持股
     print("📦 ETF 持股資料...")
     etf_holdings = fetch_etf_holdings()
     data["etf_holdings"] = etf_holdings

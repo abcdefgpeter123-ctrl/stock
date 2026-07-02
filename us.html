@@ -98,6 +98,15 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .stock-row.expanded .expand-icon{transform:rotate(90deg)}
 .empty{text-align:center;padding:40px;color:var(--text3);font-size:14px}
 .footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.theme-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;cursor:default;transition:border-color .15s}
+.theme-card:hover{border-color:var(--border2)}
+.theme-card.t-up{border-left:3px solid var(--up)}
+.theme-card.t-dn{border-left:3px solid var(--dn)}
+.theme-card.t-flat{border-left:3px solid var(--text3)}
+.theme-name{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:500}
+.theme-pct{font-size:22px;font-weight:600;font-family:var(--mono);line-height:1}
+.theme-meta{font-size:11px;color:var(--text3);margin-top:5px}
+.theme-best{font-size:11px;margin-top:3px}
 .tp-company-info{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:8px}
 .tp-info-row{display:flex;gap:10px;align-items:flex-start}
 .tp-info-icon{font-size:13px;line-height:1.6;flex-shrink:0}
@@ -192,6 +201,18 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
         由 CBOE 以 S&P500 期權隱含波動率計算。
       </div>
     </div>
+  </div>
+
+  <!-- 近期題材回顧 -->
+  <div style="margin-bottom:24px">
+    <div class="sec-hd">📊 近期大盤題材回顧</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px" id="theme-period-btns">
+      <button class="pill active" onclick="setThemePeriod('p1',this)">一天</button>
+      <button class="pill" onclick="setThemePeriod('p5',this)">一週</button>
+      <button class="pill" onclick="setThemePeriod('p30',this)">一個月</button>
+      <button class="pill" onclick="setThemePeriod('p180',this)">半年</button>
+    </div>
+    <div id="theme-recap-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
   </div>
 
   <!-- 我的最愛 -->
@@ -376,13 +397,46 @@ const ETFS = [
 const FAV_KEY = "us_stock_favorites";
 let priceCache  = {};
 let histories   = {};
+let instData    = {};
 let activeTheme = "all";
 let expandedStock = null;
 let sortCol     = "default";
 let sortAsc     = false;
 let _tpCharts   = {};
 let _maActive   = {};
+let activeThemePeriod = "p1";
 const nameMap   = Object.fromEntries(STOCKS.map(s=>[s.code, s.name]));
+
+// ── 題材回顧 ──────────────────────────────────────────────
+function setThemePeriod(p, el){
+  activeThemePeriod = p;
+  document.querySelectorAll("#theme-period-btns .pill").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderThemeRecap();
+}
+function renderThemeRecap(){
+  const themes = [...new Set(STOCKS.map(s=>s.theme))];
+  const grid = document.getElementById("theme-recap-grid");
+  if(!grid) return;
+  grid.innerHTML = themes.map(theme=>{
+    const group = STOCKS.filter(s=>s.theme===theme);
+    const vals  = group.map(s=>s[activeThemePeriod]).filter(v=>v!=null);
+    if(!vals.length) return `<div class="theme-card t-flat"><div class="theme-name">${theme}</div><div class="theme-pct neu">—</div></div>`;
+    const avg  = vals.reduce((a,b)=>a+b,0)/vals.length;
+    const upCnt= vals.filter(v=>v>0).length;
+    const cls  = avg>=1?"t-up":avg<=-1?"t-dn":"t-flat";
+    const clr  = avg>=1?"var(--up)":avg<=-1?"var(--dn)":"var(--text2)";
+    const arrow= avg>=2?"↑":avg>=0.5?"↗":avg<=-2?"↓":avg<=-0.5?"↘":"→";
+    const best = group.filter(s=>s[activeThemePeriod]!=null).sort((a,b)=>b[activeThemePeriod]-a[activeThemePeriod])[0];
+    const periodLabel = {p1:"今日均",p5:"週均",p30:"月均",p180:"半年均"}[activeThemePeriod];
+    return `<div class="theme-card ${cls}">
+      <div class="theme-name">${theme}</div>
+      <div class="theme-pct" style="color:${clr}">${arrow} ${avg>=0?"+":""}${avg.toFixed(1)}%</div>
+      <div class="theme-meta">${periodLabel} · ${upCnt}/${vals.length}支上漲</div>
+      ${best?`<div class="theme-best" style="color:${clr}">最強：${best.name} ${best[activeThemePeriod]>=0?"+":""}${best[activeThemePeriod].toFixed(1)}%</div>`:""}
+    </div>`;
+  }).join("");
+}
 
 // ETF 持股反查表 (code → ETF代號陣列)
 const etfSourceMap = {};
@@ -629,6 +683,14 @@ function renderDetail(code){
       <div class="tp-stat-cell"><span class="tp-stat-lbl">最低</span><span class="tp-stat-val">${pd?'$'+pd.low.toFixed(2):"—"}</span></div>
       <div class="tp-stat-cell"><span class="tp-stat-lbl">成交量</span><span class="tp-stat-val">${vol}</span></div>
     </div>
+    ${(()=>{const iv=instData[code];if(!iv)return "";return `<div style="display:flex;gap:16px;padding:10px 16px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;flex-wrap:wrap">
+      <span style="color:var(--text3)">🏦 機構持股</span>
+      <span style="color:var(--text2);font-family:var(--mono)">${iv.inst!=null?iv.inst+'%':"—"}</span>
+      <span style="color:var(--text3);margin-left:8px">👤 內部人</span>
+      <span style="color:var(--text2);font-family:var(--mono)">${iv.insider!=null?iv.insider+'%':"—"}</span>
+      <span style="color:var(--text3);margin-left:8px">📉 放空比</span>
+      <span style="color:${iv.short>5?'#fca5a5':'var(--text2)'};font-family:var(--mono)">${iv.short!=null?iv.short+'%':"—"}</span>
+    </div>`;})()}
     ${s?.desc?`<div class="tp-company-info">
       <div class="tp-info-row"><span class="tp-info-icon">🏢</span><span class="tp-info-text">${s.desc}</span></div>
       ${s.bull?`<div class="tp-info-row"><span class="tp-info-icon tp-bull">📈</span><span class="tp-info-text tp-bull-text">${s.bull}</span></div>`:""}
@@ -813,6 +875,7 @@ async function loadData(){
 
     priceCache = data.prices||{};
     histories  = data.histories||{};
+    instData   = data.inst_data||{};
 
     // 更新 ETF 持股（若有動態資料）
     if(data.etf_holdings){
@@ -837,6 +900,7 @@ async function loadData(){
     });
 
     computeReturns();
+    renderThemeRecap();
     updateMarket(data);
     renderETFs();
     renderFavorites();
