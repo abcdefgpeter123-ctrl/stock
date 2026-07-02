@@ -481,6 +481,7 @@ function render(){
 
   document.getElementById("stock-count").textContent=`${rows.length} 支`;
   const tbody = document.getElementById("tbody");
+  setTimeout(initCharts, 50);
   tbody.innerHTML = rows.map(s=>`
     <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}','main')">
       <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
@@ -499,6 +500,7 @@ function render(){
     </tr>
     ${expandedStock===s.code?`<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="10">${renderDetail(s.code)}</td></tr>`:""}
   `).join("");
+  renderFavorites();
 }
 
 function setTheme(t){ activeTheme=t; render(); }
@@ -726,13 +728,6 @@ async function loadData(){
     document.getElementById("app").style.opacity="1";
     setTimeout(initCharts, 100);
   }
-}
-
-// 展開後觸發圖表
-const _origRender = render;
-function render(){
-  _origRender(); renderFavorites();
-  setTimeout(initCharts,50);
 }
 
 loadData();
