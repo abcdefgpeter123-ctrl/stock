@@ -301,6 +301,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
           <button class="tp-period active" onclick="renderTwiiChart('三月',this)">三月</button>
           <button class="tp-period" onclick="renderTwiiChart('六月',this)">六月</button>
           <button class="tp-period" onclick="renderTwiiChart('一年',this)">一年</button>
+          <button class="tp-period" onclick="renderTwiiChart('五年',this)">五年</button>
         </div>
       </div>
     </div>
@@ -1435,9 +1436,9 @@ function renderTwiiChart(period, btn) {
   if (!twiiHistoryData || !twiiHistoryData.closes) return;
   const allCloses = twiiHistoryData.closes;
   const allLabels = twiiHistoryData.labels;
-  const n = period === '近月' ? 22 : period === '三月' ? 63 : period === '六月' ? 126 : 252;
-  const closes = allCloses.slice(-n);
-  const labels  = allLabels.slice(-n);
+  const n = period === '近月' ? 22 : period === '三月' ? 63 : period === '六月' ? 126 : period === '一年' ? 252 : null;
+  const closes = n ? allCloses.slice(-n) : allCloses;
+  const labels  = n ? allLabels.slice(-n) : allLabels;
   if (!closes.length) return;
   const drEl = document.getElementById('twii-chart-dr');
   if (drEl && labels.length >= 2) drEl.textContent = labels[0] + ' ~ ' + labels[labels.length-1];
