@@ -690,6 +690,25 @@ def fetch_twii():
 
 # ── VIX 恐慌指數 ─────────────────────────────────────────
 
+def fetch_usdtwd():
+    """Yahoo Finance — USD/TWD 匯率"""
+    try:
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/USDTWD%3DX?interval=1d&range=5d"
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        result = r.json()["chart"]["result"][0]
+        closes = [c for c in result["indicators"]["quote"][0]["close"] if c]
+        if len(closes) < 2:
+            return None
+        price = round(closes[-1], 3)
+        prev  = round(closes[-2], 3)
+        chg   = round(price - prev, 3)
+        chgP  = round(chg / prev * 100, 2)
+        return {"price": price, "chg": chg, "chgP": chgP}
+    except Exception as e:
+        print(f"   ⚠️ USD/TWD: {e}")
+        return None
+
+
 def fetch_vix():
     """Yahoo Finance — ^VIX，境外可用"""
     try:
@@ -1537,6 +1556,13 @@ def main():
         print(f"✅ VIX: {vix['price']} ({vix['chg']:+.2f})")
     else:
         print(f"   ⚠️ VIX 抓取失敗，保留前次資料（{data.get('vix', {}).get('price', '無')}）")
+
+    usdtwd = fetch_usdtwd()
+    if usdtwd:
+        data["usdtwd"] = usdtwd
+        print(f"✅ USD/TWD: {usdtwd['price']} ({usdtwd['chg']:+.3f})")
+    else:
+        print(f"   ⚠️ USD/TWD 抓取失敗，保留前次資料")
 
     print("📈 大盤歷史走勢...")
     twii_closes, twii_dates = fetch_twii_history()
