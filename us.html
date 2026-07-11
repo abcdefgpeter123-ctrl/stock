@@ -152,6 +152,12 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .ma-30.active{background:rgba(192,132,252,0.15);border-color:rgba(192,132,252,0.5);color:#c084fc}
 .ma-60.active{background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.5);color:#4ade80}
 @media(max-width:600px){body{padding:16px 14px 40px}.metrics{grid-template-columns:repeat(2,1fr)}.header h1{font-size:18px}.tp-stats-grid{grid-template-columns:repeat(3,1fr)}}
+.sig-th-wrap{position:relative}
+.sig-legend-btn{font-size:10px;color:var(--text3);cursor:pointer;margin-left:3px;vertical-align:middle}
+.sig-legend-btn:hover{color:var(--text2)}
+.sig-legend-box{display:none;position:absolute;top:calc(100% + 4px);right:0;background:#1e293b;border:1px solid var(--border2);border-radius:8px;padding:12px 14px;width:250px;font-size:12px;line-height:2;color:var(--text2);z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap}
+.sig-legend-box.open{display:block}
+.sig-legend-title{font-weight:600;color:var(--text);margin-bottom:6px;font-size:13px}
 </style>
 </head>
 <body>
@@ -267,7 +273,13 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
           <th style="width:80px" data-col="p5">5日</th>
           <th style="width:80px" data-col="p30">30日</th>
           <th style="width:80px" data-col="p180">半年</th>
-          <th>訊號</th>
+          <th style="width:75px" class="sig-th-wrap">訊號 <span class="sig-legend-btn" onclick="event.stopPropagation();toggleSigLegend(this)">ⓘ</span><div class="sig-legend-box">
+            <div class="sig-legend-title">訊號說明</div>
+            <div><span class="badge b-up">強勢↑</span> 今日漲幅 ≥ +3%</div>
+            <div><span class="badge b-dn">弱勢↓</span> 今日跌幅 ≤ −3%</div>
+            <div><span class="badge b-up">漲破N</span> 近5日突破N日均線向上</div>
+            <div><span class="badge b-rev">跌破N</span> 股價低於N日均線（N=20/30/60）</div>
+          </div></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -494,25 +506,46 @@ function fmtPrice(code){
 }
 
 // ── 訊號 ─────────────────────────────────────────────────
-function isRev(s){
-  const h = histories[s.code];
-  const price = priceCache[s.code]?.price;
-  if(!h?.closes?.length||!price) return null;
-  const c = h.closes;
-  if(c.length>=60){const ma60=c.slice(-60).reduce((a,b)=>a+b,0)/60;if(price<ma60)return 60;}
-  if(c.length>=30){const ma30=c.slice(-30).reduce((a,b)=>a+b,0)/30;if(price<ma30)return 30;}
-  if(c.length>=20){const ma20=c.slice(-20).reduce((a,b)=>a+b,0)/20;if(price<ma20)return 20;}
+function toggleSigLegend(btn){
+  const box = btn.nextElementSibling;
+  const isOpen = box.classList.contains('open');
+  document.querySelectorAll('.sig-legend-box.open').forEach(el=>el.classList.remove('open'));
+  if(!isOpen) box.classList.add('open');
+}
+document.addEventListener('click',()=>{document.querySelectorAll('.sig-legend-box.open').forEach(el=>el.classList.remove('open'));});
+
+function _maBreakDown(c, price){
+  for(const n of [60,30,20]){
+    if(c.length<n) continue;
+    if(price < c.slice(-n).reduce((a,b)=>a+b,0)/n) return n;
+  }
+  return null;
+}
+function _maBreakUp(c, price){
+  const lb = 5;
+  for(const n of [60,30,20]){
+    if(c.length < n+lb) continue;
+    const maNow = c.slice(-n).reduce((a,b)=>a+b,0)/n;
+    if(price <= maNow) continue;
+    const maPast = c.slice(-(n+lb),-lb).reduce((a,b)=>a+b,0)/n;
+    if(c[c.length-1-lb] < maPast) return n;
+  }
   return null;
 }
 function sigBadge(s){
-  const p1 = s.p1 ?? priceCache[s.code]?.changeP ?? null;
+  const changeP = priceCache[s.code]?.changeP ?? null;
+  const h = histories[s.code];
+  const price = priceCache[s.code]?.price;
+  const c = h?.closes;
   const badges = [];
-  if(p1!=null){
-    if(p1>=5)      badges.push(`<span class="badge b-up">強勢↑</span>`);
-    else if(p1<=-5) badges.push(`<span class="badge b-dn">弱勢↓</span>`);
+  if(changeP!=null && changeP>=3)      badges.push(`<span class="badge b-up">強勢↑</span>`);
+  else if(changeP!=null && changeP<=-3) badges.push(`<span class="badge b-dn">弱勢↓</span>`);
+  if(c && price){
+    const upN = _maBreakUp(c, price);
+    const dnN = !upN ? _maBreakDown(c, price) : null;
+    if(upN) badges.push(`<span class="badge b-up">漲破${upN}</span>`);
+    if(dnN) badges.push(`<span class="badge b-rev">跌破${dnN}</span>`);
   }
-  const revN = isRev(s);
-  if(revN) badges.push(`<span class="badge b-rev">反轉${revN}</span>`);
   if(!badges.length) badges.push(`<span class="badge b-neu">觀察中</span>`);
   return badges.join(" ");
 }

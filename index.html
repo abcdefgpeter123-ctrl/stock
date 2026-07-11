@@ -61,6 +61,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .name-cell{font-weight:500}
 .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
 .b-up{background:var(--up-bg);color:var(--up)}.b-dn{background:var(--dn-bg);color:var(--dn)}.b-neu{background:rgba(255,255,255,.05);color:var(--text2)}.b-opp{background:var(--purple-bg);color:var(--purple)}.b-theme{background:var(--teal-bg);color:var(--teal)}.b-weak{background:rgba(251,146,60,.12);color:#fb923c}.b-rev{background:rgba(251,191,36,.12);color:#fbbf24}
+.sig-th-wrap{position:relative}
+.sig-legend-btn{font-size:10px;color:var(--text3);cursor:pointer;margin-left:3px;vertical-align:middle}
+.sig-legend-btn:hover{color:var(--text2)}
+.sig-legend-box{display:none;position:absolute;top:calc(100% + 4px);right:0;background:#1e293b;border:1px solid var(--border2);border-radius:8px;padding:12px 14px;width:270px;font-size:12px;line-height:2;color:var(--text2);z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap}
+.sig-legend-box.open{display:block}
+.sig-legend-title{font-weight:600;color:var(--text);margin-bottom:6px;font-size:13px}
 .inst-wrap{min-width:90px}
 .inst-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-bottom:3px}
 .if{background:var(--blue)}.it{background:var(--up)}.is{background:var(--yellow)}
@@ -381,11 +387,13 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </select>
     <select id="sig-sel">
       <option value="all">所有訊號</option>
-      <option value="up">法人買超</option>
-      <option value="dn">法人賣超</option>
       <option value="opp">機會點</option>
-      <option value="weak">待加強</option>
-      <option value="rev">趨勢反轉</option>
+      <option value="strong">強勢↑</option>
+      <option value="weak">弱勢↓</option>
+      <option value="buy">買超中</option>
+      <option value="sell">賣超中</option>
+      <option value="breakup">漲破MA</option>
+      <option value="breakdn">跌破MA</option>
     </select>
     <button class="refresh-btn" id="refresh-btn" onclick="loadData()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
@@ -412,7 +420,16 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
             <th style="width:80px" data-col="5d">5日漲跌 ↕</th>
             <th style="width:80px" data-col="30d">30日漲跌 ↕</th>
             <th style="width:120px" data-col="inst5">法人5日 ↕</th>
-            <th style="width:75px">訊號</th>
+            <th style="width:75px" class="sig-th-wrap">訊號 <span class="sig-legend-btn" onclick="event.stopPropagation();toggleSigLegend(this)">ⓘ</span><div class="sig-legend-box">
+              <div class="sig-legend-title">訊號說明</div>
+              <div><span class="badge b-opp">機會點</span> 龍頭已大漲，此股尚未跟上</div>
+              <div><span class="badge b-up">強勢↑</span> 今日漲幅 ≥ +3%</div>
+              <div><span class="badge b-dn">弱勢↓</span> 今日跌幅 ≤ −3%</div>
+              <div><span class="badge b-up">買超中</span> 法人近5日合計買超 ≥ 8億</div>
+              <div><span class="badge b-dn">賣超中</span> 法人近5日合計賣超 ≤ −8億</div>
+              <div><span class="badge b-up">漲破N</span> 近5日突破N日均線向上</div>
+              <div><span class="badge b-rev">跌破N</span> 股價低於N日均線（N=20/30/60）</div>
+            </div></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -1631,40 +1648,52 @@ function computeSig(s){
   if(p30===null && net===0) return "watch";
   return "done";
 }
-function isSell(s){
-  const iv = getInst(s);
-  return (iv.f + iv.t + iv.s) <= -8;
+function toggleSigLegend(btn){
+  const box = btn.nextElementSibling;
+  const isOpen = box.classList.contains('open');
+  document.querySelectorAll('.sig-legend-box.open').forEach(el=>el.classList.remove('open'));
+  if(!isOpen) box.classList.add('open');
 }
-function isRev(s){
-  const h = histories[s.code];
-  const price = priceCache[s.code]?.price;
-  if(!h?.closes?.length || !price) return null;
-  const c = h.closes;
-  if(c.length >= 60){
-    const ma60 = c.slice(-60).reduce((a,b)=>a+b,0) / 60;
-    if(price < ma60) return 60;
+document.addEventListener('click',()=>{document.querySelectorAll('.sig-legend-box.open').forEach(el=>el.classList.remove('open'));});
+
+function _maBreakDown(c, price){
+  for(const n of [60,30,20]){
+    if(c.length<n) continue;
+    if(price < c.slice(-n).reduce((a,b)=>a+b,0)/n) return n;
   }
-  if(c.length >= 30){
-    const ma30 = c.slice(-30).reduce((a,b)=>a+b,0) / 30;
-    if(price < ma30) return 30;
-  }
-  if(c.length >= 20){
-    const ma20 = c.slice(-20).reduce((a,b)=>a+b,0) / 20;
-    if(price < ma20) return 20;
+  return null;
+}
+function _maBreakUp(c, price){
+  const lb = 5;
+  for(const n of [60,30,20]){
+    if(c.length < n+lb) continue;
+    const maNow = c.slice(-n).reduce((a,b)=>a+b,0)/n;
+    if(price <= maNow) continue;
+    const maPast = c.slice(-(n+lb),-lb).reduce((a,b)=>a+b,0)/n;
+    if(c[c.length-1-lb] < maPast) return n;
   }
   return null;
 }
 function sigBadge(s){
-  const sig = computeSig(s);
   const badges = [];
-  if(sig==="up")   badges.push(`<span class="badge b-up">買超中</span>`);
-  else if(sig==="weak") badges.push(`<span class="badge b-weak">待加強</span>`);
-  else if(sig==="opp")  badges.push(`<span class="badge b-opp">機會點</span>`);
-  else if(sig==="watch") badges.push(`<span class="badge b-neu">觀察中</span>`);
-  else              badges.push(`<span class="badge b-neu">已反映</span>`);
-  if(isSell(s)) badges.push(`<span class="badge b-dn">賣超中</span>`);
-  const revN = isRev(s);
-  if(revN) badges.push(`<span class="badge b-rev">趨勢反轉${revN}</span>`);
+  const iv = getInst(s);
+  const net = iv.f + iv.t + iv.s;
+  const changeP = priceCache[s.code]?.changeP ?? null;
+  const h = histories[s.code];
+  const price = priceCache[s.code]?.price;
+  const c = h?.closes;
+  if(oppCodes.has(s.code))           badges.push(`<span class="badge b-opp">機會點</span>`);
+  if(changeP!=null && changeP>=3)    badges.push(`<span class="badge b-up">強勢↑</span>`);
+  else if(changeP!=null&&changeP<=-3) badges.push(`<span class="badge b-dn">弱勢↓</span>`);
+  if(net>=8)                          badges.push(`<span class="badge b-up">買超中</span>`);
+  if(net<=-8)                         badges.push(`<span class="badge b-dn">賣超中</span>`);
+  if(c && price){
+    const upN = _maBreakUp(c, price);
+    const dnN = !upN ? _maBreakDown(c, price) : null;
+    if(upN) badges.push(`<span class="badge b-up">漲破${upN}</span>`);
+    if(dnN) badges.push(`<span class="badge b-rev">跌破${dnN}</span>`);
+  }
+  if(!badges.length) badges.push(`<span class="badge b-neu">觀察中</span>`);
   return badges.join(" ");
 }
 
@@ -1724,11 +1753,18 @@ function setInstMetrics(data){
 function render(){
   let rows = STOCKS.filter(s => {
     if(activeTheme!=="all" && s.theme!==activeTheme) return false;
-    if(sigFilter==="up"   && computeSig(s)!=="up")   return false;
-    if(sigFilter==="dn"   && computeSig(s)!=="dn")   return false;
-    if(sigFilter==="opp"  && computeSig(s)!=="opp")  return false;
-    if(sigFilter==="weak" && computeSig(s)!=="weak")  return false;
-    if(sigFilter==="rev"  && computeSig(s)!=="rev")   return false;
+    if(sigFilter!=="all"){
+      const iv2=getInst(s), net2=iv2.f+iv2.t+iv2.s;
+      const chgP2=priceCache[s.code]?.changeP??null;
+      const h2=histories[s.code]; const c2=h2?.closes; const p2=priceCache[s.code]?.price;
+      if(sigFilter==="opp"    && !oppCodes.has(s.code)) return false;
+      if(sigFilter==="strong" && !(chgP2!=null&&chgP2>=3)) return false;
+      if(sigFilter==="weak"   && !(chgP2!=null&&chgP2<=-3)) return false;
+      if(sigFilter==="buy"    && net2<8) return false;
+      if(sigFilter==="sell"   && net2>-8) return false;
+      if(sigFilter==="breakup"&& !(c2&&p2&&_maBreakUp(c2,p2))) return false;
+      if(sigFilter==="breakdn"&& !(c2&&p2&&_maBreakDown(c2,p2))) return false;
+    }
     if(q && !(s.code.includes(q) || s.name.includes(q) || s.theme.includes(q))) return false;
     return true;
   });
