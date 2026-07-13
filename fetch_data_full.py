@@ -920,6 +920,9 @@ def fetch_all_twse_stocks():
     """
     headers_rwd = {**HEADERS, "Referer": "https://www.twse.com.tw/"}
 
+    # 今天的 ROC 日期字串，例如 "1150713"
+    today_roc = str(datetime.date.today().year - 1911) + datetime.date.today().strftime("%m%d")
+
     # ── 端點 1：openapi.twse.com.tw ──
     for url in [
         "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
@@ -929,6 +932,11 @@ def fetch_all_twse_stocks():
             r = requests.get(url, headers=headers_rwd, timeout=30)
             rows = r.json()
             if isinstance(rows, list) and rows:
+                # 驗證資料日期是否為今天
+                sample_date = str(rows[0].get("Date", "")).replace("/", "")
+                if sample_date and sample_date != today_roc:
+                    print(f"   ⚠️ openapi 資料日期 {sample_date} 非今天 {today_roc}，略過")
+                    break
                 prices = _parse_twse_openapi_rows(rows)
                 if prices:
                     print(f"   ✅ openapi 端點成功: {url.split('/')[-1]} → {len(prices)} 支")
@@ -943,10 +951,23 @@ def fetch_all_twse_stocks():
         r = requests.get(url, headers=headers_rwd, timeout=30)
         resp = r.json()
         if resp.get("stat") == "OK":
-            prices = _parse_twse_rwd_rows(resp)
-            if prices:
-                print(f"   ✅ rwd STOCK_DAY_ALL → {len(prices)} 支")
-                return prices
+            # 驗證日期（title 通常含日期，如 "112年01月05日 各類指數日成交量值"）
+            title = resp.get("title", "")
+            rwd_date = re.search(r"(\d+)年(\d+)月(\d+)日", title)
+            if rwd_date:
+                rwd_roc = rwd_date.group(1) + rwd_date.group(2) + rwd_date.group(3)
+                if rwd_roc != today_roc:
+                    print(f"   ⚠️ rwd STOCK_DAY_ALL 日期 {rwd_roc} 非今天 {today_roc}，略過")
+                else:
+                    prices = _parse_twse_rwd_rows(resp)
+                    if prices:
+                        print(f"   ✅ rwd STOCK_DAY_ALL → {len(prices)} 支")
+                        return prices
+            else:
+                prices = _parse_twse_rwd_rows(resp)
+                if prices:
+                    print(f"   ✅ rwd STOCK_DAY_ALL → {len(prices)} 支")
+                    return prices
         else:
             print(f"   ⚠️ rwd STOCK_DAY_ALL stat={resp.get('stat')}")
     except Exception as e:
@@ -958,16 +979,35 @@ def fetch_all_twse_stocks():
         r = requests.get(url, headers=headers_rwd, timeout=45)
         resp = r.json()
         if resp.get("stat") == "OK":
-            prices = {}
-            for table in resp.get("tables", []):
-                fields = table.get("fields", [])
-                if "收盤價" not in fields:
-                    continue
-                sub = _parse_twse_rwd_rows({"fields": fields, "data": table.get("data", [])})
-                prices.update(sub)
-            if prices:
-                print(f"   ✅ rwd MI_INDEX → {len(prices)} 支")
-                return prices
+            title = resp.get("title", "")
+            rwd_date = re.search(r"(\d+)年(\d+)月(\d+)日", title)
+            if rwd_date:
+                rwd_roc = rwd_date.group(1) + rwd_date.group(2) + rwd_date.group(3)
+                if rwd_roc != today_roc:
+                    print(f"   ⚠️ rwd MI_INDEX 日期 {rwd_roc} 非今天 {today_roc}，略過")
+                    # fall through to Yahoo fallback
+                else:
+                    prices = {}
+                    for table in resp.get("tables", []):
+                        fields = table.get("fields", [])
+                        if "收盤價" not in fields:
+                            continue
+                        sub = _parse_twse_rwd_rows({"fields": fields, "data": table.get("data", [])})
+                        prices.update(sub)
+                    if prices:
+                        print(f"   ✅ rwd MI_INDEX → {len(prices)} 支")
+                        return prices
+            else:
+                prices = {}
+                for table in resp.get("tables", []):
+                    fields = table.get("fields", [])
+                    if "收盤價" not in fields:
+                        continue
+                    sub = _parse_twse_rwd_rows({"fields": fields, "data": table.get("data", [])})
+                    prices.update(sub)
+                if prices:
+                    print(f"   ✅ rwd MI_INDEX → {len(prices)} 支")
+                    return prices
         else:
             print(f"   ⚠️ MI_INDEX stat={resp.get('stat')}")
     except Exception as e:
@@ -1480,7 +1520,7 @@ def fetch_inst_stocks(all_prices, target_days=5):
         url = (f"https://www.tpex.org.tw/web/stock/3insti/daily_trade/"
                f"3itrade_hedge_result.php?l=zh-tw&t=D&d={tw_date}&s=0,asc,0&_=1")
         try:
-            r = requests.get(url, headers={**HEADERS, "Referer": "https://www.tpex.org.tw/"}, timeout=25)
+            r = requests.get(url, headers={**HEADERS, "Referer": "https://www.tpex.org.tw/"}, timeout=25, verify=False)
             resp = r.json()
             tables = resp.get("tables", [])
             if not tables:
@@ -1661,6 +1701,22 @@ def main():
             etf_holdings["0050"] = full_0050
             data["etf_holdings"] = etf_holdings
             print(f"   ✅ 0050 補全至 {len(full_0050)} 支")
+
+    # 5b-2. 補抓 ETF 成份股歷史走勢（p5/p30 顯示用）
+    etf_extra_codes = set()
+    for holdings in (etf_holdings or {}).values():
+        for h in holdings:
+            c = h.get("code", "")
+            if c and c not in histories:
+                etf_extra_codes.add(c)
+    if etf_extra_codes:
+        print(f"   📈 補抓 {len(etf_extra_codes)} 支 ETF 成份股歷史走勢...")
+        _, extra_hist = compute_opportunities(all_prices, extra_codes=list(etf_extra_codes), company_info=company_info)
+        for code, h in extra_hist.items():
+            if code not in histories:
+                histories[code] = h
+        data["histories"] = histories
+        print(f"   ✅ 歷史走勢總計 {len(histories)} 支")
 
     # 5c. 個股三大法人（T86，最近5個交易日累計）
     print("📊 個股三大法人資料（T86）...")
