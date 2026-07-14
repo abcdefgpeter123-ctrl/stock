@@ -156,6 +156,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .risk-list{list-style:none;padding:0}
 .risk-list li{padding:5px 0;font-size:12px;color:var(--text2);line-height:1.5;padding-left:16px;position:relative}
 .risk-list li:before{content:"⚠";position:absolute;left:0;color:#fbbf24}
+tr.theme-hd-row td{background:rgba(255,255,255,0.03);border-top:2px solid var(--border2)!important;padding:8px 12px!important;cursor:default}
+tr.theme-hd-row:first-child td{border-top:none!important}
+.theme-hd-label{font-size:12px;font-weight:600;color:var(--teal);letter-spacing:.5px;margin-right:10px}
+.theme-hd-desc{font-size:11px;color:var(--text3);line-height:1.5}
 tr.stock-row{cursor:pointer}
 tr.stock-row:hover .name-cell{color:var(--purple)}
 .expand-icon{display:inline-block;margin-right:4px;color:var(--text3);font-size:10px;transition:transform .2s}
@@ -365,12 +369,17 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="pills" id="theme-pills">
     <button class="pill active" data-theme="all">全部題材</button>
     <button class="pill" data-theme="半導體">半導體</button>
+    <button class="pill" data-theme="ABF載板">ABF載板</button>
     <button class="pill" data-theme="AI伺服器">AI伺服器</button>
     <button class="pill" data-theme="液冷散熱">液冷散熱</button>
+    <button class="pill" data-theme="網通">網通</button>
+    <button class="pill" data-theme="面板">面板</button>
     <button class="pill" data-theme="海運">海運</button>
-    <button class="pill" data-theme="金融">金融</button>
+    <button class="pill" data-theme="航空">航空</button>
     <button class="pill" data-theme="傳產">傳產</button>
-
+    <button class="pill" data-theme="電信">電信</button>
+    <button class="pill" data-theme="金融">金融</button>
+    <button class="pill" data-theme="被動元件">被動元件</button>
   </div>
 
   <div class="controls">
@@ -451,25 +460,31 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 // 靜態資料
 // 監控清單：主動型 ETF 前10大持股（29支台股）
 const STOCKS=[
-  // ── 半導體 ──
-  {code:"2330",name:"台積電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3711",name:"日月光投控",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2454",name:"聯發科",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2303",name:"聯電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3661",name:"世芯-KY",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6488",name:"環球晶",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2449",name:"京元電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3034",name:"聯詠",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2379",name:"瑞昱",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2344",name:"華邦電",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"6223",name:"旺矽",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2408",name:"南亞科",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3443",name:"創意電子",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6239",name:"力成",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2404",name:"漢唐",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3105",name:"穩懋",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"5347",name:"世界先進",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3374",name:"精材",theme:"半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 晶圓代工 ──
+  {code:"2330",name:"台積電",theme:"晶圓代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2303",name:"聯電",theme:"晶圓代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"5347",name:"世界先進",theme:"晶圓代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── IC設計 ──
+  {code:"2454",name:"聯發科",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3661",name:"世芯-KY",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3034",name:"聯詠",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2379",name:"瑞昱",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"3443",name:"創意電子",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 半導體封測 ──
+  {code:"3711",name:"日月光投控",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2449",name:"京元電",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6223",name:"旺矽",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"6239",name:"力成",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3374",name:"精材",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 記憶體 ──
+  {code:"2344",name:"華邦電",theme:"記憶體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+  {code:"2408",name:"南亞科",theme:"記憶體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 矽晶圓 ──
+  {code:"6488",name:"環球晶",theme:"矽晶圓",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 化合物半導體 ──
+  {code:"3105",name:"穩懋",theme:"化合物半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 半導體設備 ──
+  {code:"2404",name:"漢唐",theme:"半導體設備",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── ABF載板 ──
   {code:"2383",name:"台光電",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3037",name:"欣興",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
@@ -490,11 +505,19 @@ const STOCKS=[
   {code:"8996",name:"高力",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 網通 ──
   {code:"2345",name:"智邦",theme:"網通",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 面板 ──
+  {code:"3481",name:"群創",theme:"面板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 海運 ──
   {code:"2603",name:"長榮",theme:"海運",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 航空 ──
+  {code:"2618",name:"長榮航",theme:"航空",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 傳產 ──
   {code:"2002",name:"中鋼",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"6505",name:"台塑化",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"1101",name:"台泥",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"1301",name:"台塑",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  // ── 電信 ──
+  {code:"2412",name:"中華電",theme:"電信",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 金融 ──
   {code:"2881",name:"富邦金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2882",name:"國泰金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
@@ -510,9 +533,38 @@ const STOCKS=[
   {code:"2327",name:"國巨",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2492",name:"華新科",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3026",name:"禾伸堂",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6173",name:"信昌電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3090",name:"日電貿",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2472",name:"立隆電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
+// 題材說明（顯示於各區塊標頭）
+const THEME_DESCS = {
+  "晶圓代工":    "代客製造晶片，台積電為全球龍頭，技術護城河最深，聯電主攻成熟製程",
+  "IC設計":      "只設計不製造，毛利率高，受惠 AI 算力需求爆發，聯發科攻車用與 AI 邊緣端",
+  "半導體封測":  "晶片封裝與測試，CoWoS/SiP 先進封裝需求因 AI 大幅升級，日月光為龍頭",
+  "記憶體":      "DRAM/NAND 儲存，景氣循環特性強，HBM 高頻寬記憶體受 AI 訓練需求拉動",
+  "矽晶圓":      "晶圓代工的上游原料，台積電持續擴產為環球晶最直接受惠方",
+  "化合物半導體":"GaAs/GaN 功率元件，應用於 5G PA 與電力轉換，穩懋為台灣最大砷化鎵代工",
+  "半導體設備":  "半導體廠房機電工程，台積電、三星擴廠帶動設備與氣體系統需求",
+  "ABF載板":     "台光電(2383)：生產ABF載板所需的銅箔基板(CCL)，屬上游材料廠，受惠於載板需求但波動相對小。欣興(3037)：直接生產ABF載板，屬下游製造廠，受AI伺服器拉動明顯，漲跌幅通常大於上游",
+  "AI伺服器":    "AI 訓練/推理伺服器整機組裝，受惠 NVIDIA GPU 出貨量成長，廣達、緯穎為 CSP 主力代工廠",
+  "液冷散熱":    "AI 算力密集造成散熱瓶頸，液冷滲透率快速提升，奇鋐為冷板式液冷龍頭",
+  "網通":        "AI 資料中心高速乙太網路交換器需求爆發，智邦為台灣最大網通設備廠",
+  "面板":        "LCD/OLED 面板製造，受惠電視與 IT 需求回溫，群創為台灣第二大面板廠",
+  "海運":        "貨櫃航運，受全球貿易量與運費指數（SCFI）影響，長榮為台灣最大貨櫃航運商",
+  "航空":        "國際客運與貨運，受油價與出入境旅遊需求影響，長榮航貨運占比高受電商拉動",
+  "傳產":        "鋼鐵、石化、水泥，受原物料景氣循環與台幣匯率影響，防禦性較高",
+  "電信":        "固網與行動通信，高現金殖利率防禦題材，AI 資料中心建設帶動中華電企業專網商機",
+  "金融":        "壽險、銀行，受惠升息環境與股市熱絡帶動獲利，金融股多為高股息標的",
+  "PCB":         "印刷電路板，AI 伺服器高層板（20層以上）需求成長，健鼎專注高階多層板",
+  "IC通路":      "電子元件代理通路商，景氣回補庫存動能帶動出貨，文曄為台灣最大 IC 通路商",
+  "光學":        "iPhone 鏡頭模組核心供應商，大立光為全球最大光學鏡頭廠，毛利率業界最高",
+  "被動元件":    "MLCC、電阻、電容，AI 伺服器與電動車拉動高階需求，國巨為全球前三大被動元件廠",
+};
+
+// 半導體子題材對應父題材（讓「半導體」pill 可一鍵篩選全部子類）
+const THEME_PARENT = {
+  "晶圓代工": "半導體", "IC設計": "半導體", "半導體封測": "半導體",
+  "記憶體": "半導體", "矽晶圓": "半導體", "化合物半導體": "半導體", "半導體設備": "半導體",
+};
+
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
 let opps = [];
 let oppCodes = new Set();
@@ -1752,7 +1804,7 @@ function setInstMetrics(data){
 
 function render(){
   let rows = STOCKS.filter(s => {
-    if(activeTheme!=="all" && s.theme!==activeTheme) return false;
+    if(activeTheme!=="all" && s.theme!==activeTheme && THEME_PARENT[s.theme]!==activeTheme) return false;
     if(sigFilter!=="all"){
       const iv2=getInst(s), net2=iv2.f+iv2.t+iv2.s;
       const chgP2=priceCache[s.code]?.changeP??null;
@@ -1798,25 +1850,57 @@ function render(){
   });
 
   const tbody = document.getElementById("tbody");
-  tbody.innerHTML = rows.length===0
-    ? `<tr><td colspan="9" class="empty">查無符合條件的股票</td></tr>`
-    : rows.map(s => `
-      <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}')">
-        <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
-        <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
-        <td class="name-cell">
-          <div>${s.name}</div>
-          ${!s._extra && etfSourceMap[s.code]?.length ? `<div style="margin-top:2px">${etfSourceMap[s.code].map(c=>`<span style="font-size:9.5px;background:rgba(96,165,250,0.13);color:var(--blue);border-radius:3px;padding:1px 4px;margin-right:3px;font-weight:500">${c}</span>`).join('')}</div>` : ''}
-        </td>
-        <td>${s._extra ? '<span class="neu" style="font-size:11px">全台股</span>' : `<span class="badge b-theme">${s.theme}</span>`}</td>
-        <td>${fmtPrice(s.code)}</td>
-        <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
-        <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
-        <td>${(()=>{const iv=getInst(s);return (iv.f||iv.t||iv.s) ? instBar(iv.f,iv.t,iv.s) : '<span class="neu" style="font-size:11px">—</span>';})()}</td>
-        <td>${sigBadge(s)}</td>
-      </tr>
-      ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
-    `).join("");
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">查無符合條件的股票</td></tr>`;
+  } else {
+    // 依 STOCKS 順序決定題材出現順序，再依此順序分組渲染
+    const themeOrder = [...new Set(STOCKS.map(s=>s.theme))];
+    const grouped = {};
+    rows.forEach(r => { (grouped[r.theme]||(grouped[r.theme]=[])).push(r); });
+    // 額外搜尋結果（非 STOCKS 清單）不分組
+    const extraRows = rows.filter(r=>r._extra);
+    let html = "";
+    themeOrder.forEach(theme => {
+      if(!grouped[theme]?.length) return;
+      const desc = THEME_DESCS[theme] || "";
+      html += `<tr class="theme-hd-row"><td colspan="9"><span class="theme-hd-label">${theme}</span><span class="theme-hd-desc">${desc}</span></td></tr>`;
+      grouped[theme].forEach(s => {
+        html += `
+        <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}')">
+          <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
+          <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
+          <td class="name-cell">
+            <div>${s.name}</div>
+            ${etfSourceMap[s.code]?.length ? `<div style="margin-top:2px">${etfSourceMap[s.code].map(c=>`<span style="font-size:9.5px;background:rgba(96,165,250,0.13);color:var(--blue);border-radius:3px;padding:1px 4px;margin-right:3px;font-weight:500">${c}</span>`).join('')}</div>` : ''}
+          </td>
+          <td><span class="badge b-theme">${s.theme}</span></td>
+          <td>${fmtPrice(s.code)}</td>
+          <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
+          <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
+          <td>${(()=>{const iv=getInst(s);return (iv.f||iv.t||iv.s) ? instBar(iv.f,iv.t,iv.s) : '<span class="neu" style="font-size:11px">—</span>';})()}</td>
+          <td>${sigBadge(s)}</td>
+        </tr>
+        ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}`;
+      });
+    });
+    if(extraRows.length){
+      html += `<tr class="theme-hd-row"><td colspan="9"><span class="theme-hd-label">全台股搜尋</span></td></tr>`;
+      extraRows.forEach(s => {
+        html += `
+        <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}')">
+          <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
+          <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
+          <td class="name-cell"><div>${s.name}</div></td>
+          <td><span class="neu" style="font-size:11px">全台股</span></td>
+          <td>${fmtPrice(s.code)}</td>
+          <td>—</td><td>—</td>
+          <td><span class="neu" style="font-size:11px">—</span></td>
+          <td>${sigBadge(s)}</td>
+        </tr>`;
+      });
+    }
+    tbody.innerHTML = html;
+  }
 
   const filtOpps = opps.filter(o => activeTheme==="all" || o.theme===activeTheme);
   if(filtOpps.length === 0){
