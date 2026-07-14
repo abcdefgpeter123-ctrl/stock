@@ -523,16 +523,11 @@ const STOCKS=[
   {code:"2882",name:"國泰金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2891",name:"中信金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2885",name:"元大金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── PCB ──
-  {code:"3044",name:"健鼎",theme:"PCB",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── IC通路 ──
-  {code:"3036",name:"文曄",theme:"IC通路",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 光學 ──
   {code:"3008",name:"大立光",theme:"光學",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 被動元件 ──
   {code:"2327",name:"國巨",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2492",name:"華新科",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3026",name:"禾伸堂",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2472",name:"立隆電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
 // 題材說明（顯示於各區塊標頭）
 const THEME_DESCS = {
@@ -2012,24 +2007,6 @@ async function loadData(){
     });
     // 動態從 ETF holdings 補充 STOCKS
     if(data.etf_holdings){
-      const existingCodes = new Set(STOCKS.map(s => s.code));
-      const watchlistEtfs = ETFS.filter(e => e.watchlist);
-      watchlistEtfs.forEach(etf => {
-        const holdings = data.etf_holdings[etf.code] || etf.holdings || [];
-        holdings.forEach(h => {
-          if(!existingCodes.has(h.code) && h.code && h.code.match(/^\d{4}$/)){
-            STOCKS.push({
-              code: h.code,
-              name: h.name || h.code,
-              theme: "ETF成份",
-              p5: null, p30: null, i5f: 0, i5t: 0, i5s: 0,
-              sig: "up",
-              _fromEtf: etf.code
-            });
-            existingCodes.add(h.code);
-          }
-        });
-      });
     }
     // 大盤走勢線圖
     if(data.twii_history){
