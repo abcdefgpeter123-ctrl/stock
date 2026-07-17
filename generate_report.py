@@ -269,6 +269,11 @@ body{{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:1
 </head>
 <body>
 <div class="wrap">
+  <nav style="display:flex;gap:6px;margin-bottom:20px">
+    <a href="index.html" style="display:inline-flex;align-items:center;gap:5px;padding:6px 16px;border-radius:20px;font-size:13px;text-decoration:none;background:var(--bg3);border:1px solid var(--border);color:var(--text3)">🇹🇼 台股</a>
+    <a href="us.html" style="display:inline-flex;align-items:center;gap:5px;padding:6px 16px;border-radius:20px;font-size:13px;text-decoration:none;background:var(--bg3);border:1px solid var(--border);color:var(--text3)">🇺🇸 美股</a>
+    <a href="weekly_report.html" style="display:inline-flex;align-items:center;gap:5px;padding:6px 16px;border-radius:20px;font-size:13px;text-decoration:none;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.4);color:#60a5fa;font-weight:500">📋 週報</a>
+  </nav>
   <div class="masthead">
     <span class="m-title">台美股市週報</span>
     <span class="m-date">{prices_date}（週五收盤）｜ 更新 {updated}</span>
