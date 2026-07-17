@@ -24,18 +24,27 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python3 fetch_data_full.py
-        
-      - name: Fetch US stock data
-        run: python3 fetch_us_data.py
 
       - name: Fetch US stock data
         run: python3 fetch_us_data.py
+
+      - name: Generate weekly report (Fridays only)
+        run: |
+          # 判斷今天是否為週五（台灣時間，UTC+8）
+          DAY=$(TZ=Asia/Taipei date +%u)
+          EVENT="${{ github.event_name }}"
+          if [ "$DAY" = "5" ] || [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "週五或手動觸發，產生週報..."
+            python3 generate_report.py
+          else
+            echo "今天是週${DAY}，跳過週報"
+          fi
 
       - name: Commit and push if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data.json company_info.json us_data.json
+          git add data.json company_info.json us_data.json weekly_report.html
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

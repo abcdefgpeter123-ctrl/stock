@@ -1070,6 +1070,9 @@ def fetch_yahoo(code):
             prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
             if not price or not prev:
                 continue
+            mkt_ts = meta.get("regularMarketTime")
+            mkt_date = (datetime.datetime.fromtimestamp(mkt_ts).strftime("%Y/%m/%d")
+                        if mkt_ts else datetime.date.today().strftime("%Y/%m/%d"))
             return {
                 "price":   round(price, 2),
                 "change":  round(price - prev, 2),
@@ -1078,6 +1081,7 @@ def fetch_yahoo(code):
                 "high":    round(meta.get("regularMarketDayHigh", 0), 2),
                 "low":     round(meta.get("regularMarketDayLow", 0), 2),
                 "vol":     meta.get("regularMarketVolume", 0),
+                "date":    mkt_date,
             }
         except Exception:
             continue
@@ -1630,35 +1634,25 @@ def main():
         else:
             print("   ⚠️ 法人數據抓取失敗，無前次資料可保留")
 
-    # 3. 全台個股 — 優先用開放 API
-    print("📊 TWSE 開放 API — 上市股票...")
+    # 3. 全台個股 — Yahoo Finance 優先（即時報價），TWSE/TPEX 補齊全市場
+    print("📊 Yahoo Finance — 監控清單即時報價（優先）...")
+    yf_prices = fetch_fallback_list()
+    print(f"   Yahoo Finance: {len(yf_prices)} 支")
+
+    print("📊 TWSE 開放 API — 上市股票（補全市場）...")
     twse = fetch_all_twse_stocks()
     print(f"   上市: {len(twse)} 支")
 
-    print("📊 TPEX 開放 API — 上櫃股票...")
+    print("📊 TPEX 開放 API — 上櫃股票（補全市場）...")
     otc = fetch_all_otc_openapi()
     print(f"   上櫃: {len(otc)} 支")
 
-    # 上市不足 100 支（API 失敗）→ 用 Yahoo Finance 補主要清單
-    if len(twse) < 100:
-        print("⚠️  TWSE 開放 API 無上市資料，改用 Yahoo Finance 補主要清單...")
-        yf = fetch_fallback_list()
-        print(f"   Yahoo Finance: {len(yf)} 支")
-        all_prices = {**data.get("prices", {}), **otc, **yf}
-    else:
-        all_prices = {**otc, **twse}   # 上市優先
+    # Yahoo 即時報價優先；TWSE/TPEX 補齊其餘個股
+    all_prices = {**otc, **twse, **yf_prices}
 
-    # 安全網：FALLBACK_CODES 裡缺少或股價為 0 的股票，用 Yahoo Finance 補抓
-    missing = [c for c in FALLBACK_CODES
-               if not all_prices.get(c) or all_prices[c].get("price", 0) == 0]
-    if missing:
-        print(f"   ⚠️  補抓 {len(missing)} 支缺漏股票（Yahoo Finance）: {missing}")
-        for code in missing:
-            p = fetch_yahoo(code)
-            if p:
-                all_prices[code] = p
-                print(f"      ✅ {code} = {p['price']}")
-            time.sleep(0.3)
+    # 從 Yahoo 樣本取得實際交易日期
+    sample_yf = next((v for v in yf_prices.values() if v.get("date")), None)
+    data["prices_date"] = sample_yf["date"] if sample_yf else datetime.date.today().strftime("%Y/%m/%d")
 
     print(f"✅ 全市場合計 {len(all_prices)} 支")
 

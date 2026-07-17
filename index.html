@@ -413,6 +413,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="sec-hd">上漲題材個股 — 法人進出 × 股價
     <span style="display:flex;align-items:center;gap:8px">
       <span class="src-tag" id="src-tag">資料由 n8n 每日更新</span>
+      <span id="prices-date-tag" style="font-size:11px;color:var(--text3);font-family:var(--mono);display:none">股價日期：—</span>
       <button class="sec-toggle" id="stocks-toggle" onclick="toggleSection('stocks-wrap',this)">▼ 收合</button>
     </span>
   </div>
@@ -2026,6 +2027,11 @@ async function loadData(){
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
       document.getElementById("src-tag").textContent = "抓取日期：" + data.updated_at;
+    }
+    const pdTag = document.getElementById("prices-date-tag");
+    if(pdTag && data.prices_date){
+      pdTag.textContent = "股價日期：" + data.prices_date;
+      pdTag.style.display = "inline";
     }
   } catch(e){
     document.getElementById("err-bar").textContent = "⚠️ 資料載入失敗：" + e.message;
