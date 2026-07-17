@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台美股市週報 — 2026/07/17</title>
+<style>
+:root{
+  --bg:#0C1018;--bg2:#131820;--bg3:#1A2130;
+  --border:#222B3A;--border2:#2D3A4E;
+  --text:#D8E4F0;--text2:#8A9BB0;--text3:#4E5F72;
+  --up:#2EC96E;--dn:#F05656;--accent:#4D9FEC;--gold:#C9993A;--warn:#E0933A;
+  --mono:"SF Mono","Fira Code","Consolas",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --r:6px;
+}
+@media(prefers-color-scheme:light){:root{
+  --bg:#F4F6F9;--bg2:#FFF;--bg3:#EBF0F7;
+  --border:#D4DCE8;--border2:#B8C4D4;
+  --text:#1A2232;--text2:#4A5668;--text3:#8A9AB0;
+  --accent:#2A7DD4;--gold:#A07520;--warn:#C07020;
+}}
+:root[data-theme="light"]{--bg:#F4F6F9;--bg2:#FFF;--bg3:#EBF0F7;--border:#D4DCE8;--border2:#B8C4D4;--text:#1A2232;--text2:#4A5668;--text3:#8A9AB0;--accent:#2A7DD4;--gold:#A07520;--warn:#C07020;}
+:root[data-theme="dark"]{--bg:#0C1018;--bg2:#131820;--bg3:#1A2130;--border:#222B3A;--border2:#2D3A4E;--text:#D8E4F0;--text2:#8A9BB0;--text3:#4E5F72;--accent:#4D9FEC;--gold:#C9993A;--warn:#E0933A;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.5;padding:28px 16px 60px}
+.wrap{max-width:980px;margin:0 auto}
+.masthead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:12px;margin-bottom:24px;flex-wrap:wrap;gap:6px}
+.m-title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.m-date{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.alert{background:rgba(240,86,86,.1);border:1px solid rgba(240,86,86,.3);border-left:3px solid var(--dn);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}
+.alert-icon{font-size:14px;line-height:1.4;flex-shrink:0}
+.alert-body{font-size:12px;color:var(--text2);line-height:1.6}
+.alert-body strong{color:var(--dn)}
+.sec{display:flex;align-items:center;gap:10px;margin:24px 0 14px}
+.sec-line{flex:1;height:1px;background:var(--border)}
+.sec-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-weight:600;white-space:nowrap}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:580px){.ov-grid,.pg{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.panel-flag{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.big-val{font-family:var(--mono);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.big-chg{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;margin-left:8px}
+.sub-rows{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.sub-row{display:flex;align-items:baseline;gap:8px}
+.s-name{font-size:11px;color:var(--text2);min-width:72px}
+.s-val{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.dn{color:var(--dn)}.neu{color:var(--text3)}.warn{color:var(--warn)}
+.inst{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;margin-top:10px;display:flex;gap:24px;flex-wrap:wrap;align-items:center}
+.inst-item{display:flex;flex-direction:column;gap:2px}
+.inst-label{font-size:10px;color:var(--text3);letter-spacing:.04em}
+.inst-val{font-family:var(--mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.inst-total{margin-left:auto;padding-left:20px;border-left:1px solid var(--border)}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.pb{margin-bottom:4px}
+.ph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.pbadge{font-size:10px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border-radius:3px;background:var(--bg3);color:var(--accent);text-transform:uppercase}
+.psub{font-size:11px;color:var(--text3)}
+.rt{width:100%;border-collapse:collapse}
+.rt th{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:4px 0;text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+.rt th:last-child{text-align:right}
+.rt td{padding:5px 0;vertical-align:middle}
+.rt tr:not(:last-child) td{border-bottom:1px solid var(--border)}
+.rname{font-size:12px;color:var(--text)}
+.rcode{font-size:10px;color:var(--text3);font-family:var(--mono);margin-right:4px}
+.rval{font-family:var(--mono);font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bw{width:56px;display:inline-block;vertical-align:middle}
+.bb{height:3px;border-radius:2px;overflow:hidden;background:var(--bg3)}
+.bf{height:100%;border-radius:2px}
+.divlabel{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin:10px 0 6px;padding-top:12px;border-top:1px solid var(--border)}
+.obs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.obs{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 14px}
+.obs.dn{border-left-color:var(--dn)}.obs.up{border-left-color:var(--up)}.obs.gold{border-left-color:var(--gold)}.obs.warn{border-left-color:var(--warn)}
+.obs-t{font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px}
+.obs-b{font-size:11px;color:var(--text2);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <span class="m-title">台美股市週報</span>
+    <span class="m-date">2026/07/17（週五收盤）｜ 更新 2026/07/18 01:32</span>
+  </div>
+
+  <div class="sec"><div class="sec-line"></div><span class="sec-label">大盤概況</span><div class="sec-line"></div></div>
+  <div class="ov-grid">
+    <div class="panel">
+      <div class="panel-flag">🇹🇼 台灣加權指數</div>
+      <div>
+        <span class="big-val">42,671</span>
+        <span class="big-chg dn">-6.47%</span>
+      </div>
+      <div class="sub-rows" style="margin-top:10px">
+        <div class="sub-row"><span class="s-name">USD/TWD</span>
+          <span class="s-val">32.374</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-flag">🇺🇸 美股大盤</div>
+      <div class="sub-rows">
+        <div class="sub-row"><span class="s-name">S&amp;P 500</span>
+          <span class="s-val">7,492.63</span>
+          <span class="s-val dn" style="font-size:11px">&nbsp;-0.55%</span>
+        </div>
+        <div class="sub-row"><span class="s-name">NASDAQ</span>
+          <span class="s-val">25,683.2</span>
+          <span class="s-val dn" style="font-size:11px">&nbsp;-0.77%</span>
+        </div>
+        <div class="sub-row"><span class="s-name">Dow Jones</span>
+          <span class="s-val">52,371.04</span>
+          <span class="s-val neu" style="font-size:11px">&nbsp;-0.35%</span>
+        </div>
+        <div class="sub-row" style="margin-top:6px"><span class="s-name">VIX 恐慌</span>
+          <span class="s-val warn">17.8 <span style="font-size:10px">+6.40%</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="inst">
+    <div class="inst-item"><span class="inst-label">外資</span>
+      <span class="inst-val dn">-1883億</span>
+    </div>
+    <div class="inst-item"><span class="inst-label">投信</span>
+      <span class="inst-val up">+73億</span>
+    </div>
+    <div class="inst-item"><span class="inst-label">自營商</span>
+      <span class="inst-val dn">-822億</span>
+    </div>
+    <div class="inst-item inst-total">
+      <span class="inst-label">三大法人合計</span>
+      <span class="inst-val dn" style="font-size:15px">-2631億</span>
+    </div>
+  </div>
+
+  
+  <div class="sec"><div class="sec-line"></div><span class="sec-label">今日（週五）</span><div class="sec-line"></div></div>
+  <div class="pg">
+    <div class="pb">
+      <div class="ph"><span class="pbadge">台股 週五</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">6505</span><span class="rname">6505</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:10%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+1.62%</td>
+    </tr><tr>
+      <td><span class="rcode">2412</span><span class="rname">2412</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:9%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+1.47%</td>
+    </tr><tr>
+      <td><span class="rcode">2379</span><span class="rname">2379</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:5%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+0.84%</td>
+    </tr><tr>
+      <td><span class="rcode">2324</span><span class="rname">2324</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:0%;background:var(--up)"></div></div></div></td>
+      <td class="rval neu">+0.00%</td>
+    </tr><tr>
+      <td><span class="rcode">2881</span><span class="rname">2881</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:2%;background:var(--dn)"></div></div></div></td>
+      <td class="rval neu">-0.40%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">2472</span><span class="rname">2472</span></td><td class="rval dn">-10.00%</td></tr><tr><td><span class="rcode">2303</span><span class="rname">2303</span></td><td class="rval dn">-10.00%</td></tr><tr><td><span class="rcode">6789</span><span class="rname">6789</span></td><td class="rval dn">-9.98%</td></tr><tr><td><span class="rcode">3037</span><span class="rname">3037</span></td><td class="rval dn">-9.98%</td></tr><tr><td><span class="rcode">3711</span><span class="rname">3711</span></td><td class="rval dn">-9.97%</td></tr>
+      </table>
+    </div>
+    <div class="pb">
+      <div class="ph"><span class="pbadge">美股 週五</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">PANW</span><span class="rname">Palo Alto</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:15%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+2.30%</td>
+    </tr><tr>
+      <td><span class="rcode">ADBE</span><span class="rname">Adobe</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:10%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+1.58%</td>
+    </tr><tr>
+      <td><span class="rcode">ANET</span><span class="rname">Arista網路</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:10%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+1.56%</td>
+    </tr><tr>
+      <td><span class="rcode">AMD</span><span class="rname">超微</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:5%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+0.83%</td>
+    </tr><tr>
+      <td><span class="rcode">LLY</span><span class="rname">禮來</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:3%;background:var(--up)"></div></div></div></td>
+      <td class="rval neu">+0.46%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">ISRG</span><span class="rname">直覺外科</span></td><td class="rval dn">-13.38%</td></tr><tr><td><span class="rcode">NFLX</span><span class="rname">Netflix</span></td><td class="rval dn">-7.54%</td></tr><tr><td><span class="rcode">GOOGL</span><span class="rname">Alphabet</span></td><td class="rval dn">-2.57%</td></tr><tr><td><span class="rcode">META</span><span class="rname">Meta</span></td><td class="rval dn">-2.16%</td></tr><tr><td><span class="rcode">V</span><span class="rname">Visa</span></td><td class="rval dn">-1.92%</td></tr>
+      </table>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="sec-line"></div><span class="sec-label">本週</span><div class="sec-line"></div></div>
+  <div class="pg">
+    <div class="pb">
+      <div class="ph"><span class="pbadge">台股</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">6505</span><span class="rname">6505</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+38.27%</td>
+    </tr><tr>
+      <td><span class="rcode">1301</span><span class="rname">1301</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:97%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+14.60%</td>
+    </tr><tr>
+      <td><span class="rcode">2618</span><span class="rname">2618</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:26%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+4.04%</td>
+    </tr><tr>
+      <td><span class="rcode">1101</span><span class="rname">1101</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:23%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+3.52%</td>
+    </tr><tr>
+      <td><span class="rcode">2412</span><span class="rname">2412</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:22%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+3.37%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">2492</span><span class="rname">2492</span></td><td class="rval dn">-33.94%</td></tr><tr><td><span class="rcode">2472</span><span class="rname">2472</span></td><td class="rval dn">-23.40%</td></tr><tr><td><span class="rcode">2327</span><span class="rname">2327</span></td><td class="rval dn">-22.33%</td></tr><tr><td><span class="rcode">6223</span><span class="rname">6223</span></td><td class="rval dn">-20.90%</td></tr><tr><td><span class="rcode">3481</span><span class="rname">3481</span></td><td class="rval dn">-19.45%</td></tr>
+      </table>
+    </div>
+    <div class="pb">
+      <div class="ph"><span class="pbadge">美股</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">PANW</span><span class="rname">Palo Alto</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:74%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+11.12%</td>
+    </tr><tr>
+      <td><span class="rcode">ADBE</span><span class="rname">Adobe</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:45%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+6.89%</td>
+    </tr><tr>
+      <td><span class="rcode">INTU</span><span class="rname">Intuit</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:42%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+6.33%</td>
+    </tr><tr>
+      <td><span class="rcode">CRM</span><span class="rname">Salesforce</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:33%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+5.06%</td>
+    </tr><tr>
+      <td><span class="rcode">AAPL</span><span class="rname">蘋果</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:31%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+4.77%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">ISRG</span><span class="rname">直覺外科</span></td><td class="rval dn">-14.30%</td></tr><tr><td><span class="rcode">AMD</span><span class="rname">超微</span></td><td class="rval dn">-9.43%</td></tr><tr><td><span class="rcode">ANET</span><span class="rname">Arista網路</span></td><td class="rval dn">-8.40%</td></tr><tr><td><span class="rcode">NFLX</span><span class="rname">Netflix</span></td><td class="rval dn">-6.35%</td></tr><tr><td><span class="rcode">AVGO</span><span class="rname">博通</span></td><td class="rval dn">-5.93%</td></tr>
+      </table>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="sec-line"></div><span class="sec-label">本月</span><div class="sec-line"></div></div>
+  <div class="pg">
+    <div class="pb">
+      <div class="ph"><span class="pbadge">台股</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">6505</span><span class="rname">6505</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+54.27%</td>
+    </tr><tr>
+      <td><span class="rcode">3374</span><span class="rname">3374</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+52.88%</td>
+    </tr><tr>
+      <td><span class="rcode">1301</span><span class="rname">1301</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+34.19%</td>
+    </tr><tr>
+      <td><span class="rcode">6488</span><span class="rname">6488</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+18.66%</td>
+    </tr><tr>
+      <td><span class="rcode">2059</span><span class="rname">2059</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+18.65%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">2492</span><span class="rname">2492</span></td><td class="rval dn">-37.75%</td></tr><tr><td><span class="rcode">3105</span><span class="rname">3105</span></td><td class="rval dn">-32.56%</td></tr><tr><td><span class="rcode">8996</span><span class="rname">8996</span></td><td class="rval dn">-26.45%</td></tr><tr><td><span class="rcode">2327</span><span class="rname">2327</span></td><td class="rval dn">-26.42%</td></tr><tr><td><span class="rcode">2454</span><span class="rname">2454</span></td><td class="rval dn">-26.10%</td></tr>
+      </table>
+    </div>
+    <div class="pb">
+      <div class="ph"><span class="pbadge">美股</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">PANW</span><span class="rname">Palo Alto</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+29.14%</td>
+    </tr><tr>
+      <td><span class="rcode">V</span><span class="rname">Visa</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:97%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+14.63%</td>
+    </tr><tr>
+      <td><span class="rcode">LLY</span><span class="rname">禮來</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:59%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+8.90%</td>
+    </tr><tr>
+      <td><span class="rcode">AAPL</span><span class="rname">蘋果</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:43%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+6.48%</td>
+    </tr><tr>
+      <td><span class="rcode">META</span><span class="rname">Meta</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:29%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+4.48%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">AVGO</span><span class="rname">博通</span></td><td class="rval dn">-21.36%</td></tr><tr><td><span class="rcode">NFLX</span><span class="rname">Netflix</span></td><td class="rval dn">-15.71%</td></tr><tr><td><span class="rcode">ISRG</span><span class="rname">直覺外科</span></td><td class="rval dn">-14.40%</td></tr><tr><td><span class="rcode">NOW</span><span class="rname">ServiceNow</span></td><td class="rval dn">-11.38%</td></tr><tr><td><span class="rcode">CRM</span><span class="rname">Salesforce</span></td><td class="rval dn">-9.75%</td></tr>
+      </table>
+    </div>
+  </div>
+  
+  <div class="sec"><div class="sec-line"></div><span class="sec-label">今年以來（YTD）</span><div class="sec-line"></div></div>
+  <div class="pg">
+    <div class="pb">
+      <div class="ph"><span class="pbadge">台股</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">3037</span><span class="rname">3037</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+262.56%</td>
+    </tr><tr>
+      <td><span class="rcode">6488</span><span class="rname">6488</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+207.69%</td>
+    </tr><tr>
+      <td><span class="rcode">2303</span><span class="rname">2303</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+195.69%</td>
+    </tr><tr>
+      <td><span class="rcode">3481</span><span class="rname">3481</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+190.61%</td>
+    </tr><tr>
+      <td><span class="rcode">2327</span><span class="rname">2327</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+190.04%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">3231</span><span class="rname">3231</span></td><td class="rval dn">-10.32%</td></tr><tr><td><span class="rcode">3661</span><span class="rname">3661</span></td><td class="rval dn">-4.26%</td></tr><tr><td><span class="rcode">2002</span><span class="rname">2002</span></td><td class="rval dn">-0.80%</td></tr><tr><td><span class="rcode">2317</span><span class="rname">2317</span></td><td class="rval dn">+0.86%</td></tr><tr><td><span class="rcode">1101</span><span class="rname">1101</span></td><td class="rval dn">+2.17%</td></tr>
+      </table>
+    </div>
+    <div class="pb">
+      <div class="ph"><span class="pbadge">美股</span><span class="psub">漲幅前五</span></div>
+      <table class="rt">
+        <tr><th>個股</th><th></th><th style="text-align:right">漲跌</th></tr>
+        <tr>
+      <td><span class="rcode">AMD</span><span class="rname">超微</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+126.11%</td>
+    </tr><tr>
+      <td><span class="rcode">PANW</span><span class="rname">Palo Alto</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+101.91%</td>
+    </tr><tr>
+      <td><span class="rcode">ANET</span><span class="rname">Arista網路</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+28.19%</td>
+    </tr><tr>
+      <td><span class="rcode">AAPL</span><span class="rname">蘋果</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:100%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+22.12%</td>
+    </tr><tr>
+      <td><span class="rcode">COST</span><span class="rname">好市多</span></td>
+      <td><div class="bw"><div class="bb"><div class="bf" style="width:65%;background:var(--up)"></div></div></div></td>
+      <td class="rval up">+9.80%</td>
+    </tr>
+      </table>
+      <div class="divlabel">跌幅前五</div>
+      <table class="rt">
+        <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
+        <tr><td><span class="rcode">INTU</span><span class="rname">Intuit</span></td><td class="rval dn">-53.12%</td></tr><tr><td><span class="rcode">ISRG</span><span class="rname">直覺外科</span></td><td class="rval dn">-37.97%</td></tr><tr><td><span class="rcode">CRM</span><span class="rname">Salesforce</span></td><td class="rval dn">-32.00%</td></tr><tr><td><span class="rcode">NOW</span><span class="rname">ServiceNow</span></td><td class="rval dn">-29.14%</td></tr><tr><td><span class="rcode">ADBE</span><span class="rname">Adobe</span></td><td class="rval dn">-28.28%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec"><div class="sec-line"></div><span class="sec-label">本週回顧</span><div class="sec-line"></div></div>
+  <div class="obs-grid">
+    <div class="obs dn">
+      <div class="obs-t">台股大盤 -6.47%</div>
+      <div class="obs-b">法人合計 -2631億。外資賣壓明顯，留意短線風險。</div>
+    </div><div class="obs up">
+      <div class="obs-t">台股週冠 6505 +38.27%</div>
+      <div class="obs-b">6505 收盤 81.3，月漲 +54.27%，YTD +74.46%。</div>
+    </div><div class="obs dn">
+      <div class="obs-t">台股週殺 2492 -33.94%</div>
+      <div class="obs-b">2492 收盤 307.5，月漲 -37.75%，YTD +146.99%。</div>
+    </div><div class="obs up">
+      <div class="obs-t">美股週冠 PANW +11.12%</div>
+      <div class="obs-b">Palo Alto，月漲 +29.14%，YTD +101.91%。</div>
+    </div><div class="obs dn">
+      <div class="obs-t">美股週殺 ISRG -14.30%</div>
+      <div class="obs-b">直覺外科，月漲 -14.40%，YTD -37.97%。</div>
+    </div><div class="obs gold">
+      <div class="obs-t">台股 YTD 冠軍 3037 +262.56%</div>
+      <div class="obs-b">3037 今年漲幅驚人，週 -9.26%，月 -19.06%。</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
