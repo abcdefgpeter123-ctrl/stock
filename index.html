@@ -721,7 +721,7 @@ function renderFavorites() {
       <th style="width:75px">訊號</th>
     </tr></thead>
     <tbody>${favStocks.map(s => `
-      <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}')">
+      <tr class="stock-row ${expandedFav===s.code?'expanded':''}" onclick="toggleFavDetail('${s.code}')">
         <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
         <td class="code-cell"><span class="expand-icon">▶</span>${s.code}</td>
         <td class="name-cell">
@@ -735,7 +735,7 @@ function renderFavorites() {
         <td>${(()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s);})()}</td>
         <td>${sigBadge(s)}</td>
       </tr>
-      ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
+      ${expandedFav===s.code ? `<tr class="detail-row" data-fav-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
     `).join("")}</tbody>
   </table></div>`;
 }
@@ -928,6 +928,7 @@ let companyInfo = {};   // AI 自動生成（company_info.json）
 let histories  = {};    // 30日收盤歷史（data.json histories）
 let instStocks = {};    // 個股三大法人5日累計（data.json inst_stocks）
 let expandedStock = null;
+let expandedFav = null;
 
 async function loadStockInfo() {
   await Promise.allSettled([
@@ -938,15 +939,23 @@ async function loadStockInfo() {
   ]);
 }
 
+function toggleFavDetail(code) {
+  expandedFav = expandedFav === code ? null : code;
+  renderFavorites();
+  if (expandedFav) {
+    setTimeout(() => {
+      const row = document.querySelector(`tr[data-fav-detail="${code}"]`);
+      if (row) row.scrollIntoView({behavior:"smooth", block:"center"});
+    }, 50);
+  }
+}
+
 function toggleStockDetail(code) {
   expandedStock = expandedStock === code ? null : code;
   render();
-  renderFavorites();   // 讓我的最愛也能展開看盤面板
   if (expandedStock) {
     setTimeout(() => {
-      // 優先找主表（data-main-detail），避免捲到最愛區塊
-      const row = document.querySelector(`tr[data-main-detail="${code}"]`)
-               || document.querySelector(`tr[data-detail="${code}"]`);
+      const row = document.querySelector(`tr[data-main-detail="${code}"]`);
       if (row) row.scrollIntoView({behavior:"smooth", block:"center"});
     }, 50);
   }
@@ -1105,9 +1114,9 @@ function renderDetail(code) {
       <!-- 時間維度切換 + 日期範圍 -->
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="tp-periods" id="tp-per-${code}">
-          <button class="tp-period" onclick="switchTpPeriod('${code}','當日',this)">當日</button>
-          <button class="tp-period" onclick="switchTpPeriod('${code}','五日',this)">五日</button>
-          <button class="tp-period active" onclick="switchTpPeriod('${code}','近月',this)">近月</button>
+          <button class="tp-period ${(!open || open === 0) ? '' : ''}" onclick="switchTpPeriod('${code}','當日',this)">當日</button>
+          <button class="tp-period ${(!open || open === 0) ? 'active' : ''}" onclick="switchTpPeriod('${code}','五日',this)">五日</button>
+          <button class="tp-period ${(!open || open === 0) ? '' : 'active'}" onclick="switchTpPeriod('${code}','近月',this)">近月</button>
           <button class="tp-period" onclick="switchTpPeriod('${code}','三月',this)">三月</button>
           <button class="tp-period" onclick="switchTpPeriod('${code}','六月',this)">六月</button>
           <button class="tp-period" onclick="switchTpPeriod('${code}','一年',this)">一年</button>

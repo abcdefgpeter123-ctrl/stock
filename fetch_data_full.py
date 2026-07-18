@@ -346,12 +346,46 @@ def fetch_trailing_pe(code):
 
 
 def fetch_quarterly_eps(code):
-    """從 Yahoo Finance earnings 模組抓近四季 EPS"""
+    """從 Yahoo Finance 抓近四季實際 EPS"""
+    # 先用 yfinance quarterly_income_stmt（自動處理 crumb）
+    if _YF_AVAILABLE:
+        for suffix in [".TW", ".TWO"]:
+            try:
+                t = yf.Ticker(f"{code}{suffix}")
+                df = t.quarterly_income_stmt
+                if df is None or df.empty:
+                    continue
+                eps_row = next((r for r in df.index if "Diluted EPS" in str(r)), None)
+                if eps_row is None:
+                    continue
+                import math
+                out = []
+                for col in list(df.columns)[:4]:
+                    val = df.loc[eps_row, col]
+                    if val is not None and not (isinstance(val, float) and math.isnan(val)):
+                        if hasattr(col, "strftime"):
+                            q_num = (col.month - 1) // 3 + 1
+                            label = f"{col.year}Q{q_num}"
+                        else:
+                            label = str(col)[:7]
+                        out.append({"q": label, "eps": round(float(val), 2)})
+                if out:
+                    return list(reversed(out))  # 舊到新
+            except Exception:
+                continue
+
+    # fallback：quoteSummary with crumb
+    session, crumb = _get_yf_crumb()
+    if not session:
+        session = requests.Session()
+        session.headers.update(HEADERS)
+    crumb_param = f"&crumb={crumb}" if crumb else ""
+
     for suffix in [".TW", ".TWO"]:
         try:
-            url = (f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
-                   f"{code}{suffix}?modules=earnings")
-            r = requests.get(url, headers=HEADERS, timeout=12)
+            url = (f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/"
+                   f"{code}{suffix}?modules=earnings{crumb_param}")
+            r = session.get(url, timeout=12)
             if not r.ok:
                 continue
             result = r.json().get("quoteSummary", {}).get("result") or []
@@ -360,8 +394,6 @@ def fetch_quarterly_eps(code):
             quarters = (result[0].get("earnings", {})
                                   .get("earningsChart", {})
                                   .get("quarterly", []))
-            if not quarters:
-                continue
             out = []
             for q in quarters[-4:]:
                 actual = q.get("actual", {})
