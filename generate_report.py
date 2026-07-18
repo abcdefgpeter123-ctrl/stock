@@ -6,14 +6,42 @@
 import json
 import datetime
 
-# ── 台股監控代號 & 名稱對應 ────────────────────────────────────
-TW_CODES = [
-    "2330","6488","2492","2327","2472","3037","3481","2409","2454","3034",
-    "2379","3374","2303","6223","3105","3711","2449","1301","6505","2382",
-    "6669","2317","2308","2345","2603","2618","2002","1101","3008","2344",
-    "2408","3661","2059","8996","3017","2356","2376","3231","2357","2324",
-    "2301","2881","2882","2891","2885","6789","2383","2412",
-]
+# ── 台股監控代號 & 名稱 / 類股對應 ──────────────────────────────
+TW_META = {
+    "2330":("台積電","晶圓代工"),  "2303":("聯電","晶圓代工"),
+    "5347":("世界先進","晶圓代工"),"6789":("采鈺","晶圓代工"),
+    "2454":("聯發科","IC設計"),    "3661":("世芯-KY","IC設計"),
+    "3034":("聯詠","IC設計"),      "2379":("瑞昱","IC設計"),
+    "3443":("創意電子","IC設計"),
+    "3711":("日月光投控","半導體封測"), "2449":("京元電","半導體封測"),
+    "6223":("旺矽","半導體封測"),  "6239":("力成","半導體封測"),
+    "3374":("精材","半導體封測"),
+    "2344":("華邦電","記憶體"),    "2408":("南亞科","記憶體"),
+    "6488":("環球晶","矽晶圓"),
+    "3105":("穩懋","化合物半導體"),
+    "2404":("漢唐","半導體設備"),
+    "2383":("台光電","ABF載板"),   "3037":("欣興","ABF載板"),
+    "2382":("廣達","AI伺服器"),    "6669":("緯穎","AI伺服器"),
+    "2356":("英業達","AI伺服器"),  "2376":("技嘉","AI伺服器"),
+    "3231":("緯創","AI伺服器"),    "2357":("華碩","AI伺服器"),
+    "2324":("仁寶","AI伺服器"),    "2308":("台達電","AI伺服器"),
+    "2317":("鴻海","AI伺服器"),    "2301":("光寶科","AI伺服器"),
+    "2059":("川湖","AI伺服器"),
+    "3017":("奇鋐","液冷散熱"),   "8996":("高力","液冷散熱"),
+    "2345":("智邦","網通"),
+    "3481":("群創","面板"),        "2409":("友達","面板"),
+    "2603":("長榮","海運"),        "2609":("陽明","海運"),
+    "2618":("長榮航","航空"),      "2610":("華航","航空"),
+    "2002":("中鋼","傳產"),        "6505":("台塑化","傳產"),
+    "1101":("台泥","傳產"),        "1301":("台塑","傳產"),
+    "2412":("中華電","電信"),      "4904":("遠傳","電信"),
+    "2881":("富邦金","金融"),      "2882":("國泰金","金融"),
+    "2891":("中信金","金融"),      "2885":("元大金","金融"),
+    "3008":("大立光","光學"),
+    "2327":("國巨","被動元件"),    "2492":("華新科","被動元件"),
+    "2472":("立隆電","被動元件"),
+}
+TW_CODES = list(TW_META.keys())
 
 def load_json(path):
     try:
@@ -46,7 +74,8 @@ def calc_tw(data):
         p     = prices.get(code, {})
         h     = histories.get(code, {})
         price = p.get("price", 0)
-        name  = p.get("name", code)
+        meta_name, theme = TW_META.get(code, (code, "—"))
+        name  = p.get("name") or meta_name
         closes = h.get("closes", [])
         labels = h.get("labels", [])
         if not price or not closes:
@@ -62,7 +91,7 @@ def calc_tw(data):
         )
         chg_ytd = ((price / ytd_p) - 1) * 100 if ytd_p else None
         results.append({
-            "code": code, "name": name, "price": price,
+            "code": code, "name": name, "theme": theme, "price": price,
             "d": chg_d, "w": chg_w, "m": chg_m, "ytd": chg_ytd,
         })
     return results
@@ -113,12 +142,14 @@ def top(rows, key, n=5, reverse=True):
                   key=lambda x: x[key], reverse=reverse)[:n]
 
 def row_html(r, key):
-    val  = r.get(key)
-    cls  = cls_str(val)
+    val   = r.get(key)
+    cls   = cls_str(val)
     bar_w = min(int(abs(val) / 15 * 100), 100) if val is not None else 0
     bar_c = "var(--up)" if (val or 0) >= 0 else "var(--dn)"
+    theme = r.get("theme", "")
+    theme_html = f'<span class="rtheme">{theme}</span>' if theme and theme != "—" else ""
     return f"""<tr>
-      <td><span class="rcode">{r['code']}</span><span class="rname">{r['name']}</span></td>
+      <td><span class="rcode">{r['code']}</span><span class="rname">{r['name']}</span>{theme_html}</td>
       <td><div class="bw"><div class="bb"><div class="bf" style="width:{bar_w}%;background:{bar_c}"></div></div></div></td>
       <td class="rval {cls}">{pct(val)}</td>
     </tr>"""
@@ -140,7 +171,7 @@ def section(title, tw_rows, us_rows, key, tw_label="台股", us_label="美股", 
       <div class="divlabel">跌幅前五</div>
       <table class="rt">
         <tr><th>個股</th><th style="text-align:right">漲跌</th></tr>
-        {''.join(f'<tr><td><span class="rcode">{r["code"]}</span><span class="rname">{r["name"]}</span></td><td class="rval dn">{pct(r.get(key))}</td></tr>' for r in tw_bot)}
+        {''.join(f'<tr><td><span class="rcode">{r["code"]}</span><span class="rname">{r["name"]}</span>{"<span class=rtheme>" + r.get("theme","") + "</span>" if r.get("theme") and r.get("theme") != "—" else ""}</td><td class="rval dn">{pct(r.get(key))}</td></tr>' for r in tw_bot)}
       </table>
     </div>
     <div class="pb">
@@ -254,6 +285,7 @@ body{{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:1
 .rt td{{padding:5px 0;vertical-align:middle}}
 .rt tr:not(:last-child) td{{border-bottom:1px solid var(--border)}}
 .rname{{font-size:12px;color:var(--text)}}
+.rtheme{{font-size:9px;color:var(--text3);background:var(--bg3);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle}}
 .rcode{{font-size:10px;color:var(--text3);font-family:var(--mono);margin-right:4px}}
 .rval{{font-family:var(--mono);font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}}
 .bw{{width:56px;display:inline-block;vertical-align:middle}}
