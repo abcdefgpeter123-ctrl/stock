@@ -425,7 +425,8 @@ def fetch_price_history(code):
             ]
             if len(triples) >= 6:
                 closes  = [c for _, c, _ in triples]
-                dates   = [datetime.datetime.utcfromtimestamp(t).strftime("%Y/%m/%d")
+                tz_tw   = datetime.timezone(datetime.timedelta(hours=8))
+                dates   = [datetime.datetime.fromtimestamp(t, tz=tz_tw).strftime("%Y/%m/%d")
                            for t, _, _ in triples]
                 volumes = [int(v) if v is not None else 0 for _, _, v in triples]
                 return closes, dates, volumes
@@ -602,7 +603,8 @@ def fetch_twii_history():
         pairs = [(t, c) for t, c in zip(timestamps, closes_raw) if c is not None]
         if len(pairs) >= 10:
             closes = [round(c, 1) for c in [c for _, c in pairs]]
-            dates  = [datetime.datetime.utcfromtimestamp(t).strftime("%Y/%m/%d")
+            tz_tw  = datetime.timezone(datetime.timedelta(hours=8))
+            dates  = [datetime.datetime.fromtimestamp(t, tz=tz_tw).strftime("%Y/%m/%d")
                       for t, _ in pairs]
             return closes, dates
     except Exception as e:
