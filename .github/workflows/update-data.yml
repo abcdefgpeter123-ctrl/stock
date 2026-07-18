@@ -5,6 +5,12 @@ on:
     # 每天台灣時間 18:30 執行（UTC 10:30），週一到週五
     # 17:00 收盤後 TWSE 需要約 1 小時才會發布 ETF 申購買回清單
     - cron: '30 10 * * 1-5'
+  push:
+    branches: [main]
+    paths:
+      - 'fetch_data_full.py'
+      - 'fetch_us_data.py'
+      - 'generate_report.py'
   workflow_dispatch:  # 允許手動觸發
 
 permissions:
