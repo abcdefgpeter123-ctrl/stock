@@ -1715,6 +1715,28 @@ def main():
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
 
+    # ── 補上最新交易日（Yahoo 歷史 API 常延遲 1 天）──────────────────
+    prices_date = data.get("prices_date", "")
+    patched = 0
+    for code, h in histories.items():
+        labels = h.get("labels", [])
+        closes = h.get("closes", [])
+        if not labels or not closes or not prices_date:
+            continue
+        if labels[-1] == prices_date:
+            continue  # 已是最新，不需補
+        p = all_prices.get(code, {})
+        latest_price = p.get("price")
+        if latest_price:
+            labels.append(prices_date)
+            closes.append(round(latest_price, 2))
+            if "volumes" in h:
+                h["volumes"].append(p.get("vol", 0))
+            patched += 1
+    if patched:
+        data["histories"] = histories
+        print(f"   🗓️ 補上最新交易日 {prices_date}：{patched} 支股票")
+
     # 5b. ETF 持股比重（TWSE OpenAPI）
     print("📊 ETF 成分股持股抓取中...")
     etf_holdings = fetch_etf_holdings()
