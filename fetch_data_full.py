@@ -52,7 +52,11 @@ FALLBACK_CODES = [
     "3481","2409","2618","1101","1301",
     "6789",
     # 半導體（新增）
-    "5347","3374",
+    "5347","3374","4477","2455","3583",
+    # 網通（新增）
+    "4906",
+    # 海運 / 航空 / 電信 / 光學（新增）
+    "2609","2610","4904","3484",
     # ETF
     "0050","0056","00878","00919","00929","00940",
     "00713","00757","00662","00891",
@@ -341,6 +345,36 @@ def fetch_trailing_pe(code):
     return {}
 
 
+def fetch_quarterly_eps(code):
+    """從 Yahoo Finance earnings 模組抓近四季 EPS"""
+    for suffix in [".TW", ".TWO"]:
+        try:
+            url = (f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/"
+                   f"{code}{suffix}?modules=earnings")
+            r = requests.get(url, headers=HEADERS, timeout=12)
+            if not r.ok:
+                continue
+            result = r.json().get("quoteSummary", {}).get("result") or []
+            if not result:
+                continue
+            quarters = (result[0].get("earnings", {})
+                                  .get("earningsChart", {})
+                                  .get("quarterly", []))
+            if not quarters:
+                continue
+            out = []
+            for q in quarters[-4:]:
+                actual = q.get("actual", {})
+                eps_val = actual.get("raw") if isinstance(actual, dict) else None
+                if eps_val is not None:
+                    out.append({"q": q.get("date", ""), "eps": round(eps_val, 2)})
+            if out:
+                return out
+        except Exception:
+            continue
+    return []
+
+
 def update_company_info(all_prices, company_info, api_key, max_new=50):
     """
     為沒有描述（或描述已過期）的股票呼叫 Claude 自動生成，
@@ -386,15 +420,19 @@ def update_company_info(all_prices, company_info, api_key, max_new=50):
     else:
         print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過 AI 描述生成")
 
-    # ── 更新本益比（優先清單）
+    # ── 更新本益比 + 季 EPS（優先清單）
     pe_codes = list(priority)[:60]  # 每天最多抓 60 支，避免超時
-    print(f"   📊 更新 {len(pe_codes)} 支本益比...")
+    print(f"   📊 更新 {len(pe_codes)} 支本益比與季 EPS...")
     for code in pe_codes:
         pe_data = fetch_trailing_pe(code)
         if pe_data:
             entry = company_info.setdefault(code, {"generated": today_str})
             entry.update(pe_data)
-        time.sleep(0.2)
+        qeps = fetch_quarterly_eps(code)
+        if qeps:
+            entry = company_info.setdefault(code, {"generated": today_str})
+            entry["quarterly_eps"] = qeps
+        time.sleep(0.3)
 
     return company_info
 
