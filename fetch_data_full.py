@@ -219,11 +219,10 @@ def _generate_story(code, name, theme, p5, p30, api_key):
         return None
 
 
-def generate_stories(company_info, histories_json, all_prices, api_key, max_new=35):
-    """為沒有 recent_story（或故事過期）的題材股生成近期股價故事"""
-    if not api_key:
-        print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過故事生成")
-        return company_info
+def generate_stories(company_info, histories_json, all_prices, api_key=None, max_new=35):
+    """為沒有 recent_story（或故事過期）的題材股生成近期股價故事（需 API，目前停用）"""
+    print("   ⚠️ 故事生成已停用（無 API Key）")
+    return company_info
 
     today_str = datetime.date.today().strftime("%Y/%m/%d")
 
@@ -407,11 +406,9 @@ def fetch_quarterly_eps(code):
     return []
 
 
-def update_company_info(all_prices, company_info, api_key, max_new=50):
+def update_company_info(all_prices, company_info, api_key=None, max_new=50):
     """
-    為沒有描述（或描述已過期）的股票呼叫 Claude 自動生成，
-    每次最多生成 max_new 筆（避免單次執行太久）。
-    同時為 STOCKS + THEME_GROUPS 成員更新本益比。
+    更新本益比與季 EPS（公司描述生成已停用，不依賴 Claude API）。
     """
     today_str = datetime.date.today().strftime("%Y/%m/%d")
 
@@ -420,37 +417,6 @@ def update_company_info(all_prices, company_info, api_key, max_new=50):
     for g in THEME_GROUPS.values():
         priority.update(g["leaders"])
         priority.update(g["members"])
-
-    # 排序：優先股先補，其餘按代號排序
-    def sort_key(code):
-        return (0 if code in priority else 1, code)
-
-    codes_to_check = sorted(all_prices.keys(), key=sort_key)
-    generated = 0
-
-    if api_key:
-        print(f"   🤖 Claude API 自動生成公司描述（最多 {max_new} 筆）...")
-        for code in codes_to_check:
-            if generated >= max_new:
-                break
-            entry = company_info.get(code, {})
-            if not _info_needs_update(entry):
-                continue
-            name = all_prices.get(code, {}).get("name", code)
-            info = _call_claude(code, name, api_key)
-            if info:
-                info["generated"] = today_str
-                # 保留已有的 pe/eps
-                if "pe" in entry:
-                    info["pe"]  = entry["pe"]
-                if "eps" in entry:
-                    info["eps"] = entry["eps"]
-                company_info[code] = info
-                generated += 1
-                time.sleep(0.4)
-        print(f"   ✅ 新增 {generated} 筆公司描述")
-    else:
-        print("   ⚠️ 無 ANTHROPIC_API_KEY，跳過 AI 描述生成")
 
     # ── 更新本益比 + 季 EPS（優先清單）
     pe_codes = list(priority)[:60]  # 每天最多抓 60 支，避免超時
@@ -739,29 +705,11 @@ def _generate_twii_summary(closes, dates, cur_price, api_key):
         return None
 
 
-def generate_daily_commentary(twii, inst, all_prices, histories, api_key):
+def generate_daily_commentary(twii, inst, all_prices, histories, api_key=None):
     """
-    整合今日大盤、法人、題材表現，用 Claude 生成 3-4 句日評。
-    回傳純文字字串，存入 data["market_summary"]。
+    整合今日大盤、法人、題材表現，用規則式邏輯生成 3-4 句日評。
+    不依賴 Claude API。
     """
-    if not api_key:
-        return None
-
-    # ── 大盤基本數字
-    price   = twii.get("price", 0)
-    chgP    = twii.get("chgP", 0)
-    trend   = "上漲" if chgP >= 0 else "下跌"
-    sign    = "+" if chgP >= 0 else ""
-
-    # ── 法人（億元）
-    foreign = round(inst.get("foreign", 0) / 1e8, 0)
-    trust   = round(inst.get("trust",   0) / 1e8, 0)
-    dealer  = round(inst.get("dealer",  0) / 1e8, 0)
-    total   = foreign + trust + dealer
-    inst_txt = (f"外資 {foreign:+.0f} 億、投信 {trust:+.0f} 億、"
-                f"自營 {dealer:+.0f} 億，合計 {total:+.0f} 億")
-
-    # ── 今日個股漲跌 → 計算各題材平均
     THEME_MAP = {
         "2330":"晶圓代工","2303":"晶圓代工","5347":"晶圓代工","6789":"晶圓代工",
         "2454":"IC設計","3661":"IC設計","3034":"IC設計","2379":"IC設計","3443":"IC設計",
@@ -778,61 +726,90 @@ def generate_daily_commentary(twii, inst, all_prices, histories, api_key):
         "2412":"電信","4904":"電信","2881":"金融","2882":"金融","2891":"金融","2885":"金融",
         "3008":"光學","2327":"被動元件","2492":"被動元件","2472":"被動元件",
     }
+
+    # ── 大盤
+    price = twii.get("price", 0)
+    chgP  = twii.get("chgP", 0)
+    chg   = twii.get("chg", 0)
+    if abs(chgP) >= 2:
+        trend_word = "大漲" if chgP > 0 else "大跌"
+    elif abs(chgP) >= 0.5:
+        trend_word = "上漲" if chgP > 0 else "下跌"
+    else:
+        trend_word = "小幅收紅" if chgP >= 0 else "小幅收黑"
+
+    # ── 法人（億元）
+    foreign = round(inst.get("foreign", 0) / 1e8, 0)
+    trust   = round(inst.get("trust",   0) / 1e8, 0)
+    dealer  = round(inst.get("dealer",  0) / 1e8, 0)
+    total   = foreign + trust + dealer
+
+    if foreign > 0:
+        inst_lead = f"外資買超 {abs(foreign):.0f} 億"
+    elif foreign < 0:
+        inst_lead = f"外資賣超 {abs(foreign):.0f} 億"
+    else:
+        inst_lead = "外資持平"
+
+    if total > 0:
+        inst_tone = f"三大法人合計買超 {abs(total):.0f} 億，資金動能偏多"
+    elif total < 0:
+        inst_tone = f"三大法人合計賣超 {abs(total):.0f} 億，籌碼略顯鬆動"
+    else:
+        inst_tone = "三大法人動向中性"
+
+    # ── 題材強弱
     theme_chg = {}
     for code, theme in THEME_MAP.items():
         p = all_prices.get(code, {})
-        chg = p.get("changeP")
-        if chg is not None:
-            theme_chg.setdefault(theme, []).append(chg)
+        c = p.get("changeP")
+        if c is not None:
+            theme_chg.setdefault(theme, []).append(c)
     theme_avg = {t: round(sum(v)/len(v), 2) for t, v in theme_chg.items() if v}
-    top3   = sorted(theme_avg.items(), key=lambda x: x[1], reverse=True)[:3]
-    bot3   = sorted(theme_avg.items(), key=lambda x: x[1])[:3]
-    top_txt = "、".join(f"{t}({v:+.1f}%)" for t, v in top3)
-    bot_txt = "、".join(f"{t}({v:+.1f}%)" for t, v in bot3)
+    top3 = sorted(theme_avg.items(), key=lambda x: x[1], reverse=True)[:3]
+    bot3 = sorted(theme_avg.items(), key=lambda x: x[1])[:3]
+    top_txt = "、".join(f"{t}（{v:+.1f}%）" for t, v in top3)
+    bot_txt = "、".join(f"{t}（{v:+.1f}%）" for t, v in bot3)
 
-    # ── 個股異動（漲跌超過 ±5% 的監控股）
-    movers = []
-    for code, theme in THEME_MAP.items():
+    # ── 個股異動
+    movers_up, movers_dn = [], []
+    for code in THEME_MAP:
         p = all_prices.get(code, {})
-        chg = p.get("changeP")
+        c = p.get("changeP")
         name = p.get("name", code)
-        if chg is not None and abs(chg) >= 5:
-            movers.append(f"{name}({chg:+.1f}%)")
-    movers_txt = "、".join(movers[:6]) if movers else "無明顯異動個股"
+        if c is None:
+            continue
+        if c >= 5:
+            movers_up.append(f"{name}（{c:+.1f}%）")
+        elif c <= -5:
+            movers_dn.append(f"{name}（{c:+.1f}%）")
 
-    today_str = datetime.date.today().strftime("%Y年%m月%d日")
-    prompt = (
-        f"今天是 {today_str}，請以台灣投資人視角，用繁體中文寫今日台股日評，共 3-4 句話，"
-        f"不要用標題、不要用條列，直接輸出段落文字。\n\n"
-        f"以下是今日數據：\n"
-        f"- 加權指數：{price:,.0f} 點，{trend} {sign}{chgP:.2f}%\n"
-        f"- 三大法人：{inst_txt}\n"
-        f"- 強勢題材：{top_txt}\n"
-        f"- 弱勢題材：{bot_txt}\n"
-        f"- 監控個股異動：{movers_txt}\n\n"
-        f"格式要求：第一句說今日大盤表現與法人動向，第二句分析強弱題材背後的邏輯，"
-        f"第三句點出值得注意的個股異動或潛在機會，第四句（可選）給出短線展望或注意事項。"
-    )
+    # ── 組裝句子
+    s1 = f"今日加權指數{trend_word} {chgP:+.2f}%，收 {price:,.0f} 點（{chg:+.0f}），{inst_lead}，{inst_tone}。"
+    s2 = f"題材面以{top_txt}表現較強；{bot_txt}相對落後。"
 
-    try:
-        resp = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 500,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-            timeout=25,
-        )
-        return resp.json()["content"][0]["text"].strip()
-    except Exception as e:
-        print(f"   ⚠️ 每日日評生成失敗: {e}")
-        return None
+    if movers_up and movers_dn:
+        s3 = f"個股表現分化，{movers_up[0]} 等強勢，{movers_dn[0]} 等承壓。"
+    elif movers_up:
+        s3 = f"個股亮點為 {movers_up[0]}{'、' + movers_up[1] if len(movers_up) > 1 else ''}，漲幅顯著。"
+    elif movers_dn:
+        s3 = f"留意 {movers_dn[0]}{'、' + movers_dn[1] if len(movers_dn) > 1 else ''} 等個股壓力。"
+    else:
+        s3 = "監控個股漲跌幅度溫和，無明顯異常波動。"
+
+    # ── 第四句：短線展望
+    if chgP >= 1.5 and total > 0:
+        s4 = "法人買盤持續，短線多方氣氛偏強，可留意強勢族群續漲機會。"
+    elif chgP <= -1.5 and total < 0:
+        s4 = "法人持續調節，短線需注意支撐能否守穩，建議控管部位風險。"
+    elif abs(chgP) < 0.3:
+        s4 = "大盤量縮整理，方向未明，宜觀望等待訊號明朗化。"
+    else:
+        s4 = "整體走勢偏向盤堅，可逢低留意具題材支撐的個股機會。"
+
+    result = " ".join([s1, s2, s3, s4])
+    print(f"   ✅ 規則式日評生成完成（{len(result)} 字）")
+    return result
 
 
 # ── 加權指數 ──────────────────────────────────────────────
