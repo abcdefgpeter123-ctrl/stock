@@ -5,8 +5,8 @@
     "industry": "半導體業",
     "major_clients": "Apple、NVIDIA、AMD、Qualcomm",
     "generated": "2026/05/22",
-    "pe": 26.8,
-    "eps": 85.46
+    "pe": 27.1,
+    "eps": 85.42
   },
   "2317": {
     "core_products": "電子組裝代工（EMS）",
@@ -23,8 +23,8 @@
     "industry": "半導體業",
     "major_clients": "Qualcomm、MediaTek、Apple",
     "generated": "2026/05/22",
-    "pe": 60.4,
-    "eps": 10.16
+    "pe": 60.3,
+    "eps": 10.19
   },
   "6669": {
     "core_products": "AI 伺服器整機",
@@ -32,8 +32,8 @@
     "industry": "伺服器業",
     "major_clients": "Meta、Google、Microsoft",
     "generated": "2026/05/22",
-    "pe": 17.4,
-    "eps": 265.47
+    "pe": 17.5,
+    "eps": 265.65
   },
   "5274": {
     "core_products": "BMC 管理晶片",
@@ -48,8 +48,8 @@
     "industry": "半導體業",
     "major_clients": "Amazon、Google",
     "generated": "2026/05/22",
-    "pe": 51.6,
-    "eps": 67.48
+    "pe": 51.8,
+    "eps": 67.51
   },
   "4863": {
     "core_products": "銅箔基板（CCL）",
@@ -71,8 +71,8 @@
     "industry": "半導體業",
     "major_clients": "MediaTek、聯發科、瑞昱",
     "generated": "2026/05/22",
-    "pe": 43.9,
-    "eps": 6.52
+    "pe": 44.1,
+    "eps": 6.5
   },
   "2458": {
     "core_products": "觸控/指紋 IC",
@@ -108,7 +108,7 @@
     "industry": "半導體業",
     "major_clients": "伺服器廠、PC 廠",
     "generated": "2026/05/22",
-    "pe": 36.6,
+    "pe": 36.7,
     "eps": 10.8
   },
   "2344": {
@@ -198,8 +198,8 @@
     "industry": "電子零組件業",
     "major_clients": "電子製造廠",
     "generated": "2026/05/22",
-    "pe": 64.7,
-    "eps": 4.75
+    "pe": 64.9,
+    "eps": 4.74
   },
   "3034": {
     "core_products": "顯示驅動 IC",
@@ -207,8 +207,8 @@
     "industry": "半導體業",
     "major_clients": "Samsung、LG、BOE",
     "generated": "2026/05/22",
-    "pe": 17.2,
-    "eps": 26.83
+    "pe": 17.3,
+    "eps": 26.85
   },
   "6274": {
     "core_products": "高頻高速 PCB",
@@ -223,8 +223,8 @@
     "industry": "電子零組件業",
     "major_clients": "緯穎、廣達、英業達、Dell",
     "generated": "2026/05/22",
-    "pe": 36.6,
-    "eps": 60.08
+    "pe": 37.0,
+    "eps": 60.06
   },
   "3230": {
     "core_products": "液冷散熱系統",
@@ -426,7 +426,7 @@
     "major_clients": "一般消費者、企業",
     "generated": "2026/05/22",
     "pe": 14.9,
-    "eps": 8.38
+    "eps": 8.37
   },
   "2882": {
     "core_products": "壽險 / 金控",
@@ -450,8 +450,8 @@
     "industry": "半導體材料業",
     "major_clients": "台積電、三星、英特爾",
     "generated": "2026/05/22",
-    "pe": 81.5,
-    "eps": 15.21
+    "pe": 82.6,
+    "eps": 15.25
   },
   "1626": {
     "core_products": "液冷系統元件",
@@ -529,8 +529,8 @@
     "industry": "半導體業",
     "major_clients": "三星、小米、OPPO、vivo",
     "generated": "2026/05/31",
-    "pe": 51.2,
-    "eps": 65.86
+    "pe": 51.5,
+    "eps": 66.05
   },
   "3443": {
     "core_products": "ASIC/IC設計服務、IP授權",
@@ -538,8 +538,8 @@
     "industry": "半導體業",
     "major_clients": "Google、Amazon、Meta、台積電",
     "generated": "2026/05/31",
-    "pe": 116.0,
-    "eps": 33.06
+    "pe": 116.1,
+    "eps": 32.98
   },
   "6239": {
     "core_products": "半導體封裝測試（記憶體）",
@@ -548,7 +548,7 @@
     "major_clients": "三星、SK海力士、美光",
     "generated": "2026/05/31",
     "pe": 34.4,
-    "eps": 8.36
+    "eps": 8.38
   },
   "2404": {
     "core_products": "半導體廠務工程（超純水、潔淨室）",
@@ -556,8 +556,8 @@
     "industry": "半導體業",
     "major_clients": "台積電、聯電",
     "generated": "2026/05/31",
-    "pe": 24.3,
-    "eps": 47.75
+    "pe": 24.5,
+    "eps": 47.68
   },
   "3105": {
     "core_products": "GaAs化合物半導體代工（PA晶片）",
@@ -565,8 +565,8 @@
     "industry": "半導體業",
     "major_clients": "Skyworks、Qorvo、村田",
     "generated": "2026/05/31",
-    "pe": 63.9,
-    "eps": 5.2
+    "pe": 63.7,
+    "eps": 5.22
   },
   "2301": {
     "core_products": "電源供應器、光電模組、連接器",
@@ -574,7 +574,7 @@
     "industry": "電子零組件業",
     "major_clients": "Dell、HP、雲端大廠",
     "generated": "2026/05/31",
-    "pe": 29.1,
+    "pe": 29.2,
     "eps": 6.76
   },
   "2059": {
@@ -583,7 +583,7 @@
     "industry": "電子零組件業",
     "major_clients": "Dell、HP、Super Micro、雲端大廠",
     "generated": "2026/05/31",
-    "pe": 78.6,
+    "pe": 79.2,
     "eps": 100.4
   },
   "8996": {
@@ -592,8 +592,8 @@
     "industry": "電機機械業",
     "major_clients": "國內外資料中心、科技廠",
     "generated": "2026/05/31",
-    "pe": 114.2,
-    "eps": 8.89
+    "pe": 113.7,
+    "eps": 8.93
   },
   "2885": {
     "core_products": "證券、銀行、人壽（金融控股）",
@@ -620,18 +620,18 @@
   },
   "2308": {
     "generated": "2026/06/05",
-    "pe": 64.3,
-    "eps": 27.05
+    "pe": 65.3,
+    "eps": 26.97
   },
   "2345": {
     "generated": "2026/06/05",
-    "pe": 44.6,
-    "eps": 46.86
+    "pe": 40.2,
+    "eps": 52.46
   },
   "3037": {
     "generated": "2026/06/05",
-    "pe": 113.9,
-    "eps": 6.97
+    "pe": 113.6,
+    "eps": 6.99
   },
   "2891": {
     "generated": "2026/06/05",
@@ -640,13 +640,13 @@
   },
   "3374": {
     "generated": "2026/06/05",
-    "pe": 72.0,
-    "eps": 4.98
+    "pe": 72.3,
+    "eps": 4.95
   },
   "6173": {
     "generated": "2026/06/05",
-    "pe": 59.7,
-    "eps": 3.25
+    "pe": 59.5,
+    "eps": 3.26
   },
   "3090": {
     "generated": "2026/06/05",
@@ -661,27 +661,27 @@
   "6223": {
     "generated": "2026/06/05",
     "pe": 166.7,
-    "eps": 33.59
+    "eps": 33.6
   },
   "2376": {
     "generated": "2026/06/05",
-    "pe": 18.9,
+    "pe": 18.8,
     "eps": 17.19
   },
   "3026": {
     "generated": "2026/06/05",
-    "pe": 106.0,
-    "eps": 6.51
+    "pe": 106.3,
+    "eps": 6.49
   },
   "5347": {
     "generated": "2026/06/05",
     "pe": 40.0,
-    "eps": 4.22
+    "eps": 4.23
   },
   "2382": {
     "generated": "2026/06/05",
     "pe": 17.2,
-    "eps": 18.9
+    "eps": 18.91
   },
   "2472": {
     "generated": "2026/06/05",
@@ -695,32 +695,32 @@
   },
   "2357": {
     "generated": "2026/06/05",
-    "pe": 11.8,
-    "eps": 59.49
+    "pe": 12.7,
+    "eps": 55.51
   },
   "6505": {
     "generated": "2026/06/05",
-    "pe": 78.2,
-    "eps": 1.04
+    "pe": 29.1,
+    "eps": 2.79
   },
   "2383": {
     "generated": "2026/06/05",
-    "pe": 97.9,
-    "eps": 45.91
+    "pe": 98.0,
+    "eps": 45.85
   },
   "2303": {
     "generated": "2026/06/05",
     "pe": 36.5,
-    "eps": 3.94
+    "eps": 3.95
   },
   "2379": {
     "generated": "2026/06/05",
-    "pe": 26.4,
-    "eps": 27.2
+    "pe": 26.2,
+    "eps": 27.21
   },
   "3231": {
     "generated": "2026/06/05",
-    "pe": 16.6,
-    "eps": 8.39
+    "pe": 14.8,
+    "eps": 9.49
   }
 }
