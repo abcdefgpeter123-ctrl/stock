@@ -471,13 +471,14 @@ def fetch_price_history(code):
     return None, None, None
 
 
-def compute_opportunities(all_prices, extra_codes=None, company_info=None):
+def compute_opportunities(all_prices, extra_codes=None, company_info=None, inst_stocks_ref=None):
     """
     比較各題材龍頭 vs 成員的真實 30 日漲幅，
     自動找出「龍頭已大漲、但成員還沒動」的機會點。
     extra_codes: 額外保證抓歷史的代號清單（如監控清單 FALLBACK_CODES）
     company_info: {code: {eps, pe, ...}} 用於過濾虧損股
-    回傳 list of dict，每筆包含 code/name/theme/p30/p5/leader/leader_p30/gap/reason/eps/profit_ok。
+    inst_stocks_ref: {code: {f, t, s}} 法人資料，用於信心評分
+    回傳 list of dict，每筆包含 code/name/theme/p30/p5/leader/leader_p30/gap/reason/eps/profit_ok/score。
     """
     LEADER_THRESHOLD = 12   # 龍頭 30 日漲幅需 >= 12% 才算題材熱絡
     GAP_THRESHOLD    = 8    # 成員落後龍頭 >= 8% 才算有機會
@@ -617,8 +618,72 @@ def compute_opportunities(all_prices, extra_codes=None, company_info=None):
                 "profit_ok":  profit_ok,
             })
 
-    # 按落差由大到小排序
-    opportunities.sort(key=lambda x: x["gap"], reverse=True)
+    # ── 信心評分 ──────────────────────────────────────────────
+    for opp in opportunities:
+        score = 0
+        tags  = []
+        code  = opp["code"]
+
+        lp30 = opp["leader_p30"]
+        gap  = opp["gap"]
+        m_p30 = opp["p30"]
+        m_p5  = opp.get("p5") or 0
+        eps   = opp.get("eps")
+        inst  = inst_stocks_ref.get(code, {}) if inst_stocks_ref else {}
+        f5    = inst.get("f", 0)   # 外資近5日億元
+
+        # 龍頭熱度
+        if lp30 >= 30:
+            score += 25; tags.append("龍頭強勢")
+        elif lp30 >= 15:
+            score += 15; tags.append("龍頭溫和")
+
+        # 落差大小
+        if gap >= 25:
+            score += 25; tags.append("落差極大")
+        elif gap >= 15:
+            score += 18; tags.append("落差明顯")
+        elif gap >= 8:
+            score += 10
+
+        # 跟隨股近5日沒有跟漲（真的沒動）
+        if m_p5 <= 2:
+            score += 15; tags.append("尚未啟動")
+        elif m_p5 <= 5:
+            score += 8
+
+        # 外資近5日買超
+        if f5 > 0.5:
+            score += 15; tags.append("外資買超")
+        elif f5 < -0.5:
+            score -= 10; tags.append("外資賣超")
+
+        # EPS 基本面
+        if eps is not None and eps > 0:
+            score += 10; tags.append("獲利正常")
+        elif eps is None:
+            score += 5  # 不扣分但也不加滿
+
+        # 近30日成員漲幅不宜過高（還有空間）
+        if m_p30 < 5:
+            score += 10
+        elif m_p30 > 15:
+            score -= 5
+
+        score = max(0, min(100, score))
+        if score >= 75:
+            grade = "⭐⭐⭐"
+        elif score >= 55:
+            grade = "⭐⭐"
+        else:
+            grade = "⭐"
+
+        opp["score"]      = score
+        opp["score_grade"] = grade
+        opp["score_tags"] = tags
+
+    # 按信心評分 > 落差排序
+    opportunities.sort(key=lambda x: (x["score"], x["gap"]), reverse=True)
     print(f"   🎯 機會點偵測完成: {len(opportunities)} 支")
     return opportunities, histories_json
 
@@ -809,6 +874,168 @@ def generate_daily_commentary(twii, inst, all_prices, histories, api_key=None):
 
     result = " ".join([s1, s2, s3, s4])
     print(f"   ✅ 規則式日評生成完成（{len(result)} 字）")
+    return result
+
+
+def detect_stock_movers(all_prices, histories, inst_stocks):
+    """
+    偵測今日漲跌幅 >=5% 的監控個股，生成一句規則式說明。
+    回傳 {code: {name, changeP, reason}} dict，存入 data["movers"]。
+    """
+    WATCH_CODES = set()
+    for g in THEME_GROUPS.values():
+        WATCH_CODES.update(g["leaders"])
+        WATCH_CODES.update(g["members"])
+
+    def pct(closes, n):
+        if not closes or len(closes) < n + 1:
+            return None
+        base = closes[-(n + 1)]
+        cur  = closes[-1]
+        return round((cur - base) / base * 100, 1) if base > 0 else None
+
+    movers = {}
+    for code in WATCH_CODES:
+        p = all_prices.get(code, {})
+        chgP = p.get("changeP")
+        if chgP is None or abs(chgP) < 5:
+            continue
+
+        name  = p.get("name", code)
+        direction = "大漲" if chgP > 0 else "大跌"
+        sign  = "+" if chgP > 0 else ""
+
+        # 拿近期走勢數據
+        hist   = histories.get(code, {})
+        closes = hist.get("closes", [])
+        p5     = pct(closes, 5)
+        p30    = pct(closes, 30)
+
+        # 法人狀況
+        inst   = inst_stocks.get(code, {})
+        f5     = inst.get("f", 0)
+        if f5 > 0.3:
+            inst_txt = f"外資近5日買超 {f5:.1f} 億"
+        elif f5 < -0.3:
+            inst_txt = f"外資近5日賣超 {abs(f5):.1f} 億"
+        else:
+            inst_txt = "外資動向中性"
+
+        # 組裝理由
+        context = []
+        if p30 is not None:
+            trend_30 = f"近30日{'已漲' if p30 > 0 else '已跌'}{abs(p30):.0f}%"
+            context.append(trend_30)
+        context.append(inst_txt)
+        if chgP > 0 and p30 is not None and p30 > 20:
+            context.append("留意高位追漲風險")
+        elif chgP < 0 and p30 is not None and p30 < -10:
+            context.append("下跌趨勢留意支撐")
+
+        reason = f"今日{direction} {sign}{chgP:.1f}%，{' / '.join(context)}"
+        movers[code] = {"name": name, "changeP": chgP, "reason": reason}
+
+    print(f"   ✅ 個股異動偵測：{len(movers)} 支（±5%）")
+    return movers
+
+
+def generate_weekly_summary(all_prices, histories, inst, twii):
+    """
+    產生本週台股敘事摘要段落，存入 weekly_report.html 的 data-summary 或由 generate_report.py 讀取。
+    回傳純文字字串。
+    """
+    def pct(closes, n):
+        if not closes or len(closes) < n + 1:
+            return None
+        base = closes[-(n + 1)]
+        cur  = closes[-1]
+        return round((cur - base) / base * 100, 1) if base > 0 else None
+
+    # ── 本週大盤
+    twii_p5 = None
+    twii_hist = histories.get("^TWII") or histories.get("TWII")
+    if twii_hist:
+        twii_p5 = pct(twii_hist.get("closes", []), 5)
+    twii_chgP = twii.get("chgP", 0)
+    twii_price = twii.get("price", 0)
+
+    # ── 各個股本週漲跌
+    weekly = []
+    for code, p in all_prices.items():
+        hist = histories.get(code, {})
+        closes = hist.get("closes", [])
+        w = pct(closes, 5)
+        name = p.get("name", code)
+        if w is not None:
+            weekly.append((code, name, w))
+
+    if not weekly:
+        return None
+
+    weekly.sort(key=lambda x: x[2], reverse=True)
+    top5 = weekly[:5]
+    bot5 = weekly[-5:][::-1]  # 跌最多的5支
+
+    top_txt = "、".join(f"{n}（{v:+.1f}%）" for _, n, v in top5 if v > 0)
+    bot_txt = "、".join(f"{n}（{v:+.1f}%）" for _, n, v in bot5 if v < 0)
+
+    # ── 題材強弱（用 THEME_GROUPS）
+    theme_weekly = {}
+    for theme, g in THEME_GROUPS.items():
+        vals = []
+        for code in list(g["leaders"]) + list(g["members"]):
+            hist = histories.get(code, {})
+            w = pct(hist.get("closes", []), 5)
+            if w is not None:
+                vals.append(w)
+        if vals:
+            theme_weekly[theme] = round(sum(vals) / len(vals), 1)
+
+    top_theme = sorted(theme_weekly.items(), key=lambda x: x[1], reverse=True)[:3]
+    bot_theme = sorted(theme_weekly.items(), key=lambda x: x[1])[:2]
+    top_theme_txt = "、".join(f"{t}（平均{v:+.1f}%）" for t, v in top_theme if v > 0)
+    bot_theme_txt = "、".join(f"{t}（{v:+.1f}%）" for t, v in bot_theme if v < 0)
+
+    # ── 法人
+    foreign = round(inst.get("foreign", 0) / 1e8, 0)
+    if foreign > 0:
+        inst_txt = f"外資本週買超 {foreign:.0f} 億"
+    elif foreign < 0:
+        inst_txt = f"外資本週賣超 {abs(foreign):.0f} 億"
+    else:
+        inst_txt = "外資本週持平"
+
+    # ── 組句
+    if twii_chgP >= 1:
+        s1 = f"本週加權指數收漲 {twii_chgP:+.2f}%，收 {twii_price:,.0f} 點，多方氣氛延續。"
+    elif twii_chgP <= -1:
+        s1 = f"本週加權指數收跌 {twii_chgP:.2f}%，收 {twii_price:,.0f} 點，市場偏弱整理。"
+    else:
+        s1 = f"本週加權指數小幅波動，週收 {twii_price:,.0f} 點（{twii_chgP:+.2f}%），方向不明朗。"
+
+    s2 = ""
+    if top_theme_txt:
+        s2 += f"題材面以{top_theme_txt}表現最佳"
+    if bot_theme_txt:
+        s2 += f"；{bot_theme_txt}相對落後"
+    if s2:
+        s2 += f"。{inst_txt}。"
+    else:
+        s2 = f"{inst_txt}。"
+
+    s3 = ""
+    if top_txt:
+        s3 += f"本週個股亮點為{top_txt}"
+    if bot_txt:
+        s3 += f"；跌幅較深者有{bot_txt}"
+    if s3:
+        s3 += "。"
+
+    result = s1 + " " + s2
+    if s3:
+        result += " " + s3
+
+    print(f"   ✅ 週報敘事段落生成（{len(result)} 字）")
     return result
 
 
@@ -1811,11 +2038,17 @@ def main():
         json.dump(company_info, f, ensure_ascii=False, indent=2)
     print(f"   💾 company_info.json 已更新（{len(company_info)} 筆）")
 
+    # 5a-pre. 個股三大法人（T86，先抓供評分用）
+    print("📊 個股三大法人資料（T86）...")
+    inst_stocks = fetch_inst_stocks(all_prices, target_days=5)
+    data["inst_stocks"] = inst_stocks
+
     # 5. 機會點自動偵測（同時收集30日歷史供圖表用）
     print("🔍 機會點偵測中...")
-    # 傳入 FALLBACK_CODES 確保所有 29 支監控股票都能拿到歷史走勢
-    # 傳入 company_info 供獲利能力過濾（EPS/PE）
-    opps, histories = compute_opportunities(all_prices, extra_codes=FALLBACK_CODES, company_info=company_info)
+    opps, histories = compute_opportunities(
+        all_prices, extra_codes=FALLBACK_CODES,
+        company_info=company_info, inst_stocks_ref=inst_stocks
+    )
     data["opportunities"] = opps
     data["histories"] = histories
     print(f"   📊 儲存 {len(histories)} 支股票歷史走勢")
@@ -1881,11 +2114,6 @@ def main():
         data["histories"] = histories
         print(f"   ✅ 歷史走勢總計 {len(histories)} 支")
 
-    # 5c. 個股三大法人（T86，最近5個交易日累計）
-    print("📊 個股三大法人資料（T86）...")
-    inst_stocks = fetch_inst_stocks(all_prices, target_days=5)
-    data["inst_stocks"] = inst_stocks
-
     # 5c. 個股近期故事生成（用已抓好的 histories）
     print("📝 生成個股近期故事...")
     company_info = generate_stories(company_info, histories, all_prices, api_key)
@@ -1903,6 +2131,17 @@ def main():
         print(f"   ✅ 日評已生成（{len(commentary)} 字）")
     else:
         print("   ⚠️ 日評生成失敗，保留前次資料")
+
+    # 5e. 個股異動偵測（±5%）
+    print("🔔 個股異動偵測中...")
+    movers = detect_stock_movers(all_prices, histories, inst_stocks)
+    data["movers"] = movers
+
+    # 5f. 週報敘事段落（每日都更新，週報產生時直接讀取）
+    print("📋 生成週報敘事段落...")
+    weekly_summary = generate_weekly_summary(all_prices, histories, inst_data, twii_data)
+    if weekly_summary:
+        data["weekly_summary"] = weekly_summary
 
     # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))

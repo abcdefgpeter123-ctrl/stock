@@ -196,6 +196,8 @@ def generate():
     updated  = tw.get("updated_at", date_str)
     prices_date = tw.get("prices_date", tw.get("twii", {}).get("date", date_str))
 
+    weekly_summary = tw.get("weekly_summary", "")
+
     twii      = tw.get("twii", {})
     twii_p    = twii.get("price", 0)
     twii_chg  = twii.get("chgP", 0)
@@ -367,6 +369,10 @@ body{{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:1
   {section("本月", tw_rows, us_rows, "m")}
   {section("今年以來（YTD）", tw_rows, us_rows, "ytd")}
 
+  {f'''<div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r);padding:14px 18px;margin-bottom:16px">
+    <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">📝 本週摘要</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text2)">{weekly_summary}</div>
+  </div>''' if weekly_summary else ''}
   <div class="sec"><div class="sec-line"></div><span class="sec-label">本週回顧</span><div class="sec-line"></div></div>
   <div class="obs-grid">
     {"".join(_obs_cards(tw_rows, us_rows, twii_chg, total_inst))}

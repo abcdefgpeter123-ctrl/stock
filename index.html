@@ -927,6 +927,7 @@ let stockInfo = {};
 let companyInfo = {};   // AI 自動生成（company_info.json）
 let histories  = {};    // 30日收盤歷史（data.json histories）
 let instStocks = {};    // 個股三大法人5日累計（data.json inst_stocks）
+let moversData = {};    // 今日異動個股（±5%）說明
 let expandedStock = null;
 let expandedFav = null;
 
@@ -1157,6 +1158,7 @@ function renderDetail(code) {
     <!-- 基本面 -->
     ${hasFundamentals ? `<div class="tp-fundamentals">
       ${core  ? `<div class="tp-fund-block"><span class="tp-fund-lbl">核心產品</span><span class="tp-fund-text">${core}</span></div>` : ""}
+      ${(()=>{ const mv = moversData[code]; return mv ? `<div class="tp-fund-block" style="border-left:3px solid ${mv.changeP>=0?'var(--up)':'var(--dn)'};padding-left:8px"><span class="tp-fund-lbl">今日異動</span><span class="tp-fund-text" style="color:${mv.changeP>=0?'var(--up)':'var(--dn)'}">${mv.reason}</span></div>` : ""; })()}
       ${story ? `<div class="tp-fund-block"><span class="tp-fund-lbl">近期故事</span><span class="tp-fund-text">${story}</span></div>` : ""}
       ${(pe != null || eps != null) ? `<div class="tp-fund-block inline" style="flex-wrap:wrap;gap:14px">
         ${pe != null ? `<span><span class="tp-fund-lbl" style="min-width:auto;margin-right:4px">P/E</span>
@@ -1877,11 +1879,20 @@ function render(){
       const epsTxt = (o.eps != null)
         ? `<span style="font-size:10px;color:var(--text3)">EPS ${o.eps >= 0 ? "+" : ""}${o.eps}</span>`
         : "";
+      const scoreBadge = o.score != null
+        ? `<span style="font-size:11px;font-weight:600;color:${o.score>=75?'#4ade80':o.score>=55?'#facc15':'var(--text3)'}">
+            ${o.score_grade || ''} ${o.score}分
+           </span>`
+        : "";
+      const scoreTags = (o.score_tags && o.score_tags.length)
+        ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${o.score_tags.map(t=>`<span style="font-size:10px;background:var(--bg3);color:var(--text2);border-radius:3px;padding:1px 5px">${t}</span>`).join('')}</div>`
+        : "";
       return `<div class="opp-card${isOppActive ? ' opp-active' : ''}" data-code="${o.code}" onclick="toggleOppDetail('${o.code}')">
         <div class="oc-code">${o.code} <span class="badge b-theme">${o.theme}</span>${gaptxt}</div>
-        <div class="oc-name">${o.name}${profitBadge}</div>
+        <div class="oc-name" style="display:flex;align-items:center;justify-content:space-between">${o.name}${profitBadge} ${scoreBadge}</div>
         ${ps}
         <div style="display:flex;align-items:center;gap:8px;margin-top:2px">${p30txt}${epsTxt}</div>
+        ${scoreTags}
         <div class="oc-reason" style="margin-top:6px">${o.reason}</div>
         <div class="oc-tag"><span class="badge b-opp">尚未啟動</span> <span style="color:var(--text3);font-size:11px;margin-left:6px">${isOppActive ? '▲ 收起' : '▼ 展開詳情'}</span></div>
       </div>`;
@@ -1968,6 +1979,7 @@ async function loadData(){
       document.getElementById('twii-chart-wrap').style.display = 'block';
       setTimeout(() => renderTwiiChart(_twiiPeriod), 80);
     }
+    if(data.movers) moversData = data.movers;
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
