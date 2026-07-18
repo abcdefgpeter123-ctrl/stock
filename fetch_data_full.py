@@ -739,6 +739,102 @@ def _generate_twii_summary(closes, dates, cur_price, api_key):
         return None
 
 
+def generate_daily_commentary(twii, inst, all_prices, histories, api_key):
+    """
+    整合今日大盤、法人、題材表現，用 Claude 生成 3-4 句日評。
+    回傳純文字字串，存入 data["market_summary"]。
+    """
+    if not api_key:
+        return None
+
+    # ── 大盤基本數字
+    price   = twii.get("price", 0)
+    chgP    = twii.get("chgP", 0)
+    trend   = "上漲" if chgP >= 0 else "下跌"
+    sign    = "+" if chgP >= 0 else ""
+
+    # ── 法人（億元）
+    foreign = round(inst.get("foreign", 0) / 1e8, 0)
+    trust   = round(inst.get("trust",   0) / 1e8, 0)
+    dealer  = round(inst.get("dealer",  0) / 1e8, 0)
+    total   = foreign + trust + dealer
+    inst_txt = (f"外資 {foreign:+.0f} 億、投信 {trust:+.0f} 億、"
+                f"自營 {dealer:+.0f} 億，合計 {total:+.0f} 億")
+
+    # ── 今日個股漲跌 → 計算各題材平均
+    THEME_MAP = {
+        "2330":"晶圓代工","2303":"晶圓代工","5347":"晶圓代工","6789":"晶圓代工",
+        "2454":"IC設計","3661":"IC設計","3034":"IC設計","2379":"IC設計","3443":"IC設計",
+        "3711":"半導體封測","2449":"半導體封測","6223":"半導體封測","6239":"半導體封測","3374":"半導體封測",
+        "2344":"記憶體","2408":"記憶體","6488":"矽晶圓",
+        "3105":"化合物半導體","2404":"半導體設備",
+        "2383":"ABF載板","3037":"ABF載板",
+        "2382":"AI伺服器","6669":"AI伺服器","2356":"AI伺服器","2376":"AI伺服器",
+        "3231":"AI伺服器","2357":"AI伺服器","2324":"AI伺服器","2308":"AI伺服器",
+        "2317":"AI伺服器","2301":"AI伺服器","2059":"AI伺服器",
+        "3017":"液冷散熱","8996":"液冷散熱","2345":"網通","4906":"網通",
+        "3481":"面板","2409":"面板","2603":"海運","2609":"海運",
+        "2618":"航空","2610":"航空","2002":"傳產","6505":"傳產","1101":"傳產","1301":"傳產",
+        "2412":"電信","4904":"電信","2881":"金融","2882":"金融","2891":"金融","2885":"金融",
+        "3008":"光學","2327":"被動元件","2492":"被動元件","2472":"被動元件",
+    }
+    theme_chg = {}
+    for code, theme in THEME_MAP.items():
+        p = all_prices.get(code, {})
+        chg = p.get("changeP")
+        if chg is not None:
+            theme_chg.setdefault(theme, []).append(chg)
+    theme_avg = {t: round(sum(v)/len(v), 2) for t, v in theme_chg.items() if v}
+    top3   = sorted(theme_avg.items(), key=lambda x: x[1], reverse=True)[:3]
+    bot3   = sorted(theme_avg.items(), key=lambda x: x[1])[:3]
+    top_txt = "、".join(f"{t}({v:+.1f}%)" for t, v in top3)
+    bot_txt = "、".join(f"{t}({v:+.1f}%)" for t, v in bot3)
+
+    # ── 個股異動（漲跌超過 ±5% 的監控股）
+    movers = []
+    for code, theme in THEME_MAP.items():
+        p = all_prices.get(code, {})
+        chg = p.get("changeP")
+        name = p.get("name", code)
+        if chg is not None and abs(chg) >= 5:
+            movers.append(f"{name}({chg:+.1f}%)")
+    movers_txt = "、".join(movers[:6]) if movers else "無明顯異動個股"
+
+    today_str = datetime.date.today().strftime("%Y年%m月%d日")
+    prompt = (
+        f"今天是 {today_str}，請以台灣投資人視角，用繁體中文寫今日台股日評，共 3-4 句話，"
+        f"不要用標題、不要用條列，直接輸出段落文字。\n\n"
+        f"以下是今日數據：\n"
+        f"- 加權指數：{price:,.0f} 點，{trend} {sign}{chgP:.2f}%\n"
+        f"- 三大法人：{inst_txt}\n"
+        f"- 強勢題材：{top_txt}\n"
+        f"- 弱勢題材：{bot_txt}\n"
+        f"- 監控個股異動：{movers_txt}\n\n"
+        f"格式要求：第一句說今日大盤表現與法人動向，第二句分析強弱題材背後的邏輯，"
+        f"第三句點出值得注意的個股異動或潛在機會，第四句（可選）給出短線展望或注意事項。"
+    )
+
+    try:
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 500,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=25,
+        )
+        return resp.json()["content"][0]["text"].strip()
+    except Exception as e:
+        print(f"   ⚠️ 每日日評生成失敗: {e}")
+        return None
+
+
 # ── 加權指數 ──────────────────────────────────────────────
 
 def fetch_twii():
@@ -1819,6 +1915,17 @@ def main():
     with open("company_info.json", "w", encoding="utf-8") as f:
         json.dump(company_info, f, ensure_ascii=False, indent=2)
     print(f"   💾 company_info.json 已更新（含故事）")
+
+    # 5d. 每日大盤日評
+    print("📝 生成每日大盤日評...")
+    twii_data = data.get("twii", {})
+    inst_data = data.get("institutional", {})
+    commentary = generate_daily_commentary(twii_data, inst_data, all_prices, histories, api_key)
+    if commentary:
+        data["market_summary"] = commentary
+        print(f"   ✅ 日評已生成（{len(commentary)} 字）")
+    else:
+        print("   ⚠️ 日評生成失敗，保留前次資料")
 
     # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))
