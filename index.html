@@ -1061,20 +1061,10 @@ function renderDetail(code) {
   const bidPrice = price != null ? fmt(price - tick) : "—";
   const askPrice = price != null ? fmt(price + tick) : "—";
 
-  // note = 說明無法取得的原因；est = 估算值（非真實數據）
   const stats = [
-    {lbl:"成交", val:fmt(price),   c:cls},
-    {lbl:"買進", val:bidPrice,     c:cls,  est:true, note:'依最小跳動估算，非真實委買價'},
-    {lbl:"開盤", val:fmt(open),    c: (open && price) ? (open >= price ? "up" : "dn") : ""},
-    {lbl:"漲跌", val: price!=null ? `${arr}${Math.abs(change).toFixed(2)}` : "—", c:cls},
-    {lbl:"賣出", val:askPrice,     c:cls,  est:true, note:'依最小跳動估算，非真實委賣價'},
-    {lbl:"總量", val: vol != null ? vol.toLocaleString() : "—", c:""},
-    {lbl:"幅度", val: price!=null ? `${sign}${changeP.toFixed(2)}%` : "—", c:cls},
-    {lbl:"均價", val:avgPrice,     c:"",   est:true, note:'(開盤+收盤)÷2，非加權成交均價'},
-    {lbl:"振幅", val:amplitude,    c:""},
-    {lbl:"最低", val:fmt(low),     c:"dn"},
-    {lbl:"最高", val:fmt(high),    c:"up"},
-    {lbl:"參考", val: refPrice!=null ? refPrice.toFixed(2) : "—", c:""},
+    {lbl:"開盤", val:fmt(open),  c: (open && price) ? (open >= price ? "up" : "dn") : ""},
+    {lbl:"收盤", val:fmt(price), c:cls},
+    {lbl:"成交量", val: vol != null ? vol.toLocaleString() : "—", c:""},
   ];
 
   // 基本面資料
