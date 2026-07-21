@@ -344,9 +344,12 @@ def fetch_trailing_pe(code):
     return {}
 
 
-def fetch_quarterly_eps(code):
-    """從 Yahoo Finance 抓近四季實際 EPS"""
-    # 先用 yfinance quarterly_income_stmt（自動處理 crumb）
+def fetch_quarterly_eps(code, n_quarters=8):
+    """
+    從 Yahoo Finance 抓近 n_quarters 季實際 EPS，含季末日期（用於 PE 河流圖）。
+    回傳 [{"q":"2024Q1","eps":3.5,"date":"2024-03-31"}, ...]，舊→新排列。
+    """
+    import math
     if _YF_AVAILABLE:
         for suffix in [".TW", ".TWO"]:
             try:
@@ -357,29 +360,29 @@ def fetch_quarterly_eps(code):
                 eps_row = next((r for r in df.index if "Diluted EPS" in str(r)), None)
                 if eps_row is None:
                     continue
-                import math
                 out = []
-                for col in list(df.columns)[:4]:
+                for col in list(df.columns)[:n_quarters]:
                     val = df.loc[eps_row, col]
                     if val is not None and not (isinstance(val, float) and math.isnan(val)):
                         if hasattr(col, "strftime"):
                             q_num = (col.month - 1) // 3 + 1
                             label = f"{col.year}Q{q_num}"
+                            date_str = col.strftime("%Y-%m-%d")
                         else:
                             label = str(col)[:7]
-                        out.append({"q": label, "eps": round(float(val), 2)})
+                            date_str = str(col)[:10]
+                        out.append({"q": label, "eps": round(float(val), 2), "date": date_str})
                 if out:
                     return list(reversed(out))  # 舊到新
             except Exception:
                 continue
 
-    # fallback：quoteSummary with crumb
+    # fallback：quoteSummary with crumb（只有4季、無日期）
     session, crumb = _get_yf_crumb()
     if not session:
         session = requests.Session()
         session.headers.update(HEADERS)
     crumb_param = f"&crumb={crumb}" if crumb else ""
-
     for suffix in [".TW", ".TWO"]:
         try:
             url = (f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/"
@@ -398,12 +401,64 @@ def fetch_quarterly_eps(code):
                 actual = q.get("actual", {})
                 eps_val = actual.get("raw") if isinstance(actual, dict) else None
                 if eps_val is not None:
-                    out.append({"q": q.get("date", ""), "eps": round(eps_val, 2)})
+                    out.append({"q": q.get("date", ""), "eps": round(eps_val, 2), "date": ""})
             if out:
                 return out
         except Exception:
             continue
     return []
+
+
+def build_pe_river(code, quarterly_eps):
+    """
+    用 2 年股價歷史 + 逐季 EPS 建立 PE 河流圖資料。
+    quarterly_eps: [{"q":..., "eps":..., "date":"2024-03-31"}, ...]  舊→新
+    回傳 {"dates":[...], "closes":[...], "ttm":[...]} 或 None。
+    ttm[i] 是 dates[i] 當天的 trailing 12-month EPS（4季加總）。
+    """
+    if not quarterly_eps or len(quarterly_eps) < 4:
+        return None
+
+    # 只取有日期的季度
+    dated = [q for q in quarterly_eps if q.get("date")]
+    if len(dated) < 4:
+        return None
+
+    # 抓 2 年日線
+    closes, dates, _ = fetch_price_history(code)
+    if not closes or not dates:
+        return None
+
+    # 只保留最近 2 年（約 500 個交易日）
+    TWO_YEARS = 520
+    if len(closes) > TWO_YEARS:
+        closes = closes[-TWO_YEARS:]
+        dates  = dates[-TWO_YEARS:]
+
+    # 建立每個交易日的 TTM EPS
+    # 邏輯：對每個 date，找在它之前（含當日）已結束的最近 4 季，加總
+    ttm_series = []
+    for d in dates:
+        # 轉成可比較字串
+        available = [q for q in dated if q["date"] <= d.replace("/", "-")]
+        if len(available) < 4:
+            # 資料不足 4 季，用現有的加總（可能不完整，先填 None）
+            ttm_series.append(None)
+        else:
+            recent4 = available[-4:]
+            ttm = round(sum(q["eps"] for q in recent4), 2)
+            ttm_series.append(ttm)
+
+    # 如果全部都是 None，回傳 None
+    valid = [v for v in ttm_series if v is not None]
+    if not valid:
+        return None
+
+    # 前面 None 補第一個有效值
+    first_valid = next(v for v in ttm_series if v is not None)
+    ttm_series = [v if v is not None else first_valid for v in ttm_series]
+
+    return {"dates": dates, "closes": closes, "ttm": ttm_series}
 
 
 def update_company_info(all_prices, company_info, api_key=None, max_new=50):
@@ -426,7 +481,7 @@ def update_company_info(all_prices, company_info, api_key=None, max_new=50):
         if pe_data:
             entry = company_info.setdefault(code, {"generated": today_str})
             entry.update(pe_data)
-        qeps = fetch_quarterly_eps(code)
+        qeps = fetch_quarterly_eps(code, n_quarters=8)
         if qeps:
             entry = company_info.setdefault(code, {"generated": today_str})
             entry["quarterly_eps"] = qeps
@@ -2153,6 +2208,23 @@ def main():
     weekly_summary = generate_weekly_summary(all_prices, histories, inst_data, twii_data)
     if weekly_summary:
         data["weekly_summary"] = weekly_summary
+
+    # 5g. PE 河流圖資料（監控個股 2 年股價 + TTM EPS）
+    print("📈 建立 PE 河流圖資料...")
+    pe_river = data.get("pe_river", {})
+    river_codes = set(FALLBACK_CODES)
+    for g in THEME_GROUPS.values():
+        river_codes.update(g["leaders"])
+        river_codes.update(g["members"])
+    built = 0
+    for code in sorted(river_codes):
+        qeps = company_info.get(code, {}).get("quarterly_eps", [])
+        river = build_pe_river(code, qeps)
+        if river:
+            pe_river[code] = river
+            built += 1
+    data["pe_river"] = pe_river
+    print(f"   ✅ PE 河流圖完成：{built} 支")
 
     # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))

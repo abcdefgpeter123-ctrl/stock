@@ -927,7 +927,8 @@ let stockInfo = {};
 let companyInfo = {};   // AI 自動生成（company_info.json）
 let histories  = {};    // 30日收盤歷史（data.json histories）
 let instStocks = {};    // 個股三大法人5日累計（data.json inst_stocks）
-let moversData = {};    // 今日異動個股（±5%）說明
+let moversData  = {};   // 今日異動個股（±5%）說明
+let peRiverData = {};   // PE 河流圖資料 {code: {dates, closes, ttm}}
 let expandedStock = null;
 let expandedFav = null;
 
@@ -1122,6 +1123,7 @@ function renderDetail(code) {
           <button class="tp-period" onclick="switchTpPeriod('${code}','六月',this)">六月</button>
           <button class="tp-period" onclick="switchTpPeriod('${code}','一年',this)">一年</button>
           <button class="tp-period" onclick="switchTpPeriod('${code}','五年',this)">五年</button>
+          <button class="tp-period" onclick="switchTpPeriod('${code}','河流圖',this)" style="margin-left:8px;border-color:rgba(167,139,250,0.4);color:#a78bfa">河流圖</button>
         </div>
         <span id="tp-dr-${code}" style="font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;padding-right:4px">—</span>
       </div>
@@ -1404,11 +1406,130 @@ function initTpCharts() {
 }
 
 function switchTpPeriod(code, period, btn) {
-  _tpPeriods[code] = period;   // 先存期間，initTpCharts 直接讀這裡
+  _tpPeriods[code] = period;
   const wrap = btn.closest('.tp-periods');
   wrap.querySelectorAll('.tp-period').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  setTimeout(initTpCharts, 50);
+  const maRow = document.getElementById(`ma-tog-${code}`);
+  if (maRow) maRow.style.display = period === '河流圖' ? 'none' : '';
+  if (period === '河流圖') {
+    setTimeout(() => renderPeRiver(code), 50);
+  } else {
+    setTimeout(initTpCharts, 50);
+  }
+}
+
+function renderPeRiver(code) {
+  const river = peRiverData[code];
+  const area  = document.getElementById(`tp-chart-area-${code}`);
+  if (!area) return;
+
+  if (!river || !river.ttm || river.ttm.length < 20) {
+    area.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">
+      河流圖資料不足（需至少 4 季 EPS + 2 年股價）<br>
+      <span style="font-size:11px">Actions 跑完後會自動產生</span></div>`;
+    return;
+  }
+
+  const canvasId = `river-${code}`;
+  area.innerHTML = `<canvas id="${canvasId}" style="width:100%;height:280px"></canvas>`;
+  const ctx = document.getElementById(canvasId).getContext('2d');
+
+  // 銷毀舊圖表
+  if (_tpCharts[`river-${code}`]) { _tpCharts[`river-${code}`].destroy(); }
+
+  const labels  = river.dates;
+  const closes  = river.closes;
+  const ttm     = river.ttm;
+  const BANDS   = [10, 15, 20, 25, 30];
+  const COLORS  = ['#3b82f6','#10b981','#f59e0b','#f97316','#ef4444'];
+  const ALPHAS  = ['rgba(59,130,246,0.15)','rgba(16,185,129,0.15)','rgba(245,158,11,0.15)','rgba(249,115,22,0.15)','rgba(239,68,68,0.15)'];
+
+  const datasets = [];
+
+  // PE 帶（面積填滿相鄰帶之間）
+  BANDS.forEach((pe, i) => {
+    datasets.push({
+      label: `${pe}x`,
+      data: ttm.map(t => t ? +(t * pe).toFixed(1) : null),
+      borderColor: COLORS[i],
+      borderWidth: 1.2,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      fill: i > 0 ? '-1' : false,
+      backgroundColor: i > 0 ? ALPHAS[i-1] : 'transparent',
+      tension: 0.3,
+      spanGaps: true,
+    });
+  });
+
+  // 股價（實線，最後一層）
+  datasets.push({
+    label: '股價',
+    data: closes,
+    borderColor: '#e2e8f0',
+    borderWidth: 2,
+    pointRadius: 0,
+    fill: false,
+    tension: 0.1,
+    spanGaps: true,
+    order: -1,
+  });
+
+  // 只顯示每月第一個交易日的 label
+  const tickLabels = labels.map((d, i) => {
+    if (i === 0) return d.slice(0,7);
+    return d.slice(5,7) === '01' || (labels[i-1] && labels[i-1].slice(5,7) !== d.slice(5,7)) ? d.slice(0,7) : '';
+  });
+
+  _tpCharts[`river-${code}`] = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: '#8a9bb0', font: { size: 11 }, boxWidth: 20, padding: 8 }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => items[0]?.label || '',
+            label: item => {
+              const v = item.raw;
+              if (v == null) return '';
+              return item.dataset.label === '股價'
+                ? ` 股價 ${v.toFixed(1)}`
+                : ` ${item.dataset.label} PE：${v.toFixed(1)}`;
+            }
+          },
+          backgroundColor: 'rgba(10,18,30,0.92)',
+          titleColor: '#8a9bb0',
+          bodyColor: '#d8e4f0',
+          borderColor: '#222b3a',
+          borderWidth: 1,
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#4e5f72', font: { size: 10 },
+            callback: (_, i) => tickLabels[i] || '',
+            maxRotation: 0,
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+        },
+        y: {
+          ticks: { color: '#4e5f72', font: { size: 10 } },
+          grid:  { color: 'rgba(255,255,255,0.06)' },
+        }
+      }
+    }
+  });
 }
 
 // 收合功能
@@ -1979,7 +2100,8 @@ async function loadData(){
       document.getElementById('twii-chart-wrap').style.display = 'block';
       setTimeout(() => renderTwiiChart(_twiiPeriod), 80);
     }
-    if(data.movers) moversData = data.movers;
+    if(data.movers)    moversData  = data.movers;
+    if(data.pe_river)  peRiverData = data.pe_river;
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
