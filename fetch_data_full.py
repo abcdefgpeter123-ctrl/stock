@@ -1435,9 +1435,10 @@ def fetch_yahoo(code):
     for suffix in [".TW", ".TWO"]:
         try:
             url = (f"https://query1.finance.yahoo.com/v8/finance/chart/"
-                   f"{code}{suffix}?interval=1d&range=2d")
+                   f"{code}{suffix}?interval=1d&range=5d")
             r    = requests.get(url, headers=HEADERS, timeout=10)
-            meta = r.json()["chart"]["result"][0]["meta"]
+            result = r.json()["chart"]["result"][0]
+            meta  = result["meta"]
             price = meta["regularMarketPrice"]
             prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
             if not price or not prev:
@@ -1445,14 +1446,24 @@ def fetch_yahoo(code):
             mkt_ts = meta.get("regularMarketTime")
             mkt_date = (datetime.datetime.fromtimestamp(mkt_ts).strftime("%Y/%m/%d")
                         if mkt_ts else datetime.date.today().strftime("%Y/%m/%d"))
+            # 從 indicators.quote 取今日開盤/最高/最低（meta 欄位台股常為 None）
+            quote = result.get("indicators", {}).get("quote", [{}])[0]
+            opens  = [v for v in quote.get("open",  []) if v is not None]
+            highs  = [v for v in quote.get("high",  []) if v is not None]
+            lows   = [v for v in quote.get("low",   []) if v is not None]
+            vols   = [v for v in quote.get("volume",[]) if v is not None]
+            open_p = round(opens[-1],  2) if opens  else round(meta.get("regularMarketOpen",  0) or 0, 2)
+            high_p = round(highs[-1],  2) if highs  else round(meta.get("regularMarketDayHigh",0) or 0, 2)
+            low_p  = round(lows[-1],   2) if lows   else round(meta.get("regularMarketDayLow", 0) or 0, 2)
+            vol    = int(vols[-1])         if vols   else meta.get("regularMarketVolume", 0)
             return {
                 "price":   round(price, 2),
                 "change":  round(price - prev, 2),
                 "changeP": round((price - prev) / prev * 100, 2),
-                "open":    round(meta.get("regularMarketOpen", 0), 2),
-                "high":    round(meta.get("regularMarketDayHigh", 0), 2),
-                "low":     round(meta.get("regularMarketDayLow", 0), 2),
-                "vol":     meta.get("regularMarketVolume", 0),
+                "open":    open_p,
+                "high":    high_p,
+                "low":     low_p,
+                "vol":     vol,
                 "date":    mkt_date,
             }
         except Exception:
