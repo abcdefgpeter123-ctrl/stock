@@ -429,11 +429,11 @@ def build_pe_river(code, quarterly_eps):
     if not closes or not dates:
         return None
 
-    # 只保留最近 2 年（約 500 個交易日）
-    TWO_YEARS = 520
-    if len(closes) > TWO_YEARS:
-        closes = closes[-TWO_YEARS:]
-        dates  = dates[-TWO_YEARS:]
+    # 只保留最近 3 年（約 780 個交易日）
+    THREE_YEARS = 790
+    if len(closes) > THREE_YEARS:
+        closes = closes[-THREE_YEARS:]
+        dates  = dates[-THREE_YEARS:]
 
     # 建立每個交易日的 TTM EPS
     # 邏輯：對每個 date，找在它之前（含當日）已結束的最近 4 季，加總
@@ -481,7 +481,7 @@ def update_company_info(all_prices, company_info, api_key=None, max_new=50):
         if pe_data:
             entry = company_info.setdefault(code, {"generated": today_str})
             entry.update(pe_data)
-        qeps = fetch_quarterly_eps(code, n_quarters=8)
+        qeps = fetch_quarterly_eps(code, n_quarters=12)
         if qeps:
             entry = company_info.setdefault(code, {"generated": today_str})
             entry["quarterly_eps"] = qeps
