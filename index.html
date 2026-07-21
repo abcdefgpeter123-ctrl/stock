@@ -566,6 +566,30 @@ const THEME_DESCS = {
   "被動元件":    "MLCC、電阻、電容，AI 伺服器與電動車拉動高階需求，國巨為全球前三大被動元件廠",
 };
 
+const THEME_PE = {
+  "晶圓代工":    "20–35x",
+  "IC設計":      "15–30x",
+  "半導體封測":  "12–22x",
+  "記憶體":      "8–18x",
+  "矽晶圓":      "12–20x",
+  "化合物半導體":"15–25x",
+  "半導體設備":  "15–28x",
+  "ABF載板":     "10–20x",
+  "AI伺服器":    "12–22x",
+  "液冷散熱":    "15–30x",
+  "網通":        "12–22x",
+  "面板":        "6–14x",
+  "海運":        "4–12x",
+  "航空":        "8–18x",
+  "傳產":        "8–16x",
+  "電信":        "18–28x",
+  "金融":        "10–18x",
+  "PCB":         "10–18x",
+  "IC通路":      "8–14x",
+  "光學":        "25–45x",
+  "被動元件":    "12–22x",
+};
+
 // 半導體子題材對應父題材（讓「半導體」pill 可一鍵篩選全部子類）
 const THEME_PARENT = {
   "晶圓代工": "半導體", "IC設計": "半導體", "半導體封測": "半導體",
@@ -661,6 +685,7 @@ function renderMarketSummary() {
       <div class="tc2-pct ${cls}">${arrow} ${avgStr}</div>
       <div class="tc2-sub">${periodLabel}均 · ${t.hot}/${t.count} 支上漲</div>
       ${leaderTxt ? `<div class="tc2-leader">${leaderTxt}</div>` : ""}
+      ${THEME_PE[t.name] ? `<div style="font-size:10px;color:var(--text3);margin-top:3px">本益比區間 <span style="color:var(--text2);font-family:var(--mono)">${THEME_PE[t.name]}</span></div>` : ""}
       <div class="tc2-stocks">${stockRows}</div>
     </div>`;
   }).join("");
