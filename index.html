@@ -1415,6 +1415,15 @@ function switchTpPeriod(code, period, btn) {
   if (period === '河流圖') {
     setTimeout(() => renderPeRiver(code), 50);
   } else {
+    // 若 chart area 被河流圖替換過，先還原原本的 canvas
+    const area = document.getElementById(`tp-chart-area-${code}`);
+    if (area && !area.querySelector(`canvas[data-tp-code="${code}"]`)) {
+      if (_tpCharts[`river-${code}`]) {
+        _tpCharts[`river-${code}`].destroy();
+        delete _tpCharts[`river-${code}`];
+      }
+      area.innerHTML = `<canvas data-tp-code="${code}" style="width:100%;display:block"></canvas>`;
+    }
     setTimeout(initTpCharts, 50);
   }
 }
