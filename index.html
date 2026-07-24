@@ -409,6 +409,30 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
       重新載入
     </button>
+    <button class="refresh-btn" id="trigger-btn" onclick="triggerActions()" style="border-color:rgba(96,165,250,0.35);color:#60a5fa" title="觸發 GitHub Actions 重新抓取股價資料">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      立即更新資料
+    </button>
+  </div>
+
+  <!-- GitHub Token 設定 modal -->
+  <div id="gh-token-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:28px 24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">設定 GitHub Token</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.7">
+        需要 GitHub Personal Access Token 才能遠端觸發 Actions。<br>
+        前往 <span style="color:#60a5fa;font-family:var(--mono)">github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</span>，產生一個有 <span style="color:#4ade80;font-family:var(--mono)">workflow</span> 權限的 token。<br>
+        Token 只儲存在你的瀏覽器，不會上傳。
+      </div>
+      <input id="gh-token-input" type="password" placeholder="ghp_xxxxxxxxxxxx"
+        style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--text);font-family:var(--mono);outline:none;margin-bottom:12px">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('gh-token-modal').style.display='none'"
+          style="background:none;border:1px solid var(--border);border-radius:6px;padding:8px 16px;color:var(--text3);cursor:pointer;font-size:13px">取消</button>
+        <button onclick="saveGhToken()"
+          style="background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.4);border-radius:6px;padding:8px 16px;color:#60a5fa;cursor:pointer;font-size:13px;font-weight:500">儲存並觸發</button>
+      </div>
+    </div>
   </div>
 
   <div class="sec-hd">上漲題材個股 — 法人進出 × 股價
@@ -2066,6 +2090,79 @@ function render(){
   renderMarketSummary();
   // 展開股票後也初始化折線圖
   setTimeout(() => { initCharts(); initTpCharts(); }, 60);
+}
+
+const GH_REPO  = "abcdefgpeter123-ctrl/stock";
+const GH_WF    = "update-data.yml";
+const GH_TOKEN_KEY = "gh_actions_token";
+
+function triggerActions() {
+  const token = localStorage.getItem(GH_TOKEN_KEY);
+  if (!token) {
+    document.getElementById("gh-token-modal").style.display = "flex";
+    return;
+  }
+  _doTriggerActions(token);
+}
+
+function saveGhToken() {
+  const token = document.getElementById("gh-token-input").value.trim();
+  if (!token) return;
+  localStorage.setItem(GH_TOKEN_KEY, token);
+  document.getElementById("gh-token-modal").style.display = "none";
+  _doTriggerActions(token);
+}
+
+async function _doTriggerActions(token) {
+  const btn = document.getElementById("trigger-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .8s linear infinite"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> 觸發中…`;
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/actions/workflows/${GH_WF}/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ref: "main" }),
+      }
+    );
+    if (res.status === 204) {
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 已觸發！約5分鐘後重新載入`;
+      btn.style.color = "#4ade80";
+      btn.style.borderColor = "rgba(74,222,128,0.4)";
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 立即更新資料`;
+        btn.style.color = "#60a5fa";
+        btn.style.borderColor = "rgba(96,165,250,0.35)";
+      }, 8000);
+    } else if (res.status === 401) {
+      localStorage.removeItem(GH_TOKEN_KEY);
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Token 無效`;
+      btn.style.color = "#f87171";
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 立即更新資料`;
+        btn.style.color = "#60a5fa";
+        btn.style.borderColor = "rgba(96,165,250,0.35)";
+      }, 3000);
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch(e) {
+    btn.innerHTML = `❌ 失敗 (${e.message})`;
+    btn.style.color = "#f87171";
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 立即更新資料`;
+      btn.style.color = "#60a5fa";
+      btn.style.borderColor = "rgba(96,165,250,0.35)";
+    }, 3000);
+  }
 }
 
 async function loadData(){
