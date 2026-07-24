@@ -294,11 +294,12 @@ def _get_yf_crumb():
 
 def fetch_analyst_targets(codes):
     """
-    從 Yahoo Finance 批次抓分析師共識目標價。
-    回傳 {code: {mean, high, low, count, rec, rec_mean}} dict。
+    從 Yahoo Finance 批次抓分析師共識目標價 + 近 180 天券商評等異動。
+    回傳 {code: {mean, high, low, count, rec, rec_mean, ratings}} dict。
     """
     import math
     result = {}
+    cutoff = (datetime.date.today() - datetime.timedelta(days=180)).isoformat()
     print(f"   📊 抓取 {len(codes)} 支分析師目標價...")
     for i, code in enumerate(codes):
         for suffix in [".TW", ".TWO"]:
@@ -312,7 +313,7 @@ def fetch_analyst_targets(codes):
                 rec  = info.get("recommendationKey", "")
                 rec_m= info.get("recommendationMean")
                 if mean and not (isinstance(mean, float) and math.isnan(mean)):
-                    result[code] = {
+                    entry = {
                         "mean":  round(float(mean), 1),
                         "high":  round(float(high), 1) if high else None,
                         "low":   round(float(low),  1) if low  else None,
@@ -321,6 +322,27 @@ def fetch_analyst_targets(codes):
                         "rec_mean": round(float(rec_m), 2) if rec_m else None,
                         "updated": datetime.date.today().strftime("%Y/%m/%d"),
                     }
+                    # 券商評等異動（近 180 天）
+                    try:
+                        df = t.get_upgrades_downgrades()
+                        if df is not None and not df.empty:
+                            df = df.reset_index()
+                            date_col = "GradeDate" if "GradeDate" in df.columns else df.columns[0]
+                            df["_date"] = df[date_col].astype(str).str[:10]
+                            df = df[df["_date"] >= cutoff].sort_values("_date", ascending=False)
+                            ratings = []
+                            for _, row in df.head(10).iterrows():
+                                ratings.append({
+                                    "date":   row["_date"],
+                                    "firm":   str(row.get("Firm", row.get("firm", ""))),
+                                    "to":     str(row.get("ToGrade", row.get("toGrade", ""))),
+                                    "from":   str(row.get("FromGrade", row.get("fromGrade", ""))),
+                                    "action": str(row.get("Action", row.get("action", ""))),
+                                })
+                            entry["ratings"] = ratings
+                    except Exception:
+                        pass
+                    result[code] = entry
                     break
             except Exception:
                 continue

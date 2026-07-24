@@ -2345,9 +2345,31 @@ function renderAnalystTargets() {
           const diff = last - first;
           return diff > 0 ? `<span style="font-size:10px;color:#4ade80">▲ 近${h.length}日 +${diff.toFixed(0)}</span>`
                : diff < 0 ? `<span style="font-size:10px;color:#f87171">▼ 近${h.length}日 ${diff.toFixed(0)}</span>`
-               : "";
+               : `<span style="font-size:10px;color:var(--text3)">近${h.length}日持平</span>`;
         })()
-      : "";
+      : `<span style="font-size:10px;color:var(--text3)">追蹤首日</span>`;
+
+    // H/L 落差警示：落差 > 均價 50% 代表含舊目標
+    const spreadWarn = (() => {
+      if (!at.high || !at.low || !mean) return "";
+      const spread = (at.high - at.low) / mean * 100;
+      if (spread > 80) return `<div style="margin-top:6px;font-size:10px;color:#fb923c;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:4px;padding:3px 7px">⚠ H/L 落差 ${spread.toFixed(0)}%，部分目標可能為舊資料（Yahoo 未過濾日期）</div>`;
+      if (spread > 40) return `<div style="margin-top:6px;font-size:10px;color:#facc15;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:4px;padding:3px 7px">⚠ H/L 落差 ${spread.toFixed(0)}%，分析師看法分歧較大</div>`;
+      return "";
+    })();
+
+    // 券商評等異動（近 180 天，若有）
+    const ratingsHtml = (at.ratings || []).length
+      ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.04em">近期券商評等</div>
+          ${(at.ratings).map(r => `
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0">
+              <span style="color:var(--text3);font-family:var(--mono)">${r.date.slice(5)}</span>
+              <span style="color:var(--text2)">${r.firm}</span>
+              <span style="color:${r.action==='upgrade'?'#4ade80':r.action==='downgrade'?'#f87171':'var(--text3)'}">${r.to || r.from || ''}</span>
+            </div>`).join("")}
+        </div>`
+      : `<div style="margin-top:6px;font-size:10px;color:var(--text3)">個別券商資料：Yahoo Finance 台股不提供，建議查 MoneydJ / CMoney</div>`;
     const manualsHtml = manuals.length
       ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">${
           manuals.slice(-3).reverse().map(m => `
@@ -2379,6 +2401,8 @@ function renderAnalystTargets() {
         ${at.high ? `　H ${at.high.toFixed(0)} / L ${(at.low||0).toFixed(0)}` : ""}
         　${histTrend}
       </div>
+      ${spreadWarn}
+      ${ratingsHtml}
       ${manualsHtml}
     </div>`;
   }).join("");
