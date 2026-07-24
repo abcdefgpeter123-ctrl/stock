@@ -355,6 +355,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="theme-review-grid" id="theme-review-grid"></div>
   <div class="sec-hd" style="margin-top:4px">🎯 機會點快覽<span class="src-tag">點擊直接展開個股詳情</span></div>
   <div class="mkt-opp-row" id="mkt-opp-row"></div>
+  <div class="mkt-opp-row" id="target-opp-row" style="margin-top:8px"></div>
 
   <div class="fav-section" style="margin-top:24px">
     <div class="sec-hd">⭐ 我的最愛<span class="src-tag">點愛心 ☆ 加入/移除</span></div>
@@ -819,6 +820,61 @@ function renderMarketSummary() {
       </span>`;
     }).join("") +
     (opps.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${opps.length - 8} 支</span>` : "");
+
+  renderTargetOpps();
+}
+
+// ── 目標價高空間 + 突破均線 機會點 ──────────────────────────
+function renderTargetOpps() {
+  const row = document.getElementById("target-opp-row");
+  if (!row) return;
+
+  function ma(closes, n) {
+    if (closes.length < n) return null;
+    const slice = closes.slice(-n);
+    return slice.reduce((a, b) => a + b, 0) / n;
+  }
+
+  const hits = [];
+  Object.entries(analystTargets).forEach(([code, at]) => {
+    if (!at.mean) return;
+    const p = priceCache[code];
+    if (!p || !p.price) return;
+    const price = p.price;
+    const upside = (at.mean - price) / price * 100;
+    if (upside <= 50) return;                          // 上漲空間需 > 50%
+
+    const h = histories[code];
+    const closes = h?.closes;
+    if (!closes || closes.length < 60) return;
+    const ma5  = ma(closes, 5);
+    const ma20 = ma(closes, 20);
+    const ma60 = ma(closes, 60);
+    if (price <= ma5 || price <= ma20 || price <= ma60) return;  // 必須站上三均線
+
+    const name = nameCache[code] || code;
+    hits.push({ code, name, upside, theme: nameCache[code] ? "" : "" });
+  });
+
+  hits.sort((a, b) => b.upside - a.upside);
+
+  if (!hits.length) {
+    row.innerHTML = `<span style="color:var(--text3);font-size:12px">🎯 目標價 >+50% 且突破三均線：目前無符合個股</span>`;
+    return;
+  }
+
+  row.innerHTML =
+    `<span style="font-size:12px;color:#a78bfa;white-space:nowrap;font-weight:500">🎯 目標價高空間＋突破均線：</span>` +
+    hits.slice(0, 8).map(h => {
+      const d = priceCache[h.code];
+      const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
+      return `<span class="opp-chip" style="border-color:rgba(167,139,250,0.4)" onclick="toggleStock('${h.code}')">
+        <span style="color:var(--text)">${h.name}</span>
+        ${chgTxt}
+        <span style="color:#a78bfa">↑${h.upside.toFixed(0)}%</span>
+      </span>`;
+    }).join("") +
+    (hits.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${hits.length - 8} 支</span>` : "");
 }
 
 // 點機會點 chip → 滾動到 opp-grid 並展開
@@ -2542,7 +2598,7 @@ async function loadData(){
     }
     if(data.movers)           moversData     = data.movers;
     if(data.pe_river)         peRiverData    = data.pe_river;
-    if(data.analyst_targets)  analystTargets = data.analyst_targets;
+    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetOpps(); }
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
