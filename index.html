@@ -472,6 +472,87 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </div>
   </div>
 
+  <!-- ── 法人目標價追蹤 ── -->
+  <div class="sec-hd" style="margin-top:8px">
+    🎯 法人目標價追蹤
+    <span style="display:flex;align-items:center;gap:8px">
+      <span class="src-tag">Yahoo Finance 每日同步</span>
+      <button class="sec-toggle" id="targets-toggle" onclick="toggleSection('targets-wrap',this)">▼ 收合</button>
+    </span>
+  </div>
+  <div id="targets-wrap">
+    <!-- 排序/篩選列 -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:11px;color:var(--text3)">排序：</span>
+      <button class="tp-period active" id="tsort-upside" onclick="setTargetSort('upside',this)">上漲空間</button>
+      <button class="tp-period" id="tsort-raised" onclick="setTargetSort('raised',this)">目標上調</button>
+      <button class="tp-period" id="tsort-count" onclick="setTargetSort('count',this)">分析師人數</button>
+      <button class="tp-period" id="tsort-rec" onclick="setTargetSort('rec',this)">評等強弱</button>
+      <button onclick="openAddTargetModal()" style="margin-left:auto;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.35);border-radius:6px;padding:5px 12px;color:#a78bfa;font-size:12px;cursor:pointer">＋ 手動輸入券商目標</button>
+    </div>
+    <div id="analyst-targets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
+
+    <!-- 手動輸入記錄 -->
+    <div id="manual-targets-section" style="display:none;margin-top:16px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:500">📋 手動輸入記錄</div>
+      <div style="overflow-x:auto">
+        <table id="manual-targets-table" style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="color:var(--text3);border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:6px 8px">日期</th>
+              <th style="text-align:left;padding:6px 8px">股票</th>
+              <th style="text-align:left;padding:6px 8px">券商</th>
+              <th style="text-align:left;padding:6px 8px">評等</th>
+              <th style="text-align:right;padding:6px 8px">舊目標</th>
+              <th style="text-align:right;padding:6px 8px">新目標</th>
+              <th style="text-align:right;padding:6px 8px">變化</th>
+              <th style="padding:6px 8px"></th>
+            </tr>
+          </thead>
+          <tbody id="manual-targets-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手動輸入 Modal -->
+  <div id="add-target-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">新增券商目標價</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">日期</div>
+          <input id="at-date" type="date" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">股票代號</div>
+          <input id="at-code" type="text" placeholder="2330" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">券商</div>
+          <input id="at-broker" type="text" placeholder="JP Morgan" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">評等</div>
+          <input id="at-rating" type="text" placeholder="Overweight" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">舊目標價</div>
+          <input id="at-old" type="number" placeholder="1200" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">新目標價</div>
+          <input id="at-new" type="number" placeholder="1350" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
+        </div>
+      </div>
+      <div id="at-status" style="font-size:11px;color:var(--text3);margin-bottom:10px;min-height:16px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('add-target-modal').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:8px 16px;color:var(--text3);cursor:pointer;font-size:12px">取消</button>
+        <button onclick="saveManualTarget()" style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:8px 16px;color:#a78bfa;cursor:pointer;font-size:12px;font-weight:500">儲存</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sec-hd">受惠尚未啟動 — 機會點追蹤</div>
   <div class="opp-grid" id="opp-grid"></div>
   <div id="opp-detail-panel"></div>
@@ -976,8 +1057,11 @@ let stockInfo = {};
 let companyInfo = {};   // AI 自動生成（company_info.json）
 let histories  = {};    // 30日收盤歷史（data.json histories）
 let instStocks = {};    // 個股三大法人5日累計（data.json inst_stocks）
-let moversData  = {};   // 今日異動個股（±5%）說明
-let peRiverData = {};   // PE 河流圖資料 {code: {dates, closes, ttm}}
+let moversData      = {};   // 今日異動個股（±5%）說明
+let peRiverData     = {};   // PE 河流圖資料 {code: {dates, closes, ttm}}
+let analystTargets  = {};   // 分析師共識目標價 {code: {mean,high,low,count,rec,...}}
+let manualTargets   = [];   // 手動輸入券商目標 [{date,code,name,broker,rating,old,new}]
+let targetSortMode  = "upside";
 let expandedStock = null;
 let expandedFav = null;
 
@@ -1209,6 +1293,28 @@ function renderDetail(code) {
     <!-- 基本面 -->
     ${hasFundamentals ? `<div class="tp-fundamentals">
       ${core  ? `<div class="tp-fund-block"><span class="tp-fund-lbl">核心產品</span><span class="tp-fund-text">${core}</span></div>` : ""}
+      ${(()=>{
+        const at = analystTargets[code];
+        const pr = (priceCache[code]||{}).price || 0;
+        if (!at || !at.mean) return "";
+        const upside = pr ? ((at.mean - pr) / pr * 100) : null;
+        const upsideStr = upside != null ? `${upside>=0?"+":""}${upside.toFixed(1)}%` : "";
+        const upsideColor = upside==null?"var(--text3)":upside>=10?"#4ade80":upside>=0?"#facc15":"#f87171";
+        const recLabel = REC_LABEL[at.rec] || at.rec || "";
+        const recColor = REC_COLOR[at.rec] || "var(--text3)";
+        const changeTag = at.mean_change ? `<span style="color:${at.mean_change>0?"#4ade80":"#f87171"};margin-left:4px">${at.mean_change>0?"+":""}${at.mean_change}</span>` : "";
+        const manuals4code = manualTargets.filter(t=>t.code===code).slice(-2).reverse();
+        const mRow = manuals4code.map(m=>`<span style="font-size:10px;color:var(--text3)">${m.date.slice(5)} ${m.broker} ${m.old_target}→${m.new_target}</span>`).join("　");
+        return `<div class="tp-fund-block" style="border-left:3px solid rgba(96,165,250,0.5);padding-left:8px">
+          <span class="tp-fund-lbl">法人目標</span>
+          <span style="flex:1">
+            <span style="font-family:var(--mono);font-weight:600;color:${upsideColor}">${upsideStr}</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:6px">均價 ${at.mean.toFixed(0)}${changeTag}　${at.count?at.count+"位分析師":""}</span>
+            ${recLabel?`<span style="font-size:10px;color:${recColor};margin-left:6px">${recLabel}</span>`:""}
+            ${mRow?`<div style="margin-top:4px">${mRow}</div>`:""}
+          </span>
+        </div>`;
+      })()}
       ${(()=>{ const mv = moversData[code]; return mv ? `<div class="tp-fund-block" style="border-left:3px solid ${mv.changeP>=0?'var(--up)':'var(--dn)'};padding-left:8px"><span class="tp-fund-lbl">今日異動</span><span class="tp-fund-text" style="color:${mv.changeP>=0?'var(--up)':'var(--dn)'}">${mv.reason}</span></div>` : ""; })()}
       ${story ? `<div class="tp-fund-block"><span class="tp-fund-lbl">近期故事</span><span class="tp-fund-text">${story}</span></div>` : ""}
       ${(pe != null || eps != null) ? `<div class="tp-fund-block inline" style="flex-wrap:wrap;gap:14px">
@@ -2092,6 +2198,201 @@ function render(){
   setTimeout(() => { initCharts(); initTpCharts(); }, 60);
 }
 
+// ── 法人目標價 ────────────────────────────────────────────
+
+const REC_LABEL = {
+  "strongbuy":"強力買進","buy":"買進","outperform":"優於大盤",
+  "overweight":"加碼","accumulate":"積極買進","hold":"持有",
+  "neutral":"中立","underperform":"劣於大盤","underweight":"減碼","sell":"賣出",
+};
+const REC_COLOR = {
+  "strongbuy":"#4ade80","buy":"#4ade80","outperform":"#86efac","overweight":"#86efac","accumulate":"#86efac",
+  "hold":"#facc15","neutral":"#facc15",
+  "underperform":"#f87171","underweight":"#f87171","sell":"#f87171",
+};
+
+const MANUAL_KEY = "manual_broker_targets";
+
+function loadManualTargets() {
+  try { manualTargets = JSON.parse(localStorage.getItem(MANUAL_KEY) || "[]"); }
+  catch(e) { manualTargets = []; }
+}
+
+function saveManualTargetsLocal() {
+  localStorage.setItem(MANUAL_KEY, JSON.stringify(manualTargets));
+}
+
+function setTargetSort(mode, btn) {
+  targetSortMode = mode;
+  document.querySelectorAll('[id^="tsort-"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalystTargets();
+}
+
+function renderAnalystTargets() {
+  loadManualTargets();
+  const grid = document.getElementById("analyst-targets-grid");
+  if (!grid) return;
+
+  // 合併 Yahoo 共識 + 手動記錄，整理成每支股票的完整資料
+  const allCodes = new Set([
+    ...Object.keys(analystTargets),
+    ...manualTargets.map(t => t.code)
+  ]);
+
+  let cards = [];
+  allCodes.forEach(code => {
+    const at   = analystTargets[code] || {};
+    const price = (priceCache[code] || {}).price || 0;
+    const name  = (priceCache[code] || {}).name || nameCache[code] || code;
+    const mean  = at.mean || 0;
+    const upside = mean && price ? ((mean - price) / price * 100) : null;
+    const manuals = manualTargets.filter(t => t.code === code);
+    cards.push({ code, name, at, price, mean, upside, manuals });
+  });
+
+  // 排序
+  if (targetSortMode === "upside") {
+    cards.sort((a, b) => (b.upside ?? -999) - (a.upside ?? -999));
+  } else if (targetSortMode === "raised") {
+    cards.sort((a, b) => (b.at.mean_change || 0) - (a.at.mean_change || 0));
+  } else if (targetSortMode === "count") {
+    cards.sort((a, b) => (b.at.count || 0) - (a.at.count || 0));
+  } else if (targetSortMode === "rec") {
+    cards.sort((a, b) => (a.at.rec_mean || 3) - (b.at.rec_mean || 3));
+  }
+
+  // 只顯示有共識目標的
+  cards = cards.filter(c => c.mean > 0);
+
+  if (!cards.length) {
+    grid.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:16px">Actions 跑完後自動填入（需等今日排程）</div>`;
+    return;
+  }
+
+  grid.innerHTML = cards.map(({ code, name, at, price, mean, upside, manuals }) => {
+    const upsideStr = upside != null ? `${upside >= 0 ? "+" : ""}${upside.toFixed(1)}%` : "—";
+    const upsideColor = upside == null ? "var(--text3)" : upside >= 10 ? "#4ade80" : upside >= 0 ? "#facc15" : "#f87171";
+    const recLabel = REC_LABEL[at.rec] || at.rec || "—";
+    const recColor = REC_COLOR[at.rec] || "var(--text3)";
+    const changeTag = at.mean_change
+      ? `<span style="font-size:10px;background:${at.mean_change>0?"rgba(74,222,128,0.12)":"rgba(248,113,113,0.12)"};color:${at.mean_change>0?"#4ade80":"#f87171"};border-radius:3px;padding:1px 5px;margin-left:4px">${at.mean_change>0?"+":""}${at.mean_change}</span>`
+      : "";
+    const histTrend = (at.history || []).length >= 2
+      ? (() => {
+          const h = at.history;
+          const first = h[0].mean, last = h[h.length-1].mean;
+          const diff = last - first;
+          return diff > 0 ? `<span style="font-size:10px;color:#4ade80">▲ 近${h.length}日 +${diff.toFixed(0)}</span>`
+               : diff < 0 ? `<span style="font-size:10px;color:#f87171">▼ 近${h.length}日 ${diff.toFixed(0)}</span>`
+               : "";
+        })()
+      : "";
+    const manualsHtml = manuals.length
+      ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">${
+          manuals.slice(-3).reverse().map(m => `
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0">
+              <span style="color:var(--text3);font-family:var(--mono)">${m.date.slice(5)}</span>
+              <span style="color:var(--text2)">${m.broker}</span>
+              <span style="color:${m.new_target>m.old_target?"#4ade80":m.new_target<m.old_target?"#f87171":"var(--text3)"}">${m.old_target}→${m.new_target}</span>
+              <span style="color:var(--text3);margin-left:auto">${m.rating}</span>
+            </div>`).join("")
+        }</div>`
+      : "";
+
+    return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer" onclick="toggleStock('${code}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${code}</span>
+        <span style="font-size:11px;color:${recColor};background:${recColor}22;padding:1px 7px;border-radius:10px">${recLabel}</span>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">${name}</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+        <span style="font-size:18px;font-weight:700;color:${upsideColor};font-family:var(--mono)">${upsideStr}</span>
+        <span style="font-size:11px;color:var(--text3)">上漲空間</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">
+        目標均價 <span style="color:var(--text2)">${mean.toFixed(0)}</span>${changeTag}
+        　現價 <span style="color:var(--text)">${price > 0 ? price.toFixed(1) : "—"}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:2px">
+        ${at.count ? `${at.count} 位分析師` : ""}
+        ${at.high ? `　H ${at.high.toFixed(0)} / L ${(at.low||0).toFixed(0)}` : ""}
+        　${histTrend}
+      </div>
+      ${manualsHtml}
+    </div>`;
+  }).join("");
+
+  // 手動記錄表格
+  renderManualTable();
+}
+
+function renderManualTable() {
+  const tbody = document.getElementById("manual-targets-body");
+  const section = document.getElementById("manual-targets-section");
+  if (!tbody || !section) return;
+  if (!manualTargets.length) { section.style.display = "none"; return; }
+  section.style.display = "";
+  const sorted = [...manualTargets].sort((a,b) => b.date.localeCompare(a.date));
+  tbody.innerHTML = sorted.map((t,i) => {
+    const diff = t.new_target - t.old_target;
+    const name = nameCache[t.code] || t.code;
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 8px;color:var(--text3);font-family:var(--mono)">${t.date}</td>
+      <td style="padding:6px 8px"><span style="color:#60a5fa;font-family:var(--mono)">${t.code}</span> <span style="color:var(--text2)">${name}</span></td>
+      <td style="padding:6px 8px;color:var(--text2)">${t.broker}</td>
+      <td style="padding:6px 8px;color:var(--text3)">${t.rating}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:var(--text2)">${t.old_target||"—"}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:var(--text)">${t.new_target}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:${diff>0?"#4ade80":diff<0?"#f87171":"var(--text3)"}">${diff>0?"+":""}${diff||"—"}</td>
+      <td style="padding:6px 8px"><button onclick="deleteManualTarget(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px">✕</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function openAddTargetModal() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById("at-date").value = today;
+  document.getElementById("at-code").value = "";
+  document.getElementById("at-broker").value = "";
+  document.getElementById("at-rating").value = "";
+  document.getElementById("at-old").value = "";
+  document.getElementById("at-new").value = "";
+  document.getElementById("at-status").textContent = "";
+  document.getElementById("add-target-modal").style.display = "flex";
+}
+
+function saveManualTarget() {
+  const date   = document.getElementById("at-date").value;
+  const code   = document.getElementById("at-code").value.trim();
+  const broker = document.getElementById("at-broker").value.trim();
+  const rating = document.getElementById("at-rating").value.trim();
+  const oldT   = parseFloat(document.getElementById("at-old").value) || 0;
+  const newT   = parseFloat(document.getElementById("at-new").value);
+  const status = document.getElementById("at-status");
+  if (!date || !code || !broker || !newT) {
+    status.textContent = "請填寫日期、代號、券商、新目標價";
+    status.style.color = "#f87171";
+    return;
+  }
+  loadManualTargets();
+  manualTargets.push({ date, code, broker, rating, old_target: oldT, new_target: newT });
+  saveManualTargetsLocal();
+  document.getElementById("add-target-modal").style.display = "none";
+  renderAnalystTargets();
+}
+
+function deleteManualTarget(idx) {
+  loadManualTargets();
+  const sorted = [...manualTargets].sort((a,b) => b.date.localeCompare(a.date));
+  const item = sorted[idx];
+  const realIdx = manualTargets.findIndex(t =>
+    t.date===item.date && t.code===item.code && t.broker===item.broker && t.new_target===item.new_target);
+  if (realIdx >= 0) manualTargets.splice(realIdx, 1);
+  saveManualTargetsLocal();
+  renderAnalystTargets();
+}
+
 const GH_REPO  = "abcdefgpeter123-ctrl/stock";
 const GH_WF    = "update-data.yml";
 const GH_TOKEN_KEY = "gh_actions_token";
@@ -2231,8 +2532,9 @@ async function loadData(){
       document.getElementById('twii-chart-wrap').style.display = 'block';
       setTimeout(() => renderTwiiChart(_twiiPeriod), 80);
     }
-    if(data.movers)    moversData  = data.movers;
-    if(data.pe_river)  peRiverData = data.pe_river;
+    if(data.movers)           moversData     = data.movers;
+    if(data.pe_river)         peRiverData    = data.pe_river;
+    if(data.analyst_targets)  analystTargets = data.analyst_targets;
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
@@ -2259,6 +2561,7 @@ async function loadData(){
   renderMarketSummary();
   renderFavorites();
   renderETFs();
+  renderAnalystTargets();
   setTimeout(() => { initCharts(); initTpCharts(); }, 60);
   document.getElementById("loading").classList.add("hidden");
   setTimeout(() => document.getElementById("loading").style.display = "none", 400);

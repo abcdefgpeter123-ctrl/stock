@@ -292,6 +292,45 @@ def _get_yf_crumb():
     return None, None
 
 
+def fetch_analyst_targets(codes):
+    """
+    從 Yahoo Finance 批次抓分析師共識目標價。
+    回傳 {code: {mean, high, low, count, rec, rec_mean}} dict。
+    """
+    import math
+    result = {}
+    print(f"   📊 抓取 {len(codes)} 支分析師目標價...")
+    for i, code in enumerate(codes):
+        for suffix in [".TW", ".TWO"]:
+            try:
+                t = yf.Ticker(f"{code}{suffix}")
+                info = t.info
+                mean = info.get("targetMeanPrice")
+                high = info.get("targetHighPrice")
+                low  = info.get("targetLowPrice")
+                cnt  = info.get("numberOfAnalystOpinions")
+                rec  = info.get("recommendationKey", "")
+                rec_m= info.get("recommendationMean")
+                if mean and not (isinstance(mean, float) and math.isnan(mean)):
+                    result[code] = {
+                        "mean":  round(float(mean), 1),
+                        "high":  round(float(high), 1) if high else None,
+                        "low":   round(float(low),  1) if low  else None,
+                        "count": int(cnt) if cnt else 0,
+                        "rec":   rec.lower() if rec else "",
+                        "rec_mean": round(float(rec_m), 2) if rec_m else None,
+                        "updated": datetime.date.today().strftime("%Y/%m/%d"),
+                    }
+                    break
+            except Exception:
+                continue
+        if i % 20 == 19:
+            print(f"   進度 {i+1}/{len(codes)}...")
+        time.sleep(0.3)
+    print(f"   ✅ 取得 {len(result)} 支目標價")
+    return result
+
+
 def fetch_trailing_pe(code):
     """從 Yahoo Finance 抓本益比（trailingPE）與 EPS（trailingEps）"""
     # 優先用 yfinance（自動處理 cookie/crumb，較穩定）
@@ -2208,6 +2247,31 @@ def main():
     weekly_summary = generate_weekly_summary(all_prices, histories, inst_data, twii_data)
     if weekly_summary:
         data["weekly_summary"] = weekly_summary
+
+    # 5g. 分析師共識目標價
+    print("🎯 分析師目標價追蹤...")
+    target_codes = sorted(set(FALLBACK_CODES) | {c for g in THEME_GROUPS.values() for c in list(g["leaders"]) + list(g["members"])})
+    prev_targets = data.get("analyst_targets", {})
+    new_targets  = fetch_analyst_targets(target_codes)
+    # 計算每支股票目標價變化（與前次比較）
+    today_str = datetime.date.today().strftime("%Y/%m/%d")
+    for code, t in new_targets.items():
+        prev = prev_targets.get(code, {})
+        prev_mean = prev.get("mean")
+        if prev_mean and t["mean"] != prev_mean and prev.get("updated") != today_str:
+            t["prev_mean"]   = prev_mean
+            t["mean_change"] = round(t["mean"] - prev_mean, 1)
+        else:
+            t["prev_mean"]   = prev.get("prev_mean", prev_mean)
+            t["mean_change"] = prev.get("mean_change", 0)
+        # 保留歷史趨勢（最近30天每日快照）
+        history = prev.get("history", [])
+        if not history or history[-1].get("date") != today_str:
+            if prev_mean:
+                history.append({"date": today_str, "mean": t["mean"]})
+            history = history[-30:]  # 只保留30天
+        t["history"] = history
+    data["analyst_targets"] = new_targets
 
     # 5g. PE 河流圖資料（監控個股 2 年股價 + TTM EPS）
     print("📈 建立 PE 河流圖資料...")
