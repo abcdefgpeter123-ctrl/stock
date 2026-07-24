@@ -17,6 +17,7 @@ US_STOCKS = [
     {"code": "NVDA",  "name": "輝達",         "theme": "AI半導體"},
     {"code": "AVGO",  "name": "博通",         "theme": "AI半導體"},
     {"code": "AMD",   "name": "超微",         "theme": "AI半導體"},
+    {"code": "MU",    "name": "美光",         "theme": "AI半導體"},
     {"code": "ANET",  "name": "Arista網路",   "theme": "AI半導體"},
     {"code": "TSLA",  "name": "特斯拉",       "theme": "電動車"},
     {"code": "V",     "name": "Visa",         "theme": "金融消費"},
