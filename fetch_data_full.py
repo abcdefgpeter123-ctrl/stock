@@ -387,8 +387,10 @@ def fetch_quarterly_eps(code, n_quarters=8):
     """
     從 Yahoo Finance 抓近 n_quarters 季實際 EPS，含季末日期（用於 PE 河流圖）。
     回傳 [{"q":"2024Q1","eps":3.5,"date":"2024-03-31"}, ...]，舊→新排列。
+    只回傳季末日期 <= 今日的實際財報數據，排除未來估計值。
     """
     import math
+    today_str = datetime.date.today().isoformat()  # "YYYY-MM-DD"
     if _YF_AVAILABLE:
         for suffix in [".TW", ".TWO"]:
             try:
@@ -400,19 +402,27 @@ def fetch_quarterly_eps(code, n_quarters=8):
                 if eps_row is None:
                     continue
                 out = []
-                for col in list(df.columns)[:n_quarters]:
+                for col in list(df.columns):  # 全部欄位都看，再過濾
                     val = df.loc[eps_row, col]
                     if val is not None and not (isinstance(val, float) and math.isnan(val)):
                         if hasattr(col, "strftime"):
+                            date_str = col.strftime("%Y-%m-%d")
+                            # 排除未來季度（尚未公布的估計值）
+                            if date_str > today_str:
+                                continue
                             q_num = (col.month - 1) // 3 + 1
                             label = f"{col.year}Q{q_num}"
-                            date_str = col.strftime("%Y-%m-%d")
                         else:
-                            label = str(col)[:7]
                             date_str = str(col)[:10]
+                            if date_str > today_str:
+                                continue
+                            label = str(col)[:7]
                         out.append({"q": label, "eps": round(float(val), 2), "date": date_str})
-                if out:
-                    return list(reversed(out))  # 舊到新
+                # 取最近 n_quarters 筆（去重複、按日期排序）
+                out_sorted = sorted(out, key=lambda x: x["date"])
+                out_sorted = out_sorted[-n_quarters:]
+                if out_sorted:
+                    return out_sorted  # 舊到新
             except Exception:
                 continue
 
@@ -493,9 +503,14 @@ def build_pe_river(code, quarterly_eps):
     if not valid:
         return None
 
-    # 前面 None 補第一個有效值
-    first_valid = next(v for v in ttm_series if v is not None)
-    ttm_series = [v if v is not None else first_valid for v in ttm_series]
+    # 裁剪：只保留第一個有效 TTM 以後的資料，確保河流圖真實反映 EPS 變動
+    first_idx = next(i for i, v in enumerate(ttm_series) if v is not None)
+    dates      = dates[first_idx:]
+    closes     = closes[first_idx:]
+    ttm_series = ttm_series[first_idx:]
+
+    if len(dates) < 10:
+        return None
 
     return {"dates": dates, "closes": closes, "ttm": ttm_series}
 
