@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日機會健檢 · 台股儀表板</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--bg4:#0e1623;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#ffffff;--text2:#d0daea;--text3:#a8bacf;
+  --up:#ef4444;--dn:#22c55e;
+  --blue:#60a5fa;--purple:#a78bfa;--teal:#2dd4bf;--yellow:#fbbf24;--orange:#fb923c;
+  --green:#4ade80;--red:#f87171;
+  --font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);min-height:100%}
+body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.page-header h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.page-header .sub{font-size:12px;color:var(--text3);margin-top:4px}
+.back-link{font-size:13px;color:var(--text3);text-decoration:none;display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border2);border-radius:6px;transition:color .15s,border-color .15s}
+.back-link:hover{color:var(--purple);border-color:var(--purple)}
+
+/* ── Step card ── */
+.step-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.step-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.s1 .step-num{background:rgba(96,165,250,0.18);color:var(--blue)}
+.s2 .step-num{background:rgba(167,139,250,0.18);color:var(--purple)}
+.s3 .step-num{background:rgba(45,212,191,0.18);color:var(--teal)}
+.s4 .step-num{background:rgba(251,191,36,0.18);color:var(--yellow)}
+.step-title{font-size:15px;font-weight:600}
+.step-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.step-badge{margin-left:auto;font-size:12px;padding:3px 10px;border-radius:20px;font-family:var(--mono);font-weight:600;white-space:nowrap}
+.step-body{padding:20px}
+
+/* ── STEP 1: Scoring ── */
+.score-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.score-row:last-child{border-bottom:none}
+.score-row .label{font-size:14px;color:var(--text2)}
+.score-row .label small{display:block;font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.score-row .pts{font-size:11px;font-family:var(--mono);color:var(--text3);white-space:nowrap}
+.score-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.score-check.checked{background:var(--dn);border-color:var(--dn)}
+.score-check.checked::after{content:'✓';font-size:13px;color:#fff;font-weight:700}
+.score-check.auto-yes{background:rgba(34,197,94,0.2);border-color:var(--dn);cursor:default}
+.score-check.auto-yes::after{content:'✓';font-size:13px;color:var(--dn);font-weight:700}
+.score-check.auto-no{background:var(--bg3);border-color:var(--border);cursor:default;opacity:.5}
+.auto-tag{font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;letter-spacing:.04em}
+
+.score-total{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:16px 20px;margin-top:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.score-num{font-size:40px;font-weight:700;font-family:var(--mono);line-height:1}
+.score-denom{font-size:18px;color:var(--text3);font-family:var(--mono)}
+.score-label{font-size:20px;font-weight:700}
+.score-desc{font-size:13px;color:var(--text3);margin-top:4px}
+
+/* ── STEP 2: Strategy ── */
+.market-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.mkt-tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;background:var(--bg3);color:var(--text3)}
+.mkt-tab.active-bull2,.mkt-tab:hover{border-color:var(--dn);color:var(--dn)}
+.mkt-tab.active-bull1{border-color:var(--teal);color:var(--teal)}
+.mkt-tab.active-side{border-color:var(--yellow);color:var(--yellow)}
+.mkt-tab.active-bear1{border-color:var(--orange);color:var(--orange)}
+.mkt-tab.active-bear2{border-color:var(--red);color:var(--red)}
+
+.strategy-block{display:none}
+.strategy-block.active{display:block}
+
+.theme-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.theme-chip{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:500;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:var(--blue)}
+.theme-chip.hot{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);color:var(--purple)}
+
+.buy-points{display:flex;flex-direction:column;gap:8px}
+.buy-point{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)}
+.buy-point .icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.buy-point .text{font-size:14px;color:var(--text2)}
+.buy-point .text small{display:block;font-size:12px;color:var(--text3);margin-top:2px}
+
+.strategy-note{font-size:13px;color:var(--text3);margin-top:16px;padding:10px 14px;border-left:3px solid var(--border2);background:var(--bg4);border-radius:0 6px 6px 0}
+
+/* ── STEP 3: Stock check ── */
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.check-grid{grid-template-columns:1fr}}
+.check-section h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-weight:500}
+.check-items{display:flex;flex-direction:column;gap:6px}
+.check-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);cursor:pointer;user-select:none;transition:background .12s}
+.check-item:hover{background:rgba(255,255,255,0.04)}
+.check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--purple);cursor:pointer;flex-shrink:0}
+.check-item label{font-size:14px;color:var(--text2);cursor:pointer;flex:1}
+.check-item.checked label{color:var(--text)}
+
+.stock-input-row{display:flex;gap:10px;margin-bottom:16px}
+.stock-input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:15px;color:var(--text);font-family:var(--font);width:100%;outline:none;transition:border-color .15s}
+.stock-input:focus{border-color:var(--purple)}
+.check-btn{padding:10px 18px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);border-radius:8px;color:var(--purple);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;font-family:var(--font)}
+.check-btn:hover{background:rgba(167,139,250,0.25)}
+
+.stock-result{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;display:none}
+.stock-result-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stock-result-row:last-child{border-bottom:none}
+.stock-result-row .rl{color:var(--text3)}
+.stock-result-row .rv{font-family:var(--mono);font-weight:500}
+.rv.up{color:var(--up)}
+.rv.dn{color:var(--dn)}
+.rv.ok{color:var(--green)}
+.rv.na{color:var(--text3)}
+
+.watchlist-wrap{margin-top:16px}
+.watchlist-title{font-size:12px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;font-weight:500}
+.watchlist-chips{display:flex;flex-wrap:wrap;gap:8px;min-height:36px}
+.wl-chip{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:13px}
+.wl-chip .code{font-family:var(--mono);font-weight:500;color:var(--purple)}
+.wl-chip .name{color:var(--text2)}
+.wl-chip .rm{color:var(--text3);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
+.wl-chip .rm:hover{color:var(--red)}
+
+/* ── STEP 4: Daily output ── */
+.output-box{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:16px;font-family:var(--mono);font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap;min-height:120px}
+.output-actions{display:flex;gap:10px;margin-top:12px}
+.copy-btn{padding:8px 18px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25);border-radius:6px;color:var(--blue);font-size:13px;cursor:pointer;font-family:var(--font);transition:background .15s}
+.copy-btn:hover{background:rgba(96,165,250,0.22)}
+.save-btn{padding:8px 18px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);border-radius:6px;color:var(--purple);font-size:13px;cursor:pointer;font-family:var(--font);transition:background .15s}
+.save-btn:hover{background:rgba(167,139,250,0.22)}
+.reset-btn{padding:8px 18px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-size:13px;cursor:pointer;font-family:var(--font);transition:background .15s;margin-left:auto}
+.reset-btn:hover{background:rgba(255,255,255,0.04)}
+
+/* ── History ── */
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.history-item:hover{border-color:var(--border2)}
+.history-item .hi-date{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.history-item .hi-summary{font-size:13px;color:var(--text2);margin-top:4px}
+.history-item .hi-score{font-size:11px;font-family:var(--mono);font-weight:600;float:right}
+
+/* misc */
+.section-divider{height:1px;background:var(--border);margin:16px 0}
+.tag-yes{color:var(--dn);font-weight:600}
+.tag-no{color:var(--red);font-weight:600}
+.tag-maybe{color:var(--yellow)}
+.empty-hint{font-size:13px;color:var(--text3);padding:16px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>📋 每日機會健檢</h1>
+    <div class="sub" id="today-label">載入中…</div>
+  </div>
+  <a href="index.html" class="back-link">← 回儀表板</a>
+</div>
+
+<!-- ══════ STEP 1 ══════ -->
+<div class="step-card s1">
+  <div class="step-header" onclick="toggleCard('s1')">
+    <div class="step-num">1</div>
+    <div>
+      <div class="step-title">判斷市場</div>
+      <div class="step-sub">每天第一件事，依序判斷，不要主觀</div>
+    </div>
+    <div class="step-badge" id="s1-badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">0 / 8</div>
+  </div>
+  <div class="step-body" id="s1-body">
+    <div id="score-rows">
+      <!-- JS 渲染 -->
+    </div>
+    <div class="score-total">
+      <div>
+        <span class="score-num" id="total-score">0</span>
+        <span class="score-denom"> / 8</span>
+      </div>
+      <div>
+        <div class="score-label" id="market-label">—</div>
+        <div class="score-desc" id="market-desc">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ STEP 2 ══════ -->
+<div class="step-card s2">
+  <div class="step-header" onclick="toggleCard('s2')">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title">今天該找哪種股票？</div>
+      <div class="step-sub">依市場分數自動切換策略</div>
+    </div>
+    <div class="step-badge" id="s2-badge" style="background:rgba(167,139,250,0.12);color:var(--purple)">—</div>
+  </div>
+  <div class="step-body" id="s2-body">
+
+    <!-- 大牛 7-8 -->
+    <div class="strategy-block" id="strat-bull2">
+      <div class="theme-chips">
+        <span class="theme-chip hot">AI</span>
+        <span class="theme-chip hot">CoWoS</span>
+        <span class="theme-chip hot">ASIC</span>
+        <span class="theme-chip hot">機器人</span>
+        <span class="theme-chip hot">BBU</span>
+      </div>
+      <div class="buy-points">
+        <div class="buy-point"><span class="icon">↩</span><div class="text">回測 5MA<small>主流族群在 5MA 附近找進場點</small></div></div>
+        <div class="buy-point"><span class="icon">↩</span><div class="text">回測 10MA<small>強勢股整理後再找買點</small></div></div>
+        <div class="buy-point"><span class="icon">🔺</span><div class="text">創高整理<small>新高後縮量休息，等量縮後第一根紅K</small></div></div>
+        <div class="buy-point"><span class="icon">📦</span><div class="text">平台突破<small>橫盤整理放量突破前高</small></div></div>
+      </div>
+      <div class="strategy-note">市場有錢。聚焦主流族群，不要分散，不要去找二線。</div>
+    </div>
+
+    <!-- 小牛 5-6 -->
+    <div class="strategy-block" id="strat-bull1">
+      <div class="theme-chips">
+        <span class="theme-chip">第二波股票</span>
+        <span class="theme-chip">補漲股</span>
+        <span class="theme-chip">法人剛開始買</span>
+      </div>
+      <div class="buy-points">
+        <div class="buy-point"><span class="icon">📏</span><div class="text">月線支撐<small>20MA 附近找支撐</small></div></div>
+        <div class="buy-point"><span class="icon">📦</span><div class="text">平台突破<small>放量突破整理區</small></div></div>
+        <div class="buy-point"><span class="icon">🕯</span><div class="text">第一根大量紅K<small>強勢啟動訊號</small></div></div>
+        <div class="buy-point"><span class="icon">⬛</span><div class="text">橫盤<small>法人持續買，等待方向確認</small></div></div>
+      </div>
+      <div class="strategy-note">開始輪動。可以找主流以外的補漲股，但仍需法人支撐。</div>
+    </div>
+
+    <!-- 橫盤 3-4 -->
+    <div class="strategy-block" id="strat-side">
+      <div class="theme-chips">
+        <span class="theme-chip">台積電</span>
+        <span class="theme-chip">聯發科</span>
+        <span class="theme-chip">廣達</span>
+        <span class="theme-chip">緯創</span>
+        <span class="theme-chip">整理很久的股票</span>
+      </div>
+      <div class="buy-points">
+        <div class="buy-point"><span class="icon">🔭</span><div class="text">縮小範圍<small>只看龍頭股或已整理很久的潛力股</small></div></div>
+        <div class="buy-point"><span class="icon">🚫</span><div class="text">不要追高<small>市場方向不明，等確認再動</small></div></div>
+      </div>
+      <div class="strategy-note">縮小範圍，保持耐心。等方向確認再加碼。</div>
+    </div>
+
+    <!-- 小熊 1-2 -->
+    <div class="strategy-block" id="strat-bear1">
+      <div class="theme-chips">
+        <span class="theme-chip">EPS 成長</span>
+        <span class="theme-chip">營收創高</span>
+        <span class="theme-chip">法人連買</span>
+        <span class="theme-chip">剛站上 60MA</span>
+      </div>
+      <div class="buy-points">
+        <div class="buy-point"><span class="icon">🔬</span><div class="text">找下一波主流<small>這時候不是賺快錢，是在選股</small></div></div>
+        <div class="buy-point"><span class="icon">📋</span><div class="text">建立觀察名單<small>先存起來，等市場轉多再買</small></div></div>
+      </div>
+      <div class="strategy-note">不要硬做。整理觀察名單，為下一波準備。</div>
+    </div>
+
+    <!-- 大熊 0 -->
+    <div class="strategy-block" id="strat-bear2">
+      <div class="buy-points">
+        <div class="buy-point"><span class="icon">🛑</span><div class="text">幾乎不買<small>保留現金，等待機會</small></div></div>
+        <div class="buy-point"><span class="icon">📋</span><div class="text">每天只建立觀察名單<small>營收 +50%、法人爆買、站上 60MA → 加入 Watchlist</small></div></div>
+      </div>
+      <div class="strategy-note">現金為王。系統性風險期間，不與市場對抗。</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ STEP 3 ══════ -->
+<div class="step-card s3">
+  <div class="step-header" onclick="toggleCard('s3')">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title">個股檢查</div>
+      <div class="step-sub">看到股票後，逐項確認</div>
+    </div>
+    <div class="step-badge" id="s3-badge" style="background:rgba(45,212,191,0.12);color:var(--teal)">0 項勾選</div>
+  </div>
+  <div class="step-body" id="s3-body">
+
+    <div class="stock-input-row">
+      <input class="stock-input" id="stock-code-input" type="text" placeholder="輸入股票代號（如 2330）或名稱" oninput="onStockInput(this.value)">
+      <button class="check-btn" onclick="lookupStock()">查</button>
+    </div>
+    <div id="stock-result-box" class="stock-result"></div>
+
+    <div class="check-grid">
+      <div class="check-section">
+        <h4>基本面</h4>
+        <div class="check-items" id="checks-fundamental"></div>
+      </div>
+      <div class="check-section">
+        <h4>技術面</h4>
+        <div class="check-items" id="checks-technical"></div>
+      </div>
+      <div class="check-section">
+        <h4>籌碼（至少兩項偏多）</h4>
+        <div class="check-items" id="checks-chips"></div>
+      </div>
+      <div class="check-section">
+        <h4>題材</h4>
+        <div class="check-items" id="checks-theme"></div>
+      </div>
+    </div>
+
+    <div class="watchlist-wrap">
+      <div class="watchlist-title">今日觀察名單</div>
+      <div class="watchlist-chips" id="watchlist-chips"></div>
+      <button style="margin-top:10px;padding:6px 14px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);border-radius:6px;color:var(--purple);font-size:13px;cursor:pointer;font-family:var(--font)" onclick="addToWatchlist()">＋ 加入觀察名單</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ STEP 4 ══════ -->
+<div class="step-card s4">
+  <div class="step-header" onclick="toggleCard('s4')">
+    <div class="step-num">4</div>
+    <div>
+      <div class="step-title">每日輸出</div>
+      <div class="step-sub">整理成固定格式，方便記錄與回顧</div>
+    </div>
+    <div class="step-badge" id="s4-badge" style="background:rgba(251,191,36,0.12);color:var(--yellow)">自動產生</div>
+  </div>
+  <div class="step-body" id="s4-body">
+    <div class="output-box" id="daily-output">（填寫 STEP 1–3 後自動產生）</div>
+    <div class="output-actions">
+      <button class="copy-btn" onclick="copyOutput()">複製</button>
+      <button class="save-btn" onclick="saveToHistory()">儲存今日記錄</button>
+      <button class="reset-btn" onclick="resetAll()">重置今日</button>
+    </div>
+
+    <div class="section-divider" style="margin-top:24px"></div>
+    <div style="font-size:12px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px;font-weight:500">歷史記錄</div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  Constants & state
+// ══════════════════════════════════════════════════════
+const TODAY = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+})();
+
+const STORAGE_KEY = `hc_${TODAY.replace(/\//g,'')}`;
+const HISTORY_KEY = 'hc_history';
+
+// 指標定義：auto=true 的從 data.json 自動計算，否則手動
+const INDICATORS = [
+  { id:'twii_5ma',   label:'加權指數站上 5MA',    pts:'+1', auto:true },
+  { id:'twii_20ma',  label:'加權指數站上 20MA',   pts:'+1', auto:true },
+  { id:'twii_60ma',  label:'加權指數站上 60MA',   pts:'+1', auto:true },
+  { id:'ma20_60',    label:'20MA > 60MA（多頭排列）',pts:'+1', auto:true },
+  { id:'ma60_120',   label:'60MA > 120MA',        pts:'+1', auto:true },
+  { id:'tsmc_20ma',  label:'台積電（2330）站上 20MA', pts:'+1', auto:true },
+  { id:'ai_20ma',    label:'AI 族群站上 20MA',    pts:'+1', auto:false, hint:'AI 族群：廣達、緯創、英業達、技嘉均線多頭？' },
+  { id:'advance',    label:'上市上漲家數 > 下跌家數', pts:'+1', auto:false, hint:'今日盤後再手動確認' },
+];
+
+const MARKET_LEVELS = [
+  { min:7, label:'大牛', desc:'市場資金充沛，聚焦主流族群', color:'var(--dn)', strat:'bull2' },
+  { min:5, label:'小牛', desc:'開始輪動，找補漲股', color:'var(--teal)', strat:'bull1' },
+  { min:3, label:'橫盤', desc:'縮小範圍，保持耐心', color:'var(--yellow)', strat:'side' },
+  { min:1, label:'小熊', desc:'建立觀察名單，準備下一波', color:'var(--orange)', strat:'bear1' },
+  { min:0, label:'大熊', desc:'幾乎不買，保留現金', color:'var(--red)', strat:'bear2' },
+];
+
+const CHECKS = {
+  fundamental: [
+    { id:'eps_yoy',     label:'EPS YoY 成長' },
+    { id:'rev_yoy',     label:'月營收 YoY 成長' },
+    { id:'margin',      label:'毛利率維持 / 擴張' },
+    { id:'target_up',   label:'法人預估上修' },
+  ],
+  technical: [
+    { id:'ma5',         label:'站上 5MA' },
+    { id:'ma20',        label:'站上 20MA' },
+    { id:'ma60',        label:'站上 60MA' },
+    { id:'vol_up',      label:'成交量放大' },
+  ],
+  chips: [
+    { id:'foreign',     label:'外資偏多（買超）' },
+    { id:'trust',       label:'投信偏多（買超）' },
+    { id:'major',       label:'主力偏多' },
+  ],
+  theme: [
+    { id:'is_mainstream', label:'目前市場主流題材' },
+    { id:'cowo_asic',   label:'CoWoS / ASIC 相關' },
+    { id:'robot_ai',    label:'機器人 / AI Server 相關' },
+    { id:'cpo_bbu',     label:'CPO / BBU 相關' },
+  ],
+};
+
+const HOT_THEMES = ['AI','CoWoS','ASIC','機器人','AI Server','CPO','BBU'];
+
+// State
+let state = {
+  checks: {},   // {id: true/false}
+  stockChecks: {},  // {id: true/false}
+  watchlist: [], // [{code,name}]
+  autoResults: {},  // {id: true/false} from data.json
+};
+
+let priceData = {};   // code -> {price, ...}
+let histories = {};   // code -> {closes, labels}
+let twiiHistory = null; // {closes, labels}
+let twiiPrice = 0;
+
+// ══════════════════════════════════════════════════════
+//  Load data.json
+// ══════════════════════════════════════════════════════
+async function loadData() {
+  try {
+    const res = await fetch('data.json?t=' + Date.now());
+    const d = await res.json();
+    priceData   = d.prices || {};
+    histories   = d.histories || {};
+    twiiHistory = d.twii_history || null;
+    twiiPrice   = d.twii?.price || 0;
+
+    computeAutoIndicators();
+  } catch(e) {
+    console.warn('data.json 載入失敗', e);
+  }
+}
+
+function ma(arr, n) {
+  if (!arr || arr.length < n) return null;
+  const slice = arr.slice(-n);
+  return slice.reduce((a,b) => a+b, 0) / n;
+}
+
+function computeAutoIndicators() {
+  const auto = {};
+
+  // TWII MAs
+  if (twiiHistory?.closes?.length >= 120) {
+    const c = twiiHistory.closes;
+    const last = c[c.length-1];
+    const ma5   = ma(c, 5);
+    const ma20  = ma(c, 20);
+    const ma60  = ma(c, 60);
+    const ma120 = ma(c, 120);
+    auto.twii_5ma  = last > ma5;
+    auto.twii_20ma = last > ma20;
+    auto.twii_60ma = last > ma60;
+    auto.ma20_60   = ma20 > ma60;
+    auto.ma60_120  = ma60 > ma120;
+  }
+
+  // TSMC 2330 20MA
+  const tsmc = histories['2330'];
+  if (tsmc?.closes?.length >= 20) {
+    const c = tsmc.closes;
+    const last = c[c.length-1];
+    auto.tsmc_20ma = last > ma(c, 20);
+  }
+
+  state.autoResults = auto;
+  renderScoreRows();
+  updateScore();
+}
+
+// ══════════════════════════════════════════════════════
+//  Render STEP 1
+// ══════════════════════════════════════════════════════
+function renderScoreRows() {
+  const container = document.getElementById('score-rows');
+  container.innerHTML = INDICATORS.map(ind => {
+    const auto = state.autoResults;
+    const isAuto = ind.auto && ind.id in auto;
+    const val = isAuto ? auto[ind.id] : (state.checks[ind.id] || false);
+    const checkClass = isAuto
+      ? (val ? 'score-check auto-yes' : 'score-check auto-no')
+      : (val ? 'score-check checked' : 'score-check');
+    const onclick = isAuto ? '' : `onclick="toggleCheck('${ind.id}')"`;
+    const autoTag = isAuto ? `<span class="auto-tag">自動</span>` : '';
+    const hint = ind.hint ? `<small>${ind.hint}</small>` : '';
+    return `
+      <div class="score-row">
+        <div class="label">${ind.label}${hint}</div>
+        <div class="pts">${ind.pts}</div>
+        <div class="flex-col" style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="${checkClass}" ${onclick}></div>
+          ${autoTag}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleCheck(id) {
+  state.checks[id] = !state.checks[id];
+  renderScoreRows();
+  updateScore();
+  saveState();
+}
+
+function getScore() {
+  let s = 0;
+  INDICATORS.forEach(ind => {
+    const auto = state.autoResults;
+    const isAuto = ind.auto && ind.id in auto;
+    const val = isAuto ? auto[ind.id] : (state.checks[ind.id] || false);
+    if (val) s++;
+  });
+  return s;
+}
+
+function updateScore() {
+  const score = getScore();
+  const level = MARKET_LEVELS.find(l => score >= l.min) || MARKET_LEVELS[MARKET_LEVELS.length-1];
+
+  document.getElementById('total-score').textContent = score;
+  document.getElementById('market-label').textContent = level.label;
+  document.getElementById('market-label').style.color = level.color;
+  document.getElementById('market-desc').textContent = level.desc;
+  document.getElementById('s1-badge').textContent = `${score} / 8`;
+
+  // Update STEP 2
+  document.getElementById('s2-badge').textContent = level.label;
+  document.querySelectorAll('.strategy-block').forEach(b => b.classList.remove('active'));
+  const strat = document.getElementById(`strat-${level.strat}`);
+  if (strat) strat.classList.add('active');
+
+  updateOutput();
+}
+
+// ══════════════════════════════════════════════════════
+//  STEP 3: Individual stock checks
+// ══════════════════════════════════════════════════════
+function renderCheckItems(sectionId, items) {
+  const container = document.getElementById(sectionId);
+  container.innerHTML = items.map(item => {
+    const checked = state.stockChecks[item.id] || false;
+    return `
+      <div class="check-item${checked?' checked':''}" onclick="toggleStockCheck('${item.id}',this)">
+        <input type="checkbox" id="sc-${item.id}" ${checked?'checked':''}>
+        <label for="sc-${item.id}">${item.label}</label>
+      </div>`;
+  }).join('');
+}
+
+function renderAllCheckItems() {
+  renderCheckItems('checks-fundamental', CHECKS.fundamental);
+  renderCheckItems('checks-technical', CHECKS.technical);
+  renderCheckItems('checks-chips', CHECKS.chips);
+  renderCheckItems('checks-theme', CHECKS.theme);
+  updateS3Badge();
+}
+
+function toggleStockCheck(id, row) {
+  state.stockChecks[id] = !state.stockChecks[id];
+  row.classList.toggle('checked', state.stockChecks[id]);
+  row.querySelector('input').checked = state.stockChecks[id];
+  updateS3Badge();
+  updateOutput();
+  saveState();
+}
+
+function updateS3Badge() {
+  const total = Object.values(state.stockChecks).filter(Boolean).length;
+  document.getElementById('s3-badge').textContent = `${total} 項勾選`;
+}
+
+// Stock lookup from data.json
+function onStockInput(val) {
+  if (!val) document.getElementById('stock-result-box').style.display = 'none';
+}
+
+function lookupStock() {
+  const raw = document.getElementById('stock-code-input').value.trim();
+  const box  = document.getElementById('stock-result-box');
+
+  // Find by code or name
+  const code = Object.keys(priceData).find(c =>
+    c === raw || (priceData[c].name && priceData[c].name.includes(raw))
+  ) || raw;
+
+  const p = priceData[code];
+  if (!p) {
+    box.innerHTML = `<div style="font-size:13px;color:var(--text3);padding:4px">查無此股票（代號：${code}）</div>`;
+    box.style.display = 'block';
+    return;
+  }
+
+  const h = histories[code];
+  const closes = h?.closes;
+  const ma5v  = closes ? ma(closes, 5)  : null;
+  const ma20v = closes ? ma(closes, 20) : null;
+  const ma60v = closes ? ma(closes, 60) : null;
+  const price = p.price;
+
+  const fmt = v => v ? v.toFixed(1) : '—';
+  const cmp = (price, mav) => {
+    if (!mav) return ['—','na'];
+    return price > mav
+      ? [`↑ ${fmt(mav)} (上方)`, 'ok']
+      : [`↓ ${fmt(mav)} (下方)`, 'up'];
+  };
+  const [ma5t, ma5c]   = cmp(price, ma5v);
+  const [ma20t, ma20c] = cmp(price, ma20v);
+  const [ma60t, ma60c] = cmp(price, ma60v);
+
+  // Auto-fill technical checks
+  if (ma5v  !== null) { state.stockChecks.ma5  = price > ma5v;  }
+  if (ma20v !== null) { state.stockChecks.ma20 = price > ma20v; }
+  if (ma60v !== null) { state.stockChecks.ma60 = price > ma60v; }
+  renderAllCheckItems();
+
+  const chgClass = p.changeP >= 0 ? 'up' : 'dn';
+
+  box.innerHTML = `
+    <div class="stock-result-row"><span class="rl">名稱</span><span class="rv">${p.name}（${code}）</span></div>
+    <div class="stock-result-row"><span class="rl">股價</span><span class="rv ${chgClass}">${price} （${p.changeP >= 0?'+':''}${p.changeP?.toFixed(2)}%）</span></div>
+    <div class="stock-result-row"><span class="rl">5MA</span><span class="rv ${ma5c}">${ma5t}</span></div>
+    <div class="stock-result-row"><span class="rl">20MA</span><span class="rv ${ma20c}">${ma20t}</span></div>
+    <div class="stock-result-row"><span class="rl">60MA</span><span class="rv ${ma60c}">${ma60t}</span></div>
+  `;
+  box.style.display = 'block';
+}
+
+// Watchlist
+function renderWatchlist() {
+  const chips = document.getElementById('watchlist-chips');
+  if (!state.watchlist.length) {
+    chips.innerHTML = '<span style="font-size:13px;color:var(--text3)">（尚無）</span>';
+    return;
+  }
+  chips.innerHTML = state.watchlist.map((s,i) => `
+    <div class="wl-chip">
+      <span class="code">${s.code}</span>
+      <span class="name">${s.name}</span>
+      <span class="rm" onclick="removeFromWatchlist(${i})">✕</span>
+    </div>`).join('');
+}
+
+function addToWatchlist() {
+  const raw = document.getElementById('stock-code-input').value.trim();
+  if (!raw) return;
+  const code = Object.keys(priceData).find(c =>
+    c === raw || (priceData[c].name && priceData[c].name.includes(raw))
+  ) || raw;
+  const name = priceData[code]?.name || raw;
+  if (!state.watchlist.find(s => s.code === code)) {
+    state.watchlist.push({ code, name });
+    renderWatchlist();
+    updateOutput();
+    saveState();
+  }
+}
+
+function removeFromWatchlist(i) {
+  state.watchlist.splice(i, 1);
+  renderWatchlist();
+  updateOutput();
+  saveState();
+}
+
+// ══════════════════════════════════════════════════════
+//  STEP 4: Output
+// ══════════════════════════════════════════════════════
+function updateOutput() {
+  const score  = getScore();
+  const level  = MARKET_LEVELS.find(l => score >= l.min) || MARKET_LEVELS[MARKET_LEVELS.length-1];
+  const stockEl = document.getElementById('stock-code-input').value.trim();
+  const stockName = stockEl
+    ? (priceData[stockEl]?.name || stockEl)
+    : '';
+
+  const checkedFund  = CHECKS.fundamental.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
+  const checkedTech  = CHECKS.technical.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
+  const checkedChips = CHECKS.chips.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
+  const checkedTheme = CHECKS.theme.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
+
+  // Hot themes from STEP2
+  const stratId = `strat-${level.strat}`;
+  const stratEl = document.getElementById(stratId);
+  const hotChips = stratEl
+    ? [...stratEl.querySelectorAll('.theme-chip.hot')].map(el => `✔ ${el.textContent}`)
+    : [...stratEl?.querySelectorAll('.theme-chip') || []].map(el => `✔ ${el.textContent}`);
+  const allChips = stratEl
+    ? [...stratEl.querySelectorAll('.theme-chip')].map(el => `✔ ${el.textContent}`)
+    : [];
+
+  const buyPts = stratEl
+    ? [...stratEl.querySelectorAll('.buy-point .text')].map(el => `✔ ${el.childNodes[0].textContent.trim()}`)
+    : [];
+
+  const wl = state.watchlist.length
+    ? state.watchlist.map(s => `  ${s.name}（${s.code}）`).join('\n')
+    : '  （尚未加入）';
+
+  let text = `今日市場：${level.label}\n`;
+  text += `市場分數：${score}/8\n`;
+  text += `\n`;
+
+  if (allChips.length) {
+    text += `熱門族群：\n`;
+    allChips.forEach(c => text += `  ${c}\n`);
+    text += `\n`;
+  }
+
+  if (buyPts.length) {
+    text += `今日策略：\n`;
+    buyPts.forEach(b => text += `  ${b}\n`);
+    text += `\n`;
+  }
+
+  if (stockName) {
+    text += `個股檢查：${stockName}\n`;
+    const allChecked = [...checkedFund,...checkedTech,...checkedChips,...checkedTheme];
+    if (allChecked.length) allChecked.forEach(c => text += `  ${c}\n`);
+    text += `\n`;
+  }
+
+  text += `觀察股票：\n${wl}\n`;
+  text += `\n── ${TODAY} ──`;
+
+  document.getElementById('daily-output').textContent = text;
+}
+
+function copyOutput() {
+  const text = document.getElementById('daily-output').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '已複製 ✓';
+    setTimeout(() => btn.textContent = '複製', 1500);
+  });
+}
+
+function saveToHistory() {
+  const score = getScore();
+  const level = MARKET_LEVELS.find(l => score >= l.min) || MARKET_LEVELS[MARKET_LEVELS.length-1];
+  const text  = document.getElementById('daily-output').textContent;
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+
+  const idx = history.findIndex(h => h.date === TODAY);
+  const entry = { date: TODAY, score, label: level.label, text };
+  if (idx >= 0) history[idx] = entry;
+  else history.unshift(entry);
+
+  // Keep last 30 days
+  if (history.length > 30) history.splice(30);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  renderHistory();
+
+  const btn = event.target;
+  btn.textContent = '已儲存 ✓';
+  setTimeout(() => btn.textContent = '儲存今日記錄', 1500);
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  const list = document.getElementById('history-list');
+  if (!history.length) {
+    list.innerHTML = '<div class="empty-hint">尚無歷史記錄</div>';
+    return;
+  }
+  const levelColor = { '大牛':'var(--dn)', '小牛':'var(--teal)', '橫盤':'var(--yellow)', '小熊':'var(--orange)', '大熊':'var(--red)' };
+  list.innerHTML = history.map(h => `
+    <div class="history-item" onclick="loadHistory('${h.date}')">
+      <span class="hi-score" style="color:${levelColor[h.label]||'var(--text3)'}">${h.label} ${h.score}/8</span>
+      <div class="hi-date">${h.date}</div>
+      <div class="hi-summary">${h.text.split('\n').slice(0,3).join(' · ')}</div>
+    </div>`).join('');
+}
+
+function loadHistory(date) {
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  const entry = history.find(h => h.date === date);
+  if (entry) {
+    document.getElementById('daily-output').textContent = entry.text;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  Persistence
+// ══════════════════════════════════════════════════════
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    checks:      state.checks,
+    stockChecks: state.stockChecks,
+    watchlist:   state.watchlist,
+  }));
+}
+
+function loadState() {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  if (saved) {
+    state.checks      = saved.checks      || {};
+    state.stockChecks = saved.stockChecks || {};
+    state.watchlist   = saved.watchlist   || [];
+  }
+}
+
+function resetAll() {
+  if (!confirm('確定要重置今日所有記錄？')) return;
+  state.checks = {};
+  state.stockChecks = {};
+  state.watchlist = [];
+  localStorage.removeItem(STORAGE_KEY);
+  renderScoreRows();
+  updateScore();
+  renderAllCheckItems();
+  renderWatchlist();
+  document.getElementById('stock-code-input').value = '';
+  document.getElementById('stock-result-box').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════
+//  Card toggle
+// ══════════════════════════════════════════════════════
+const cardOpen = { s1:true, s2:true, s3:true, s4:true };
+function toggleCard(id) {
+  cardOpen[id] = !cardOpen[id];
+  document.getElementById(`${id}-body`).style.display = cardOpen[id] ? '' : 'none';
+}
+
+// ══════════════════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════════════════
+document.getElementById('today-label').textContent = `${TODAY} 健檢記錄`;
+
+loadState();
+renderScoreRows();
+updateScore();
+renderAllCheckItems();
+renderWatchlist();
+renderHistory();
+loadData();
+</script>
+</body>
+</html>

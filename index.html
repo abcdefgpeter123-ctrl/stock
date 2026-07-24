@@ -272,7 +272,10 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <h1>台股研究儀表板</h1>
       <div class="sub"><span class="dot"></span>大盤 · 法人進出 · 熱門題材 · 機會點</div>
     </div>
-    <div class="header-right" id="update-time">—</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="health_check.html" style="font-size:12px;color:var(--text3);text-decoration:none;padding:5px 12px;border:1px solid var(--border2);border-radius:6px;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--purple)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='';this.style.borderColor=''">📋 每日健檢</a>
+      <div class="header-right" id="update-time">—</div>
+    </div>
   </div>
 
   <div class="err-bar" id="err-bar"></div>
