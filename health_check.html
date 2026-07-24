@@ -83,32 +83,46 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 
 .strategy-note{font-size:13px;color:var(--text3);margin-top:16px;padding:10px 14px;border-left:3px solid var(--border2);background:var(--bg4);border-radius:0 6px 6px 0}
 
-/* ── STEP 3: Stock check ── */
-.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.check-grid{grid-template-columns:1fr}}
-.check-section h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-weight:500}
-.check-items{display:flex;flex-direction:column;gap:6px}
-.check-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);cursor:pointer;user-select:none;transition:background .12s}
-.check-item:hover{background:rgba(255,255,255,0.04)}
-.check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--purple);cursor:pointer;flex-shrink:0}
-.check-item label{font-size:14px;color:var(--text2);cursor:pointer;flex:1}
-.check-item.checked label{color:var(--text)}
+/* ── STEP 3: Auto scan table ── */
+.scan-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.scan-filter{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border2);cursor:pointer;background:var(--bg3);color:var(--text3);transition:all .15s}
+.scan-filter.active{background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.4);color:var(--purple)}
+.scan-sort{margin-left:auto;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:6px}
+.scan-sort select{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 8px;outline:none;font-family:var(--font);cursor:pointer}
 
-.stock-input-row{display:flex;gap:10px;margin-bottom:16px}
-.stock-input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:15px;color:var(--text);font-family:var(--font);width:100%;outline:none;transition:border-color .15s}
-.stock-input:focus{border-color:var(--purple)}
-.check-btn{padding:10px 18px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);border-radius:8px;color:var(--purple);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;font-family:var(--font)}
-.check-btn:hover{background:rgba(167,139,250,0.25)}
+.scan-table{width:100%;border-collapse:collapse;font-size:13px}
+.scan-table th{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--border2);text-align:center;white-space:nowrap}
+.scan-table th:first-child{text-align:left}
+.scan-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center}
+.scan-table td:first-child{text-align:left}
+.scan-table tr:last-child td{border-bottom:none}
+.scan-table tr:hover td{background:rgba(255,255,255,0.025)}
 
-.stock-result{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;display:none}
-.stock-result-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
-.stock-result-row:last-child{border-bottom:none}
-.stock-result-row .rl{color:var(--text3)}
-.stock-result-row .rv{font-family:var(--mono);font-weight:500}
-.rv.up{color:var(--up)}
-.rv.dn{color:var(--dn)}
-.rv.ok{color:var(--green)}
-.rv.na{color:var(--text3)}
+.sc-name{font-weight:500;color:var(--text)}
+.sc-code{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.sc-theme{font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;display:inline-block;margin-top:2px}
+.sc-price{font-family:var(--mono);font-size:13px}
+.sc-price.up{color:var(--up)}
+.sc-price.dn{color:var(--dn)}
+
+.ind{width:22px;height:22px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.ind-y{background:rgba(34,197,94,0.15);color:var(--dn)}
+.ind-n{background:rgba(239,68,68,0.10);color:var(--up)}
+.ind-u{background:rgba(255,255,255,0.05);color:var(--text3)}
+
+.score-bar-wrap{display:inline-flex;align-items:center;gap:5px}
+.score-bar{height:4px;border-radius:2px;background:var(--border2);width:42px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+
+.wl-btn{padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:var(--font);transition:all .12s;white-space:nowrap}
+.wl-btn:hover{border-color:var(--purple);color:var(--purple)}
+.wl-btn.in-wl{border-color:rgba(167,139,250,0.4);color:var(--purple);background:rgba(167,139,250,0.08)}
+
+.scan-legend{display:flex;gap:14px;font-size:11px;color:var(--text3);margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.scan-legend span{display:flex;align-items:center;gap:4px}
+
+.watchlist-wrap{margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.watchlist-title{font-size:12px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;font-weight:500}
 
 .watchlist-wrap{margin-top:16px}
 .watchlist-title{font-size:12px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;font-weight:500}
@@ -276,42 +290,58 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
   <div class="step-header" onclick="toggleCard('s3')">
     <div class="step-num">3</div>
     <div>
-      <div class="step-title">個股檢查</div>
-      <div class="step-sub">看到股票後，逐項確認</div>
+      <div class="step-title">個股健檢掃描</div>
+      <div class="step-sub">自動比對清單所有股票的技術面與籌碼</div>
     </div>
-    <div class="step-badge" id="s3-badge" style="background:rgba(45,212,191,0.12);color:var(--teal)">0 項勾選</div>
+    <div class="step-badge" id="s3-badge" style="background:rgba(45,212,191,0.12);color:var(--teal)">掃描中…</div>
   </div>
   <div class="step-body" id="s3-body">
 
-    <div class="stock-input-row">
-      <input class="stock-input" id="stock-code-input" type="text" placeholder="輸入股票代號（如 2330）或名稱" oninput="onStockInput(this.value)">
-      <button class="check-btn" onclick="lookupStock()">查</button>
+    <div class="scan-toolbar">
+      <button class="scan-filter active" id="filter-all"    onclick="setScanFilter('all',this)">全部</button>
+      <button class="scan-filter"        id="filter-strong" onclick="setScanFilter('strong',this)">強勢（5MA+20MA）</button>
+      <button class="scan-filter"        id="filter-inst"   onclick="setScanFilter('inst',this)">法人偏多</button>
+      <button class="scan-filter"        id="filter-wl"     onclick="setScanFilter('wl',this)">觀察名單</button>
+      <div class="scan-sort">
+        排序
+        <select id="scan-sort-sel" onchange="renderScanTable()">
+          <option value="score">綜合分</option>
+          <option value="chg">今日漲跌</option>
+          <option value="ma_score">技術面分</option>
+          <option value="inst_score">籌碼分</option>
+        </select>
+      </div>
     </div>
-    <div id="stock-result-box" class="stock-result"></div>
 
-    <div class="check-grid">
-      <div class="check-section">
-        <h4>基本面</h4>
-        <div class="check-items" id="checks-fundamental"></div>
-      </div>
-      <div class="check-section">
-        <h4>技術面</h4>
-        <div class="check-items" id="checks-technical"></div>
-      </div>
-      <div class="check-section">
-        <h4>籌碼（至少兩項偏多）</h4>
-        <div class="check-items" id="checks-chips"></div>
-      </div>
-      <div class="check-section">
-        <h4>題材</h4>
-        <div class="check-items" id="checks-theme"></div>
-      </div>
+    <div class="scan-legend">
+      <span><div class="ind ind-y">✓</div> 達標</span>
+      <span><div class="ind ind-n">✗</div> 不達標</span>
+      <span><div class="ind ind-u">—</div> 無資料</span>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="scan-table">
+        <thead>
+          <tr>
+            <th style="min-width:100px">股票</th>
+            <th>股價</th>
+            <th title="站上5日均線">5MA</th>
+            <th title="站上20日均線">20MA</th>
+            <th title="站上60日均線">60MA</th>
+            <th title="外資5日累計買超">外資</th>
+            <th title="投信5日累計買超">投信</th>
+            <th title="EPS為正">EPS</th>
+            <th>綜合</th>
+            <th>觀察</th>
+          </tr>
+        </thead>
+        <tbody id="scan-tbody"></tbody>
+      </table>
     </div>
 
     <div class="watchlist-wrap">
       <div class="watchlist-title">今日觀察名單</div>
       <div class="watchlist-chips" id="watchlist-chips"></div>
-      <button style="margin-top:10px;padding:6px 14px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);border-radius:6px;color:var(--purple);font-size:13px;cursor:pointer;font-family:var(--font)" onclick="addToWatchlist()">＋ 加入觀察名單</button>
     </div>
   </div>
 </div>
@@ -402,32 +432,40 @@ const HOT_THEMES = ['AI','CoWoS','ASIC','機器人','AI Server','CPO','BBU'];
 
 // State
 let state = {
-  checks: {},   // {id: true/false}
-  stockChecks: {},  // {id: true/false}
-  watchlist: [], // [{code,name}]
-  autoResults: {},  // {id: true/false} from data.json
+  checks: {},
+  watchlist: [],
+  autoResults: {},
 };
 
-let priceData = {};   // code -> {price, ...}
-let histories = {};   // code -> {closes, labels}
-let twiiHistory = null; // {closes, labels}
-let twiiPrice = 0;
+let priceData      = {};
+let histories      = {};
+let instStocksData = {};
+let twiiHistory    = null;
+let twiiPrice      = 0;
 
 // ══════════════════════════════════════════════════════
-//  Load data.json
+//  Load data.json + company_info.json
 // ══════════════════════════════════════════════════════
 async function loadData() {
   try {
-    const res = await fetch('data.json?t=' + Date.now());
-    const d = await res.json();
-    priceData   = d.prices || {};
-    histories   = d.histories || {};
-    twiiHistory = d.twii_history || null;
-    twiiPrice   = d.twii?.price || 0;
+    const [dRes, ciRes] = await Promise.all([
+      fetch('data.json?t=' + Date.now()),
+      fetch('company_info.json?t=' + Date.now()),
+    ]);
+    const d  = await dRes.json();
+    companyInfo = ciRes.ok ? await ciRes.json() : {};
+
+    priceData      = d.prices      || {};
+    histories      = d.histories   || {};
+    instStocksData = d.inst_stocks || {};
+    twiiHistory    = d.twii_history || null;
+    twiiPrice      = d.twii?.price || 0;
 
     computeAutoIndicators();
+    renderScanTable();
   } catch(e) {
-    console.warn('data.json 載入失敗', e);
+    console.warn('資料載入失敗', e);
+    renderScanTable();
   }
 }
 
@@ -533,104 +571,210 @@ function updateScore() {
 }
 
 // ══════════════════════════════════════════════════════
-//  STEP 3: Individual stock checks
+//  STEP 3: Auto scan
 // ══════════════════════════════════════════════════════
-function renderCheckItems(sectionId, items) {
-  const container = document.getElementById(sectionId);
-  container.innerHTML = items.map(item => {
-    const checked = state.stockChecks[item.id] || false;
-    return `
-      <div class="check-item${checked?' checked':''}" onclick="toggleStockCheck('${item.id}',this)">
-        <input type="checkbox" id="sc-${item.id}" ${checked?'checked':''}>
-        <label for="sc-${item.id}">${item.label}</label>
-      </div>`;
+const WATCH_STOCKS = [
+  {code:"2330",name:"台積電",theme:"晶圓代工"},
+  {code:"2303",name:"聯電",theme:"晶圓代工"},
+  {code:"5347",name:"世界先進",theme:"晶圓代工"},
+  {code:"6789",name:"采鈺",theme:"晶圓代工"},
+  {code:"2454",name:"聯發科",theme:"IC設計"},
+  {code:"3661",name:"世芯-KY",theme:"IC設計"},
+  {code:"3034",name:"聯詠",theme:"IC設計"},
+  {code:"2379",name:"瑞昱",theme:"IC設計"},
+  {code:"3443",name:"創意電子",theme:"IC設計"},
+  {code:"3711",name:"日月光投控",theme:"半導體封測"},
+  {code:"2449",name:"京元電",theme:"半導體封測"},
+  {code:"6223",name:"旺矽",theme:"半導體封測"},
+  {code:"6239",name:"力成",theme:"半導體封測"},
+  {code:"3374",name:"精材",theme:"半導體封測"},
+  {code:"2344",name:"華邦電",theme:"記憶體"},
+  {code:"2408",name:"南亞科",theme:"記憶體"},
+  {code:"6488",name:"環球晶",theme:"矽晶圓"},
+  {code:"6182",name:"合晶科技",theme:"矽晶圓"},
+  {code:"3105",name:"穩懋",theme:"化合物半導體"},
+  {code:"2455",name:"全新",theme:"化合物半導體"},
+  {code:"2404",name:"漢唐",theme:"半導體設備"},
+  {code:"3583",name:"辛耘",theme:"半導體設備"},
+  {code:"2383",name:"台光電",theme:"ABF載板"},
+  {code:"3037",name:"欣興",theme:"ABF載板"},
+  {code:"2382",name:"廣達",theme:"AI伺服器"},
+  {code:"6669",name:"緯穎",theme:"AI伺服器"},
+  {code:"2356",name:"英業達",theme:"AI伺服器"},
+  {code:"2376",name:"技嘉",theme:"AI伺服器"},
+  {code:"3231",name:"緯創",theme:"AI伺服器"},
+  {code:"2357",name:"華碩",theme:"AI伺服器"},
+  {code:"2324",name:"仁寶",theme:"AI伺服器"},
+  {code:"2308",name:"台達電",theme:"AI伺服器"},
+  {code:"2317",name:"鴻海",theme:"AI伺服器"},
+  {code:"2301",name:"光寶科",theme:"AI伺服器"},
+  {code:"2059",name:"川湖",theme:"AI伺服器"},
+  {code:"3017",name:"奇鋐",theme:"液冷散熱"},
+  {code:"8996",name:"高力",theme:"液冷散熱"},
+  {code:"2345",name:"智邦",theme:"網通"},
+  {code:"4906",name:"正文",theme:"網通"},
+  {code:"3481",name:"群創",theme:"面板"},
+  {code:"2409",name:"友達",theme:"面板"},
+  {code:"2603",name:"長榮",theme:"海運"},
+  {code:"2609",name:"陽明",theme:"海運"},
+  {code:"2618",name:"長榮航",theme:"航空"},
+  {code:"2610",name:"華航",theme:"航空"},
+  {code:"2002",name:"中鋼",theme:"傳產"},
+  {code:"6505",name:"台塑化",theme:"傳產"},
+  {code:"1101",name:"台泥",theme:"傳產"},
+  {code:"1301",name:"台塑",theme:"傳產"},
+  {code:"2412",name:"中華電",theme:"電信"},
+  {code:"4904",name:"遠傳",theme:"電信"},
+  {code:"2881",name:"富邦金",theme:"金融"},
+  {code:"2882",name:"國泰金",theme:"金融"},
+  {code:"2891",name:"中信金",theme:"金融"},
+  {code:"2885",name:"元大金",theme:"金融"},
+  {code:"3008",name:"大立光",theme:"光學"},
+  {code:"3484",name:"亞光",theme:"光學"},
+  {code:"2327",name:"國巨",theme:"被動元件"},
+  {code:"2492",name:"華新科",theme:"被動元件"},
+  {code:"2472",name:"立隆電",theme:"被動元件"},
+];
+
+let scanFilter = 'all';
+let companyInfo = {};  // from company_info.json
+
+// Compute per-stock scan results
+function computeScanResults() {
+  return WATCH_STOCKS.map(s => {
+    const p  = priceData[s.code];
+    const h  = histories[s.code];
+    const is = instStocksData[s.code];
+    const ci = companyInfo[s.code];
+    const closes = h?.closes;
+    const price  = p?.price;
+
+    const ma5v  = closes?.length >= 5  ? ma(closes, 5)  : null;
+    const ma20v = closes?.length >= 20 ? ma(closes, 20) : null;
+    const ma60v = closes?.length >= 60 ? ma(closes, 60) : null;
+
+    const above5  = price && ma5v  != null ? price > ma5v  : null;
+    const above20 = price && ma20v != null ? price > ma20v : null;
+    const above60 = price && ma60v != null ? price > ma60v : null;
+    const fBull   = is ? is.f > 0 : null;
+    const tBull   = is ? is.t > 0 : null;
+    const epsOk   = ci?.eps != null ? ci.eps > 0 : null;
+
+    const techScore = [above5, above20, above60].filter(v => v === true).length;
+    const instScore = [fBull, tBull].filter(v => v === true).length;
+    const score = techScore + instScore + (epsOk ? 1 : 0);
+
+    return {
+      ...s,
+      price, changeP: p?.changeP,
+      above5, above20, above60,
+      fBull, tBull, epsOk,
+      techScore, instScore, score,
+      ma5v, ma20v, ma60v,
+    };
+  });
+}
+
+function ind(val) {
+  if (val === true)  return '<div class="ind ind-y">✓</div>';
+  if (val === false) return '<div class="ind ind-n">✗</div>';
+  return '<div class="ind ind-u">—</div>';
+}
+
+function scoreColor(s, max) {
+  const pct = s / max;
+  if (pct >= 0.75) return '#22c55e';
+  if (pct >= 0.5)  return '#fbbf24';
+  if (pct >= 0.25) return '#fb923c';
+  return '#ef4444';
+}
+
+function setScanFilter(f, btn) {
+  scanFilter = f;
+  document.querySelectorAll('.scan-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderScanTable();
+}
+
+function renderScanTable() {
+  const results = computeScanResults();
+  const sortBy  = document.getElementById('scan-sort-sel').value;
+
+  // Filter
+  let rows = results.filter(r => {
+    if (scanFilter === 'strong') return r.above5 && r.above20;
+    if (scanFilter === 'inst')   return r.fBull === true || r.tBull === true;
+    if (scanFilter === 'wl')     return state.watchlist.find(w => w.code === r.code);
+    return true;
+  });
+
+  // Sort
+  rows.sort((a,b) => {
+    if (sortBy === 'chg')       return (b.changeP || -999) - (a.changeP || -999);
+    if (sortBy === 'ma_score')  return b.techScore - a.techScore;
+    if (sortBy === 'inst_score')return b.instScore - a.instScore;
+    return b.score - a.score;
+  });
+
+  const MAX_SCORE = 6;  // 3 tech + 2 inst + 1 eps
+  const tbody = document.getElementById('scan-tbody');
+
+  tbody.innerHTML = rows.map(r => {
+    const inWl  = !!state.watchlist.find(w => w.code === r.code);
+    const priceTxt = r.price ? r.price.toLocaleString() : '—';
+    const chgTxt   = r.changeP != null
+      ? `<span style="font-size:11px;color:${r.changeP>=0?'var(--up)':'var(--dn)'}">${r.changeP>=0?'+':''}${r.changeP.toFixed(2)}%</span>`
+      : '';
+    const fillPct  = Math.round(r.score / MAX_SCORE * 100);
+    const fillColor = scoreColor(r.score, MAX_SCORE);
+
+    return `<tr>
+      <td>
+        <div class="sc-name">${r.name}</div>
+        <div class="sc-code">${r.code} <span class="sc-theme">${r.theme}</span></div>
+      </td>
+      <td><div class="sc-price${r.changeP>=0?' up':' dn'}">${priceTxt}</div>${chgTxt}</td>
+      <td>${ind(r.above5)}</td>
+      <td>${ind(r.above20)}</td>
+      <td>${ind(r.above60)}</td>
+      <td>${ind(r.fBull)}</td>
+      <td>${ind(r.tBull)}</td>
+      <td>${ind(r.epsOk)}</td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar"><div class="score-bar-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
+          <span style="font-size:12px;font-family:var(--mono);color:${fillColor}">${r.score}</span>
+        </div>
+      </td>
+      <td><button class="wl-btn${inWl?' in-wl':''}" onclick="toggleWatchlist('${r.code}','${r.name}',this)">${inWl?'已加入':'＋'}</button></td>
+    </tr>`;
   }).join('');
+
+  const passCount = rows.filter(r => r.score >= 4).length;
+  document.getElementById('s3-badge').textContent = `${rows.length} 支 · ${passCount} 支達標`;
 }
 
-function renderAllCheckItems() {
-  renderCheckItems('checks-fundamental', CHECKS.fundamental);
-  renderCheckItems('checks-technical', CHECKS.technical);
-  renderCheckItems('checks-chips', CHECKS.chips);
-  renderCheckItems('checks-theme', CHECKS.theme);
-  updateS3Badge();
-}
-
-function toggleStockCheck(id, row) {
-  state.stockChecks[id] = !state.stockChecks[id];
-  row.classList.toggle('checked', state.stockChecks[id]);
-  row.querySelector('input').checked = state.stockChecks[id];
-  updateS3Badge();
+function toggleWatchlist(code, name, btn) {
+  const idx = state.watchlist.findIndex(w => w.code === code);
+  if (idx >= 0) {
+    state.watchlist.splice(idx, 1);
+    btn.textContent = '＋';
+    btn.classList.remove('in-wl');
+  } else {
+    state.watchlist.push({ code, name });
+    btn.textContent = '已加入';
+    btn.classList.add('in-wl');
+  }
+  renderWatchlist();
   updateOutput();
   saveState();
-}
-
-function updateS3Badge() {
-  const total = Object.values(state.stockChecks).filter(Boolean).length;
-  document.getElementById('s3-badge').textContent = `${total} 項勾選`;
-}
-
-// Stock lookup from data.json
-function onStockInput(val) {
-  if (!val) document.getElementById('stock-result-box').style.display = 'none';
-}
-
-function lookupStock() {
-  const raw = document.getElementById('stock-code-input').value.trim();
-  const box  = document.getElementById('stock-result-box');
-
-  // Find by code or name
-  const code = Object.keys(priceData).find(c =>
-    c === raw || (priceData[c].name && priceData[c].name.includes(raw))
-  ) || raw;
-
-  const p = priceData[code];
-  if (!p) {
-    box.innerHTML = `<div style="font-size:13px;color:var(--text3);padding:4px">查無此股票（代號：${code}）</div>`;
-    box.style.display = 'block';
-    return;
-  }
-
-  const h = histories[code];
-  const closes = h?.closes;
-  const ma5v  = closes ? ma(closes, 5)  : null;
-  const ma20v = closes ? ma(closes, 20) : null;
-  const ma60v = closes ? ma(closes, 60) : null;
-  const price = p.price;
-
-  const fmt = v => v ? v.toFixed(1) : '—';
-  const cmp = (price, mav) => {
-    if (!mav) return ['—','na'];
-    return price > mav
-      ? [`↑ ${fmt(mav)} (上方)`, 'ok']
-      : [`↓ ${fmt(mav)} (下方)`, 'up'];
-  };
-  const [ma5t, ma5c]   = cmp(price, ma5v);
-  const [ma20t, ma20c] = cmp(price, ma20v);
-  const [ma60t, ma60c] = cmp(price, ma60v);
-
-  // Auto-fill technical checks
-  if (ma5v  !== null) { state.stockChecks.ma5  = price > ma5v;  }
-  if (ma20v !== null) { state.stockChecks.ma20 = price > ma20v; }
-  if (ma60v !== null) { state.stockChecks.ma60 = price > ma60v; }
-  renderAllCheckItems();
-
-  const chgClass = p.changeP >= 0 ? 'up' : 'dn';
-
-  box.innerHTML = `
-    <div class="stock-result-row"><span class="rl">名稱</span><span class="rv">${p.name}（${code}）</span></div>
-    <div class="stock-result-row"><span class="rl">股價</span><span class="rv ${chgClass}">${price} （${p.changeP >= 0?'+':''}${p.changeP?.toFixed(2)}%）</span></div>
-    <div class="stock-result-row"><span class="rl">5MA</span><span class="rv ${ma5c}">${ma5t}</span></div>
-    <div class="stock-result-row"><span class="rl">20MA</span><span class="rv ${ma20c}">${ma20t}</span></div>
-    <div class="stock-result-row"><span class="rl">60MA</span><span class="rv ${ma60c}">${ma60t}</span></div>
-  `;
-  box.style.display = 'block';
 }
 
 // Watchlist
 function renderWatchlist() {
   const chips = document.getElementById('watchlist-chips');
   if (!state.watchlist.length) {
-    chips.innerHTML = '<span style="font-size:13px;color:var(--text3)">（尚無）</span>';
+    chips.innerHTML = '<span style="font-size:13px;color:var(--text3)">（尚無，從上方表格加入）</span>';
     return;
   }
   chips.innerHTML = state.watchlist.map((s,i) => `
@@ -641,82 +785,61 @@ function renderWatchlist() {
     </div>`).join('');
 }
 
-function addToWatchlist() {
-  const raw = document.getElementById('stock-code-input').value.trim();
-  if (!raw) return;
-  const code = Object.keys(priceData).find(c =>
-    c === raw || (priceData[c].name && priceData[c].name.includes(raw))
-  ) || raw;
-  const name = priceData[code]?.name || raw;
-  if (!state.watchlist.find(s => s.code === code)) {
-    state.watchlist.push({ code, name });
-    renderWatchlist();
-    updateOutput();
-    saveState();
-  }
-}
-
 function removeFromWatchlist(i) {
   state.watchlist.splice(i, 1);
   renderWatchlist();
+  renderScanTable();
   updateOutput();
   saveState();
 }
+
+function updateS3Badge() { /* handled by renderScanTable */ }
 
 // ══════════════════════════════════════════════════════
 //  STEP 4: Output
 // ══════════════════════════════════════════════════════
 function updateOutput() {
-  const score  = getScore();
-  const level  = MARKET_LEVELS.find(l => score >= l.min) || MARKET_LEVELS[MARKET_LEVELS.length-1];
-  const stockEl = document.getElementById('stock-code-input').value.trim();
-  const stockName = stockEl
-    ? (priceData[stockEl]?.name || stockEl)
-    : '';
+  const score = getScore();
+  const level = MARKET_LEVELS.find(l => score >= l.min) || MARKET_LEVELS[MARKET_LEVELS.length-1];
 
-  const checkedFund  = CHECKS.fundamental.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
-  const checkedTech  = CHECKS.technical.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
-  const checkedChips = CHECKS.chips.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
-  const checkedTheme = CHECKS.theme.filter(c => state.stockChecks[c.id]).map(c => `✔ ${c.label}`);
+  const stratEl  = document.getElementById(`strat-${level.strat}`);
+  const allChips = stratEl ? [...stratEl.querySelectorAll('.theme-chip')].map(el => el.textContent) : [];
+  const buyPts   = stratEl ? [...stratEl.querySelectorAll('.buy-point .text')].map(el => el.childNodes[0].textContent.trim()) : [];
 
-  // Hot themes from STEP2
-  const stratId = `strat-${level.strat}`;
-  const stratEl = document.getElementById(stratId);
-  const hotChips = stratEl
-    ? [...stratEl.querySelectorAll('.theme-chip.hot')].map(el => `✔ ${el.textContent}`)
-    : [...stratEl?.querySelectorAll('.theme-chip') || []].map(el => `✔ ${el.textContent}`);
-  const allChips = stratEl
-    ? [...stratEl.querySelectorAll('.theme-chip')].map(el => `✔ ${el.textContent}`)
-    : [];
-
-  const buyPts = stratEl
-    ? [...stratEl.querySelectorAll('.buy-point .text')].map(el => `✔ ${el.childNodes[0].textContent.trim()}`)
-    : [];
+  // Top stocks from scan (score >= 4)
+  const scanTop = computeScanResults()
+    .filter(r => r.score >= 4)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 8);
 
   const wl = state.watchlist.length
     ? state.watchlist.map(s => `  ${s.name}（${s.code}）`).join('\n')
     : '  （尚未加入）';
 
   let text = `今日市場：${level.label}\n`;
-  text += `市場分數：${score}/8\n`;
-  text += `\n`;
+  text += `市場分數：${score}/8\n\n`;
 
   if (allChips.length) {
     text += `熱門族群：\n`;
-    allChips.forEach(c => text += `  ${c}\n`);
+    allChips.forEach(c => text += `  ✔ ${c}\n`);
     text += `\n`;
   }
 
   if (buyPts.length) {
     text += `今日策略：\n`;
-    buyPts.forEach(b => text += `  ${b}\n`);
+    buyPts.forEach(b => text += `  ✔ ${b}\n`);
     text += `\n`;
   }
 
-  if (stockName) {
-    text += `個股檢查：${stockName}\n`;
-    const allChecked = [...checkedFund,...checkedTech,...checkedChips,...checkedTheme];
-    if (allChecked.length) allChecked.forEach(c => text += `  ${c}\n`);
+  if (scanTop.length) {
+    text += `技術面達標個股（≥4分）：\n`;
+    scanTop.forEach(r => {
+      const flags = [
+        r.above5 ? '5MA↑':null, r.above20 ? '20MA↑':null,
+        r.above60 ? '60MA↑':null, r.fBull ? '外資+':null, r.tBull ? '投信+':null,
+      ].filter(Boolean).join(' ');
+      text += `  ${r.name}（${r.code}）${r.score}分  ${flags}\n`;
+    });
     text += `\n`;
   }
 
@@ -785,33 +908,28 @@ function loadHistory(date) {
 // ══════════════════════════════════════════════════════
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    checks:      state.checks,
-    stockChecks: state.stockChecks,
-    watchlist:   state.watchlist,
+    checks:    state.checks,
+    watchlist: state.watchlist,
   }));
 }
 
 function loadState() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   if (saved) {
-    state.checks      = saved.checks      || {};
-    state.stockChecks = saved.stockChecks || {};
-    state.watchlist   = saved.watchlist   || [];
+    state.checks    = saved.checks    || {};
+    state.watchlist = saved.watchlist || [];
   }
 }
 
 function resetAll() {
   if (!confirm('確定要重置今日所有記錄？')) return;
-  state.checks = {};
-  state.stockChecks = {};
+  state.checks    = {};
   state.watchlist = [];
   localStorage.removeItem(STORAGE_KEY);
   renderScoreRows();
   updateScore();
-  renderAllCheckItems();
+  renderScanTable();
   renderWatchlist();
-  document.getElementById('stock-code-input').value = '';
-  document.getElementById('stock-result-box').style.display = 'none';
 }
 
 // ══════════════════════════════════════════════════════
@@ -831,7 +949,7 @@ document.getElementById('today-label').textContent = `${TODAY} 健檢記錄`;
 loadState();
 renderScoreRows();
 updateScore();
-renderAllCheckItems();
+renderScanTable();
 renderWatchlist();
 renderHistory();
 loadData();
