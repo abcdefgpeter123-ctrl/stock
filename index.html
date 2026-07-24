@@ -2496,6 +2496,7 @@ async function loadData(){
       priceCache = data.prices;
       nameCache = {};
       Object.entries(priceCache).forEach(([c,p]) => { if(p.name) nameCache[c] = p.name.replace(/\*/g,"").trim(); });
+      STOCKS.forEach(s => { if(s.name && !nameCache[s.code]) nameCache[s.code] = s.name; });
     }
     if(data.opportunities){
       opps = data.opportunities;
