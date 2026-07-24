@@ -80,8 +80,9 @@ def calc_tw(data):
         labels = h.get("labels", [])
         if not price or not closes:
             continue
-        prev   = closes[-1]
-        chg_d  = (price - prev) / prev * 100
+        chg_d  = p.get("changeP") if p.get("changeP") is not None else (
+            ((price / closes[-2]) - 1) * 100 if len(closes) >= 2 else 0
+        )
         chg_w  = ((price / closes[-6])  - 1) * 100 if len(closes) >= 6  else None
         chg_m  = ((price / closes[-22]) - 1) * 100 if len(closes) >= 22 else None
         ytd_p  = next(
