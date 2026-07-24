@@ -2498,6 +2498,9 @@ async function loadData(){
       nameCache = {};
       Object.entries(priceCache).forEach(([c,p]) => { if(p.name) nameCache[c] = p.name.replace(/\*/g,"").trim(); });
       STOCKS.forEach(s => { if(s.name && !nameCache[s.code]) nameCache[s.code] = s.name; });
+      // 補充不在 STOCKS 但有分析師目標的股票名稱
+      const EXTRA_NAMES = {"2880":"華南金","2881":"富邦金","2882":"國泰金","2883":"開發金","2884":"玉山金","2885":"元大金","2886":"兆豐金","2887":"台新金","2888":"新光金","2889":"國票金","2890":"永豐金","2891":"中信金","2892":"第一金","1101":"台泥","1301":"台塑","1303":"南亞","2002":"中鋼","2412":"中華電","3008":"大立光","2207":"和泰車","2912":"統一超","1216":"統一"};
+      Object.entries(EXTRA_NAMES).forEach(([c,n]) => { if(!nameCache[c]) nameCache[c] = n; });
     }
     if(data.opportunities){
       opps = data.opportunities;
