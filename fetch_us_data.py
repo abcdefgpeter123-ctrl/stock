@@ -212,6 +212,63 @@ def fetch_etf_holdings():
     return etf_info
 
 
+def fetch_analyst_targets(codes):
+    """
+    抓美股分析師共識目標價 + 近 180 天券商評等異動（美股資料完整，含真實機構名稱）。
+    回傳 {code: {mean, high, low, count, rec, rec_mean, updated, ratings}}。
+    """
+    import math
+    result = {}
+    cutoff = (datetime.date.today() - datetime.timedelta(days=180)).isoformat()
+    print(f"   🎯 抓取 {len(codes)} 支分析師目標價...")
+    for code in codes:
+        try:
+            t = yf.Ticker(code)
+            info = t.info
+            mean = info.get("targetMeanPrice")
+            high = info.get("targetHighPrice")
+            low  = info.get("targetLowPrice")
+            cnt  = info.get("numberOfAnalystOpinions")
+            rec  = info.get("recommendationKey", "")
+            rec_m = info.get("recommendationMean")
+            if mean and not (isinstance(mean, float) and math.isnan(mean)):
+                entry = {
+                    "mean":  round(float(mean), 2),
+                    "high":  round(float(high), 2) if high else None,
+                    "low":   round(float(low),  2) if low  else None,
+                    "count": int(cnt) if cnt else 0,
+                    "rec":   rec.lower() if rec else "",
+                    "rec_mean": round(float(rec_m), 2) if rec_m else None,
+                    "updated": datetime.date.today().strftime("%Y/%m/%d"),
+                }
+                # 券商評等異動（近 180 天，美股有真實機構名稱）
+                try:
+                    df = t.get_upgrades_downgrades()
+                    if df is not None and not df.empty:
+                        df = df.reset_index()
+                        date_col = "GradeDate" if "GradeDate" in df.columns else df.columns[0]
+                        df["_date"] = df[date_col].astype(str).str[:10]
+                        df = df[df["_date"] >= cutoff].sort_values("_date", ascending=False)
+                        ratings = []
+                        for _, row in df.head(10).iterrows():
+                            ratings.append({
+                                "date":   row["_date"],
+                                "firm":   str(row.get("Firm", row.get("firm", ""))),
+                                "to":     str(row.get("ToGrade", row.get("toGrade", ""))),
+                                "from":   str(row.get("FromGrade", row.get("fromGrade", ""))),
+                                "action": str(row.get("Action", row.get("action", ""))),
+                            })
+                        entry["ratings"] = ratings
+                except Exception:
+                    pass
+                result[code] = entry
+        except Exception as e:
+            print(f"   ⚠️ {code} 目標價: {e}")
+        time.sleep(0.2)
+    print(f"   ✅ 取得 {len(result)} 支目標價")
+    return result
+
+
 def _sanitize_nan(obj):
     """遞迴將 NaN/Infinity 換成 None，避免寫出非合法 JSON（前端 JSON.parse 會整包失敗）。"""
     if isinstance(obj, float):
@@ -308,6 +365,31 @@ def main():
     etf_holdings = fetch_etf_holdings()
     data["etf_holdings"] = etf_holdings
     print(f"   ✅ {len(etf_holdings)} 檔 ETF")
+
+    # 7. 分析師共識目標價 + 評等異動
+    print("🎯 分析師目標價追蹤...")
+    prev_targets = data.get("analyst_targets", {})
+    new_targets  = fetch_analyst_targets(codes)
+    today_str = datetime.datetime.now().strftime("%Y/%m/%d")
+    for code, tval in new_targets.items():
+        prev = prev_targets.get(code, {})
+        prev_mean = prev.get("mean")
+        if prev_mean and tval["mean"] != prev_mean and prev.get("updated") != today_str:
+            tval["prev_mean"]   = prev_mean
+            tval["mean_change"] = round(tval["mean"] - prev_mean, 2)
+        else:
+            tval["prev_mean"]   = prev.get("prev_mean", prev_mean)
+            tval["mean_change"] = prev.get("mean_change", 0)
+        # 保留歷史趨勢（最近30天每日快照）
+        history = prev.get("history", [])
+        if not history or history[-1].get("date") != today_str:
+            if prev_mean:
+                history.append({"date": today_str, "mean": tval["mean"]})
+            history = history[-30:]
+        tval["history"] = history
+    # 與舊資料合併：單支股票這次抓取失敗時保留昨天資料，避免整批消失
+    data["analyst_targets"] = {**prev_targets, **new_targets}
+    print(f"   ✅ {len(new_targets)} 支目標價已更新")
 
     # 6. 更新時間
     data["updated_at"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")

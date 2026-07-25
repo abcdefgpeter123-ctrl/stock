@@ -66,6 +66,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .fav-btn.active{color:#fbbf24}
 .fav-section{margin-bottom:24px}
 .fav-empty{padding:20px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg2);border:1px dashed var(--border);border-radius:var(--r)}
+.targets-section{margin-bottom:24px}
+.tp-period{font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;font-family:var(--font)}
+.tp-period:hover{border-color:var(--border2);color:var(--text2)}
+.tp-period.active{background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,.35)}
+.target-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s}
+.target-card:hover{border-color:var(--border2)}
 .etf-section{margin-bottom:24px}
 .etf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:10px}
 .etf-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:all .15s}
@@ -233,6 +239,19 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="fav-section">
     <div class="sec-hd">⭐ 我的最愛<span class="src-tag">點愛心 ☆ 加入/移除</span></div>
     <div id="fav-content"></div>
+  </div>
+
+  <!-- 法人目標價追蹤 -->
+  <div class="targets-section">
+    <div class="sec-hd">🎯 法人目標價追蹤<span class="src-tag">Yahoo Finance 每日同步</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:11px;color:var(--text3)">排序：</span>
+      <button class="tp-period active" id="us-tsort-upside" onclick="setUsTargetSort('upside',this)">上漲空間</button>
+      <button class="tp-period" id="us-tsort-raised" onclick="setUsTargetSort('raised',this)">目標上調</button>
+      <button class="tp-period" id="us-tsort-count" onclick="setUsTargetSort('count',this)">分析師人數</button>
+      <button class="tp-period" id="us-tsort-rec" onclick="setUsTargetSort('rec',this)">評等強弱</button>
+    </div>
+    <div id="us-analyst-targets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
   </div>
 
   <!-- ETF -->
@@ -430,6 +449,19 @@ let _tpCharts   = {};
 let _maActive   = {};
 let activeThemePeriod = "p1";
 const nameMap   = Object.fromEntries(STOCKS.map(s=>[s.code, s.name]));
+let analystTargets  = {};   // 分析師共識目標價 {code: {mean,high,low,count,rec,ratings,...}}
+let usTargetSortMode = "upside";
+
+const REC_LABEL = {
+  "strongbuy":"強力買進","strong_buy":"強力買進","buy":"買進","outperform":"優於大盤",
+  "overweight":"加碼","accumulate":"積極買進","hold":"持有",
+  "neutral":"中立","underperform":"劣於大盤","underweight":"減碼","sell":"賣出",
+};
+const REC_COLOR = {
+  "strongbuy":"#4ade80","strong_buy":"#4ade80","buy":"#4ade80","outperform":"#86efac","overweight":"#86efac","accumulate":"#86efac",
+  "hold":"#facc15","neutral":"#facc15",
+  "underperform":"#f87171","underweight":"#f87171","sell":"#f87171",
+};
 
 // ── 題材回顧 ──────────────────────────────────────────────
 let expandedThemeCard = null;
@@ -611,6 +643,93 @@ function renderETFs(){
 }
 
 // ── 我的最愛渲染 ─────────────────────────────────────────
+// ── 法人目標價追蹤 ────────────────────────────────────────
+function setUsTargetSort(mode, btn){
+  usTargetSortMode = mode;
+  document.querySelectorAll('[id^="us-tsort-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalystTargets();
+}
+
+function renderAnalystTargets(){
+  const grid = document.getElementById("us-analyst-targets-grid");
+  if(!grid) return;
+
+  let cards = Object.entries(analystTargets).map(([code, at]) => {
+    const price = (priceCache[code]||{}).price || 0;
+    const name  = (priceCache[code]||{}).name || nameMap[code] || code;
+    const mean  = at.mean || 0;
+    const upside = mean && price ? ((mean - price) / price * 100) : null;
+    return { code, name, at, price, mean, upside };
+  }).filter(c => c.mean > 0);
+
+  if(usTargetSortMode === "upside"){
+    cards.sort((a,b)=>(b.upside??-999)-(a.upside??-999));
+  } else if(usTargetSortMode === "raised"){
+    cards.sort((a,b)=>(b.at.mean_change||0)-(a.at.mean_change||0));
+  } else if(usTargetSortMode === "count"){
+    cards.sort((a,b)=>(b.at.count||0)-(a.at.count||0));
+  } else if(usTargetSortMode === "rec"){
+    cards.sort((a,b)=>(a.at.rec_mean||3)-(b.at.rec_mean||3));
+  }
+
+  if(!cards.length){
+    grid.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:16px">Actions 跑完後自動填入（需等今日排程）</div>`;
+    return;
+  }
+
+  grid.innerHTML = cards.map(({code, name, at, price, mean, upside}) => {
+    const upsideStr = upside!=null ? `${upside>=0?"+":""}${upside.toFixed(1)}%` : "—";
+    const upsideColor = upside==null?"var(--text3)":upside>=10?"#4ade80":upside>=0?"#facc15":"#f87171";
+    const recLabel = REC_LABEL[at.rec] || at.rec || "—";
+    const recColor = REC_COLOR[at.rec] || "var(--text3)";
+    const changeTag = at.mean_change
+      ? `<span style="font-size:10px;background:${at.mean_change>0?"rgba(74,222,128,0.12)":"rgba(248,113,113,0.12)"};color:${at.mean_change>0?"#4ade80":"#f87171"};border-radius:3px;padding:1px 5px;margin-left:4px">${at.mean_change>0?"+":""}${at.mean_change}</span>`
+      : "";
+    const histTrend = (at.history||[]).length>=2
+      ? (()=>{ const h=at.history; const diff=h[h.length-1].mean-h[0].mean;
+          return diff>0 ? `<span style="font-size:10px;color:#4ade80">▲ 近${h.length}日 +${diff.toFixed(1)}</span>`
+               : diff<0 ? `<span style="font-size:10px;color:#f87171">▼ 近${h.length}日 ${diff.toFixed(1)}</span>`
+               : `<span style="font-size:10px;color:var(--text3)">近${h.length}日持平</span>`;
+        })()
+      : `<span style="font-size:10px;color:var(--text3)">追蹤首日</span>`;
+
+    const ratingsHtml = (at.ratings||[]).length
+      ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.04em">近期券商評等</div>
+          ${(at.ratings).slice(0,5).map(r=>`
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0">
+              <span style="color:var(--text3);font-family:var(--mono)">${r.date.slice(5)}</span>
+              <span style="color:var(--text2)">${r.firm}</span>
+              <span style="color:${r.action==='up'||r.action==='upgrade'?'#4ade80':r.action==='down'||r.action==='downgrade'?'#f87171':'var(--text3)'}">${r.to||r.from||''}</span>
+            </div>`).join("")}
+        </div>`
+      : "";
+
+    return `<div class="target-card" onclick="toggleStockDetail('${code}','fav')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${code}</span>
+        <span style="font-size:11px;color:${recColor};background:${recColor}22;padding:1px 7px;border-radius:10px">${recLabel}</span>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">${name}</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+        <span style="font-size:18px;font-weight:700;color:${upsideColor};font-family:var(--mono)">${upsideStr}</span>
+        <span style="font-size:11px;color:var(--text3)">上漲空間</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">
+        目標均價 <span style="color:var(--text2)">$${mean.toFixed(2)}</span>${changeTag}
+        　現價 <span style="color:var(--text)">${price>0?"$"+price.toFixed(2):"—"}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:2px">
+        ${at.count?`${at.count} 位分析師`:""}
+        ${at.high?`　H $${at.high.toFixed(0)} / L $${(at.low||0).toFixed(0)}`:""}
+        　${histTrend}
+      </div>
+      ${ratingsHtml}
+    </div>`;
+  }).join("");
+}
+
 function renderFavorites(){
   const favs = getFavs();
   const container = document.getElementById("fav-content");
@@ -941,6 +1060,7 @@ async function loadData(){
     priceCache = data.prices||{};
     histories  = data.histories||{};
     instData   = data.inst_data||{};
+    analystTargets = data.analyst_targets||{};
 
     // 更新 ETF 持股（若有動態資料）
     if(data.etf_holdings){
@@ -968,6 +1088,7 @@ async function loadData(){
     renderThemeRecap();
     updateMarket(data);
     renderETFs();
+    renderAnalystTargets();
     renderFavorites();
     render();
 
