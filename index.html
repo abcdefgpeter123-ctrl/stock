@@ -382,7 +382,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <circle cx="190" cy="170" r="90" class="venn-circle venn-c"/>
       <text x="150" y="30" class="venn-set-label">① 突破均線</text>
       <text x="55"  y="252" class="venn-set-label">② 目標價上漲</text>
-      <text x="245" y="252" class="venn-set-label">③ 題材落後</text>
+      <text x="245" y="252" class="venn-set-label" style="cursor:help">③ 題材補漲<title>整體題材已漲，該個股屬於此題材但股價尚未反應</title></text>
       <text id="venn-count-a"   x="150" y="55"  class="venn-count">0</text>
       <text id="venn-count-b"   x="88"  y="205" class="venn-count">0</text>
       <text id="venn-count-c"   x="212" y="205" class="venn-count">0</text>
@@ -846,7 +846,7 @@ function renderMarketSummary() {
   }
   const show = opps.slice(0, 8);
   row.innerHTML =
-    `<span style="font-size:12px;color:var(--text3);white-space:nowrap">③ 題材已漲，個股未反應：</span>` +
+    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲，該個股屬於此題材但股價尚未反應">③ 題材補漲：</span>` +
     show.map(o => {
       const d = priceCache[o.code];
       const chgTxt = d ? `<span style="color:${d.change>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.change>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
@@ -1015,11 +1015,11 @@ function renderOppVenn() {
   const LABELS = {
     abc: "🏆 三項全中（強力訊號）",
     ab:  "① 突破均線 ＋ ② 目標價上漲",
-    ac:  "① 突破均線 ＋ ③ 題材落後",
-    bc:  "② 目標價上漲 ＋ ③ 題材落後",
+    ac:  "① 突破均線 ＋ ③ 題材補漲",
+    bc:  "② 目標價上漲 ＋ ③ 題材補漲",
     a:   "僅 ① 突破均線",
     b:   "僅 ② 目標價上漲空間",
-    c:   "僅 ③ 題材落後補漲",
+    c:   "僅 ③ 題材補漲",
   };
   const order = ["abc", "ab", "ac", "bc", "a", "b", "c"];
 
@@ -1033,8 +1033,10 @@ function renderOppVenn() {
     const chips = buckets[k].map(it =>
       `<span class="opp-chip" onclick="toggleStock('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
     ).join("");
+    const hasC = k.includes("c") || k === "abc";
+    const titleAttr = hasC ? ` title="③ 題材補漲：整體題材已漲，該個股屬於此題材但股價尚未反應" style="cursor:help"` : "";
     return `<div>
-      <div class="venn-bucket-hd">${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
+      <div class="venn-bucket-hd"${titleAttr}>${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
       <div class="venn-bucket-chips">${chips}</div>
     </div>`;
   }).join("");
