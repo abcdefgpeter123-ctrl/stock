@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>問題留言板 · 台股儀表板</title>
+<style>
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2233;
+  --border:rgba(96,165,250,0.18);--border2:rgba(96,165,250,0.3);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --accent:#60a5fa;--up:#4ade80;--dn:#f87171;--warn:#fb923c;
+  --font:'Noto Sans TC',sans-serif;--mono:'JetBrains Mono','Fira Mono',monospace;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;font-size:14px;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.page{max-width:900px;margin:0 auto;padding:28px 16px 80px}
+
+nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
+.nav-a{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:13px;text-decoration:none;
+  background:var(--bg2);border:1px solid var(--border);color:var(--text3);transition:all .15s}
+.nav-a:hover{color:var(--accent);border-color:var(--accent);text-decoration:none}
+.nav-a.active{background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.4);color:var(--accent);font-weight:500}
+
+.page-hd{margin-bottom:28px}
+.page-hd h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.page-hd p{font-size:13px;color:var(--text3)}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px}
+
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;letter-spacing:.03em}
+.form-row input,.form-row select,.form-row textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  color:var(--text);font-size:14px;padding:9px 12px;font-family:var(--font);outline:none;
+  transition:border-color .15s;
+}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent)}
+.form-row textarea{min-height:90px;resize:vertical}
+.form-row select option{background:var(--bg3)}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:540px){.form-grid{grid-template-columns:1fr}}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--font)}
+.btn-primary{background:var(--accent);color:#0b0f1a}
+.btn-primary:hover{background:#93c5fd}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-danger{background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);color:#f87171}
+.btn-danger:hover{background:rgba(248,113,113,0.2)}
+
+.form-actions{display:flex;gap:10px;align-items:center;margin-top:6px}
+.submit-msg{font-size:12px;color:var(--up)}
+
+/* issue list */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar h2{font-size:15px;font-weight:600;color:var(--text);flex:1}
+.filter-tabs{display:flex;gap:4px}
+.ftab{padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all .15s}
+.ftab.active{background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.35);color:var(--accent)}
+
+.issue-list{display:flex;flex-direction:column;gap:10px}
+.issue-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;transition:border-color .15s}
+.issue-card:hover{border-color:var(--border2)}
+.issue-card.done{opacity:.55}
+.issue-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;letter-spacing:.03em}
+.badge-bug{background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.25)}
+.badge-suggest{background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.25)}
+.badge-data{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25)}
+.badge-other{background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)}
+.badge-done{background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.2)}
+.issue-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.issue-body{font-size:13px;color:var(--text2);white-space:pre-wrap;word-break:break-all}
+.issue-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px}
+.issue-from{font-size:11px;color:var(--text3)}
+.issue-actions{display:flex;gap:6px}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.empty-state div{font-size:32px;margin-bottom:8px}
+
+.note-bar{background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text3);margin-bottom:20px}
+.note-bar strong{color:var(--text2)}
+
+.stats-row{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;min-width:110px;text-align:center}
+.stat-n{font-size:24px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav>
+    <a href="index.html" class="nav-a">🇹🇼 台股</a>
+    <a href="us.html" class="nav-a">🇺🇸 美股</a>
+    <a href="weekly_report.html" class="nav-a">📋 週報</a>
+    <a href="anatomy.html" class="nav-a">🔬 晶片圖</a>
+    <a href="health_check.html" class="nav-a">📋 健檢</a>
+    <a href="feedback.html" class="nav-a active">💬 留言板</a>
+  </nav>
+
+  <div class="page-hd">
+    <h1>💬 問題留言板</h1>
+    <p>反映錯誤、提出建議，或回報資料異常。留言存在本瀏覽器，管理員可匯出查看。</p>
+  </div>
+
+  <div class="note-bar">
+    <strong>📌 說明：</strong>留言儲存於本地瀏覽器（localStorage）。點「📋 複製所有留言」可匯出文字，轉給管理員。
+  </div>
+
+  <!-- 統計列 -->
+  <div class="stats-row" id="stats-row"></div>
+
+  <!-- 提交表單 -->
+  <div class="card">
+    <h2>✏️ 新增留言</h2>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>類別</label>
+        <select id="f-cat">
+          <option value="bug">🐛 問題 / Bug</option>
+          <option value="suggest">💡 建議</option>
+          <option value="data">📊 資料錯誤</option>
+          <option value="other">💬 其他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>您的名稱（選填）</label>
+        <input id="f-name" type="text" placeholder="匿名">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>標題</label>
+      <input id="f-title" type="text" placeholder="簡短描述問題或建議">
+    </div>
+    <div class="form-row">
+      <label>內容</label>
+      <textarea id="f-body" placeholder="詳細說明：發生在哪個頁面？預期行為與實際行為是什麼？"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="submitFeedback()">送出留言</button>
+      <span class="submit-msg" id="submit-msg"></span>
+    </div>
+  </div>
+
+  <!-- 留言列表 -->
+  <div>
+    <div class="toolbar">
+      <h2>📋 留言紀錄</h2>
+      <div class="filter-tabs">
+        <button class="ftab active" data-f="all" onclick="setFilter('all',this)">全部</button>
+        <button class="ftab" data-f="open" onclick="setFilter('open',this)">待處理</button>
+        <button class="ftab" data-f="done" onclick="setFilter('done',this)">已處理</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="exportAll()">📋 複製所有留言</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearDone()">🗑 清除已處理</button>
+    </div>
+    <div class="issue-list" id="issue-list"></div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'fb_issues_v1';
+let filter = 'all';
+
+const CAT_INFO = {
+  bug:     { label:'🐛 問題/Bug',   cls:'badge-bug'     },
+  suggest: { label:'💡 建議',        cls:'badge-suggest'  },
+  data:    { label:'📊 資料錯誤',   cls:'badge-data'    },
+  other:   { label:'💬 其他',        cls:'badge-other'   },
+};
+
+function loadIssues() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+function saveIssues(arr) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function submitFeedback() {
+  const cat   = document.getElementById('f-cat').value;
+  const name  = document.getElementById('f-name').value.trim() || '匿名';
+  const title = document.getElementById('f-title').value.trim();
+  const body  = document.getElementById('f-body').value.trim();
+  const msg   = document.getElementById('submit-msg');
+  if (!title) { msg.textContent = '請填寫標題'; msg.style.color = '#f87171'; return; }
+  const issues = loadIssues();
+  issues.unshift({
+    id: Date.now(),
+    cat, name, title, body,
+    date: new Date().toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
+    done: false,
+  });
+  saveIssues(issues);
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-body').value  = '';
+  msg.textContent = '✓ 已送出！';
+  msg.style.color = '#4ade80';
+  setTimeout(() => msg.textContent = '', 2500);
+  render();
+}
+
+function toggleDone(id) {
+  const issues = loadIssues();
+  const idx = issues.findIndex(i => i.id === id);
+  if (idx >= 0) issues[idx].done = !issues[idx].done;
+  saveIssues(issues);
+  render();
+}
+
+function deleteIssue(id) {
+  const issues = loadIssues().filter(i => i.id !== id);
+  saveIssues(issues);
+  render();
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function exportAll() {
+  const issues = loadIssues();
+  if (!issues.length) { alert('目前沒有留言'); return; }
+  const txt = issues.map(i =>
+    `[${i.date}] ${CAT_INFO[i.cat]?.label || i.cat} — ${i.done ? '✅已處理' : '⏳待處理'}\n` +
+    `作者：${i.name}\n標題：${i.title}\n${i.body ? '內容：' + i.body : ''}\n${'─'.repeat(40)}`
+  ).join('\n\n');
+  navigator.clipboard.writeText(txt).then(() => alert('✓ 已複製到剪貼簿！'));
+}
+
+function clearDone() {
+  if (!confirm('確定要清除所有「已處理」的留言？')) return;
+  saveIssues(loadIssues().filter(i => !i.done));
+  render();
+}
+
+function render() {
+  const all = loadIssues();
+  const open = all.filter(i => !i.done).length;
+  const done = all.filter(i => i.done).length;
+
+  // stats
+  document.getElementById('stats-row').innerHTML = [
+    { n: all.length,  lbl: '全部留言' },
+    { n: open,        lbl: '待處理',   color: open ? '#fb923c' : '' },
+    { n: done,        lbl: '已處理',   color: '#4ade80' },
+  ].map(s => `<div class="stat">
+    <div class="stat-n" ${s.color ? `style="color:${s.color}"` : ''}>${s.n}</div>
+    <div class="stat-lbl">${s.lbl}</div>
+  </div>`).join('');
+
+  // list
+  const list = document.getElementById('issue-list');
+  let items = all;
+  if (filter === 'open') items = all.filter(i => !i.done);
+  if (filter === 'done') items = all.filter(i => i.done);
+
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-state"><div>${filter==='done'?'✅':'📭'}</div>${
+      filter==='done' ? '還沒有已處理的留言' : filter==='open' ? '太棒了，沒有待處理的留言！' : '還沒有任何留言，歡迎第一個留言！'
+    }</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(i => {
+    const ci = CAT_INFO[i.cat] || CAT_INFO.other;
+    return `<div class="issue-card${i.done ? ' done' : ''}">
+      <div class="issue-meta">
+        <span class="badge ${ci.cls}">${ci.label}</span>
+        ${i.done ? '<span class="badge badge-done">✅ 已處理</span>' : ''}
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">${i.date}</span>
+      </div>
+      <div class="issue-title">${esc(i.title)}</div>
+      ${i.body ? `<div class="issue-body" style="margin-top:5px">${esc(i.body)}</div>` : ''}
+      <div class="issue-footer">
+        <span class="issue-from">👤 ${esc(i.name)}</span>
+        <div class="issue-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleDone(${i.id})">${i.done ? '↩ 重開' : '✅ 標記已處理'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteIssue(${i.id})">刪除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+render();
+</script>
+</body>
+</html>
