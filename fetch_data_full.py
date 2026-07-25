@@ -1988,9 +1988,11 @@ def fetch_inst_stocks(all_prices, target_days=5):
                     if not rows:
                         continue
                     fields = resp.get("fields", [])
-                    # 典型欄位順序（固定位置比欄位名稱更可靠）：
-                    # 0=代號, 1=名稱, 2=外買, 3=外賣, 4=外超, 5=投買, 6=投賣, 7=投超,
-                    # 8=自行買, 9=自行賣, 10=自行超, 11=避險買, 12=避險賣, 13=避險超, 14=三大超
+                    # 實際欄位順序（www.twse.com.tw rwd/zh 格式）：
+                    # 0=代號, 1=名稱, 2=外陸資買, 3=外陸資賣, 4=外陸資買賣超(不含外資自營商),
+                    # 5=外資自營商買, 6=外資自營商賣, 7=外資自營商買賣超,
+                    # 8=投信買, 9=投信賣, 10=投信買賣超,
+                    # 11=自營商買賣超(合計), 12-14=自營商(自行買賣), 15-17=自營商(避險)
                     def col(name, fallback_idx):
                         try:
                             return fields.index(name)
@@ -1998,10 +2000,9 @@ def fetch_inst_stocks(all_prices, target_days=5):
                             return fallback_idx
 
                     i_code  = col("證券代號", 0)
-                    i_f_net = col("外陸資買賣超股數", 4)
-                    i_t_net = col("投信買賣超股數",   7)
-                    i_s1    = col("自營商(自行買賣)買賣超股數", 10)
-                    i_s2    = col("自營商(避險)買賣超股數",     13)
+                    i_f_net = col("外陸資買賣超股數(不含外資自營商)", 4)
+                    i_t_net = col("投信買賣超股數", 10)
+                    i_s_net = col("自營商買賣超股數", 11)  # 自行買賣 + 避險 合計淨額
 
                     def pn(row, idx):
                         try:
@@ -2016,7 +2017,7 @@ def fetch_inst_stocks(all_prices, target_days=5):
                         # 直接以「萬股」儲存，不再乘以股價（避免 price=0 導致全歸零）
                         acc[code]["f"] += pn(row, i_f_net) / 1e4
                         acc[code]["t"] += pn(row, i_t_net) / 1e4
-                        acc[code]["s"] += (pn(row, i_s1) + pn(row, i_s2)) / 1e4
+                        acc[code]["s"] += pn(row, i_s_net) / 1e4
                     parsed = True
 
                 if parsed:
@@ -2183,13 +2184,21 @@ def main():
     # 5a-pre. 個股三大法人（T86，先抓供評分用）
     print("📊 個股三大法人資料（T86）...")
     inst_stocks = fetch_inst_stocks(all_prices, target_days=5)
-    data["inst_stocks"] = inst_stocks
+    # 與舊資料合併：新抓到的覆蓋舊值，缺漏的（例如 TWSE 當次故障）保留昨天資料，
+    # 避免單次 API 故障讓大量上市股票法人欄位整批消失。
+    old_inst_stocks = data.get("inst_stocks", {})
+    if isinstance(old_inst_stocks, dict):
+        merged_inst_stocks = {**old_inst_stocks, **inst_stocks}
+    else:
+        merged_inst_stocks = inst_stocks
+    data["inst_stocks"] = merged_inst_stocks
+    print(f"   📊 法人資料合併：新 {len(inst_stocks)} 支 + 沿用舊資料 {len(merged_inst_stocks) - len(inst_stocks)} 支")
 
     # 5. 機會點自動偵測（同時收集30日歷史供圖表用）
     print("🔍 機會點偵測中...")
     opps, histories = compute_opportunities(
         all_prices, extra_codes=FALLBACK_CODES,
-        company_info=company_info, inst_stocks_ref=inst_stocks
+        company_info=company_info, inst_stocks_ref=merged_inst_stocks
     )
     data["opportunities"] = opps
     data["histories"] = histories
@@ -2276,7 +2285,7 @@ def main():
 
     # 5e. 個股異動偵測（±5%）
     print("🔔 個股異動偵測中...")
-    movers = detect_stock_movers(all_prices, histories, inst_stocks)
+    movers = detect_stock_movers(all_prices, histories, merged_inst_stocks)
     data["movers"] = movers
 
     # 5f. 週報敘事段落（每日都更新，週報產生時直接讀取）
