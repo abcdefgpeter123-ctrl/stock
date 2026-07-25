@@ -107,6 +107,21 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .opp-chip:hover{background:rgba(167,139,250,.22);color:var(--text)}
 .fav-empty{padding:20px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg2);border:1px dashed var(--border);border-radius:var(--r)}
 
+/* ── 機會點交集 Venn 圖 ── */
+.venn-container{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.venn-svg{width:280px;height:250px;flex-shrink:0}
+.venn-circle{fill-opacity:.32;stroke-width:1.5}
+.venn-a{fill:#4ade80;stroke:#4ade80}
+.venn-b{fill:#a78bfa;stroke:#a78bfa}
+.venn-c{fill:#60a5fa;stroke:#60a5fa}
+.venn-set-label{font-size:10.5px;fill:var(--text2);text-anchor:middle;font-weight:600;letter-spacing:.02em}
+.venn-count{font-size:17px;fill:var(--text);text-anchor:middle;font-weight:700;font-family:var(--mono)}
+.venn-count-strong{font-size:21px;fill:#fbbf24}
+.venn-detail{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
+.venn-bucket-hd{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.venn-bucket-chips{display:flex;flex-wrap:wrap;gap:6px}
+.venn-empty{color:var(--text3);font-size:12px;padding:6px 0}
+
 
 .etf-section{margin-bottom:24px}
 .etf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
@@ -358,6 +373,26 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="mkt-opp-row" id="opp-row-ma"></div>
   <div class="mkt-opp-row" id="opp-row-target" style="margin-top:8px"></div>
   <div class="mkt-opp-row" id="mkt-opp-row" style="margin-top:8px"></div>
+
+  <div class="sec-hd" style="margin-top:18px">🔵 機會點交集圖<span class="src-tag">同時符合越多條件訊號越強</span></div>
+  <div class="venn-container">
+    <svg viewBox="0 0 300 270" class="venn-svg">
+      <circle cx="150" cy="95"  r="90" class="venn-circle venn-a"/>
+      <circle cx="110" cy="170" r="90" class="venn-circle venn-b"/>
+      <circle cx="190" cy="170" r="90" class="venn-circle venn-c"/>
+      <text x="150" y="30" class="venn-set-label">① 突破均線</text>
+      <text x="55"  y="252" class="venn-set-label">② 目標價上漲</text>
+      <text x="245" y="252" class="venn-set-label">③ 題材落後</text>
+      <text id="venn-count-a"   x="150" y="55"  class="venn-count">0</text>
+      <text id="venn-count-b"   x="88"  y="205" class="venn-count">0</text>
+      <text id="venn-count-c"   x="212" y="205" class="venn-count">0</text>
+      <text id="venn-count-ab"  x="112" y="130" class="venn-count">0</text>
+      <text id="venn-count-ac"  x="188" y="130" class="venn-count">0</text>
+      <text id="venn-count-bc"  x="150" y="205" class="venn-count">0</text>
+      <text id="venn-count-abc" x="150" y="170" class="venn-count venn-count-strong">0</text>
+    </svg>
+    <div id="venn-detail" class="venn-detail"></div>
+  </div>
 
   <div class="fav-section" style="margin-top:24px">
     <div class="sec-hd">⭐ 我的最愛<span class="src-tag">點愛心 ☆ 加入/移除</span></div>
@@ -825,6 +860,7 @@ function renderMarketSummary() {
 
   renderMaBreakoutOpps();
   renderTargetUpsideOpps();
+  renderOppVenn();
 }
 
 function _maOf(closes, n) {
@@ -913,6 +949,95 @@ function renderTargetUpsideOpps() {
       </span>`;
     }).join("") +
     (hits.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${hits.length - 8} 支</span>` : "");
+}
+
+// ── 三大條件集合（供 Venn 圖使用）──────────────────────────
+function computeOppSets() {
+  const A = new Map();  // ① 突破均線
+  STOCKS.forEach(s => {
+    if (s._extra) return;
+    const p = priceCache[s.code];
+    const h = histories[s.code];
+    const closes = h?.closes;
+    if (!p || !p.price || !closes || closes.length < 60) return;
+    const price = p.price;
+    const ma5  = _maOf(closes, 5);
+    const ma20 = _maOf(closes, 20);
+    const ma60 = _maOf(closes, 60);
+    if (ma5 == null || ma20 == null || ma60 == null) return;
+    if (price <= ma5 || price <= ma20 || price <= ma60) return;
+    A.set(s.code, { code: s.code, name: nameCache[s.code] || s.name });
+  });
+
+  const B = new Map();  // ② 目標價上漲空間為正
+  Object.entries(analystTargets).forEach(([code, at]) => {
+    if (!at.mean) return;
+    const p = priceCache[code];
+    if (!p || !p.price) return;
+    const upside = (at.mean - p.price) / p.price * 100;
+    if (upside <= 0) return;
+    B.set(code, { code, name: nameCache[code] || code, upside });
+  });
+
+  const C = new Map();  // ③ 題材已漲，個股未反應
+  (opps || []).forEach(o => { C.set(o.code, { code: o.code, name: o.name, gap: o.gap }); });
+
+  return { A, B, C };
+}
+
+// ── 機會點交集 Venn 圖 ──────────────────────────────────────
+function renderOppVenn() {
+  const detailEl = document.getElementById("venn-detail");
+  if (!detailEl) return;
+
+  const { A, B, C } = computeOppSets();
+  const allCodes = new Set([...A.keys(), ...B.keys(), ...C.keys()]);
+
+  const buckets = { abc: [], ab: [], ac: [], bc: [], a: [], b: [], c: [] };
+  allCodes.forEach(code => {
+    const inA = A.has(code), inB = B.has(code), inC = C.has(code);
+    const src = A.get(code) || B.get(code) || C.get(code);
+    const item = { code, name: src.name };
+    if (inA && inB && inC) buckets.abc.push(item);
+    else if (inA && inB)   buckets.ab.push(item);
+    else if (inA && inC)   buckets.ac.push(item);
+    else if (inB && inC)   buckets.bc.push(item);
+    else if (inA)          buckets.a.push(item);
+    else if (inB)          buckets.b.push(item);
+    else                   buckets.c.push(item);
+  });
+
+  Object.entries(buckets).forEach(([k, arr]) => {
+    const el = document.getElementById("venn-count-" + k);
+    if (el) el.textContent = arr.length;
+  });
+
+  const LABELS = {
+    abc: "🏆 三項全中（強力訊號）",
+    ab:  "① 突破均線 ＋ ② 目標價上漲",
+    ac:  "① 突破均線 ＋ ③ 題材落後",
+    bc:  "② 目標價上漲 ＋ ③ 題材落後",
+    a:   "僅 ① 突破均線",
+    b:   "僅 ② 目標價上漲空間",
+    c:   "僅 ③ 題材落後補漲",
+  };
+  const order = ["abc", "ab", "ac", "bc", "a", "b", "c"];
+
+  const nonEmpty = order.filter(k => buckets[k].length);
+  if (!nonEmpty.length) {
+    detailEl.innerHTML = `<div class="venn-empty">目前尚無符合任何條件的個股</div>`;
+    return;
+  }
+
+  detailEl.innerHTML = nonEmpty.map(k => {
+    const chips = buckets[k].map(it =>
+      `<span class="opp-chip" onclick="toggleStock('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
+    ).join("");
+    return `<div>
+      <div class="venn-bucket-hd">${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
+      <div class="venn-bucket-chips">${chips}</div>
+    </div>`;
+  }).join("");
 }
 
 // 點機會點 chip → 滾動到 opp-grid 並展開
@@ -2660,7 +2785,7 @@ async function loadData(){
     }
     if(data.movers)           moversData     = data.movers;
     if(data.pe_river)         peRiverData    = data.pe_river;
-    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); }
+    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); }
     // 大盤走勢分析一句話
     if(data.market_summary){
       document.getElementById("market-summary-text").textContent = data.market_summary;
