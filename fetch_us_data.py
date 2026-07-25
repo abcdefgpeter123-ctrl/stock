@@ -2,6 +2,7 @@
 """美股資料抓取腳本"""
 
 import yfinance as yf
+import pandas as pd
 import json
 import datetime
 import time
@@ -50,11 +51,17 @@ def fetch_market_indices():
             if len(h) >= 2:
                 prev  = h["Close"].iloc[-2]
                 cur   = h["Close"].iloc[-1]
+                if pd.isna(prev) or pd.isna(cur) or prev == 0:
+                    print(f"   ⚠️ {symbol}: 收盤價缺漏或無效（prev={prev}, cur={cur}），跳過本次更新")
+                    continue
                 chg   = cur - prev
                 chgP  = chg / prev * 100
                 result[key] = {"price": round(cur, 2), "chg": round(chg, 2), "chgP": round(chgP, 2)}
             elif len(h) == 1:
                 cur = h["Close"].iloc[-1]
+                if pd.isna(cur):
+                    print(f"   ⚠️ {symbol}: 收盤價無效，跳過本次更新")
+                    continue
                 result[key] = {"price": round(cur, 2), "chg": 0, "chgP": 0}
             time.sleep(0.3)
         except Exception as e:
@@ -205,6 +212,17 @@ def fetch_etf_holdings():
     return etf_info
 
 
+def _sanitize_nan(obj):
+    """遞迴將 NaN/Infinity 換成 None，避免寫出非合法 JSON（前端 JSON.parse 會整包失敗）。"""
+    if isinstance(obj, float):
+        return None if (obj != obj or obj in (float("inf"), float("-inf"))) else obj
+    if isinstance(obj, dict):
+        return {k: _sanitize_nan(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_nan(v) for v in obj]
+    return obj
+
+
 def main():
     print("🚀 美股資料抓取開始...")
     print(f"   時間: {datetime.datetime.now()}")
@@ -222,7 +240,9 @@ def main():
     print("📈 美股大盤指數...")
     market = fetch_market_indices()
     if market:
-        data["market"] = market
+        # 與舊資料合併：單一指數這次抓取失敗（NaN/缺漏）時保留昨天數值，避免整組被清空
+        old_market = data.get("market", {})
+        data["market"] = {**old_market, **market} if isinstance(old_market, dict) else market
         for k, v in market.items():
             emoji = "📈" if v["chgP"] >= 0 else "📉"
             print(f"   {emoji} {k}: {v['price']} ({v['chgP']:+.2f}%)")
@@ -292,9 +312,11 @@ def main():
     # 6. 更新時間
     data["updated_at"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
 
-    # 儲存
+    # 儲存前清除任何殘留的 NaN/Infinity（合法 Python 但非合法 JSON，
+    # 會讓瀏覽器 JSON.parse() 整包失敗、頁面全部空白）
+    data = _sanitize_nan(data)
     with open("us_data.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     print(f"\n🎉 完成！更新時間: {data['updated_at']}")
 
 
