@@ -82,6 +82,65 @@ body::before{
   .value-chain{grid-template-columns:repeat(2,1fr)}
   .vc-cell:nth-child(2){border-right:none}
 }
+
+/* ── 產業鏈全景圖（總覽） ── */
+.overview-hd{margin-bottom:16px}
+.overview-eyebrow{font-size:10px;letter-spacing:.15em;color:rgba(0,212,255,0.45);margin-bottom:6px}
+.overview-title{font-size:clamp(15px,2.6vw,19px);font-weight:500;letter-spacing:.03em;color:#00d4ff;margin-bottom:4px}
+.overview-sub{font-size:11px;color:rgba(0,212,255,0.4);font-family:'Noto Sans TC',sans-serif}
+
+.chain-grid{
+  display:grid;
+  grid-template-columns:1fr 34px 1fr 34px 1fr;
+  gap:0;
+  margin-bottom:14px;
+  align-items:stretch;
+}
+.chain-col{
+  background:rgba(0,212,255,0.03);
+  border:1px solid rgba(0,212,255,0.15);
+  border-radius:6px;
+  padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.chain-col.up{border-top:3px solid rgba(0,212,255,0.55)}
+.chain-col.mid{border-top:3px solid #00d4ff}
+.chain-col.down{border-top:3px solid rgba(74,222,128,0.65)}
+.chain-col-hd{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.chain-col-tag{font-size:9px;letter-spacing:.14em;color:rgba(0,212,255,0.4);font-weight:500}
+.chain-col-name{font-size:14px;font-weight:600;color:#00d4ff;font-family:'Noto Sans TC',sans-serif}
+.chain-col.down .chain-col-name{color:#4ade80}
+.chain-col-desc{font-size:10px;color:rgba(0,212,255,0.4);font-family:'Noto Sans TC',sans-serif;line-height:1.6;margin-bottom:4px}
+
+.chain-arrow{display:flex;align-items:center;justify-content:center;color:rgba(0,212,255,0.35);font-size:20px}
+
+.chain-cat{
+  background:rgba(0,212,255,0.03);
+  border:1px solid rgba(0,212,255,0.1);
+  border-radius:4px;
+  padding:9px 11px;
+}
+.chain-cat-name{font-size:11.5px;font-weight:600;color:rgba(0,212,255,0.85);font-family:'Noto Sans TC',sans-serif;margin-bottom:5px}
+.chain-cat-companies{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px}
+.chain-chip{
+  font-size:10px;padding:2px 7px;border-radius:10px;
+  background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);
+  color:rgba(0,212,255,0.75);font-family:'Noto Sans TC',sans-serif;white-space:nowrap;
+}
+.chain-cat-desc{font-size:9.5px;color:rgba(0,212,255,0.32);line-height:1.5;font-family:'Noto Sans TC',sans-serif}
+
+.drill-hint{
+  display:flex;align-items:center;gap:10px;justify-content:center;
+  margin:22px 0 20px;padding:10px;
+  font-size:11px;color:rgba(0,212,255,0.4);
+  letter-spacing:.06em;
+}
+.drill-hint::before,.drill-hint::after{content:'';flex:1;height:1px;background:rgba(0,212,255,0.12)}
+
+@media(max-width:820px){
+  .chain-grid{grid-template-columns:1fr}
+  .chain-arrow{transform:rotate(90deg);padding:2px 0}
+}
 </style>
 </head>
 <body>
@@ -102,6 +161,173 @@ body::before{
       <a href="feedback.html" class="nav-link">💬 留言板</a>
     </div>
   </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- 半導體產業鏈全景圖（總覽：上游→中游→下游） -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="overview-hd">
+    <div class="overview-eyebrow">INDUSTRY OVERVIEW · 上游到下游全貌</div>
+    <div class="overview-title">半導體產業鏈全景圖</div>
+    <div class="overview-sub">先看懂整條供應鏈的分工，再往下拆解單一晶片的封裝結構</div>
+  </div>
+
+  <div class="chain-grid">
+    <!-- 上游 -->
+    <div class="chain-col up">
+      <div class="chain-col-hd">
+        <span class="chain-col-tag">01 UPSTREAM</span>
+        <span class="chain-col-name">上游｜設計與材料</span>
+      </div>
+      <div class="chain-col-desc">賣智財與工具的人：不生產晶片，靠授權與設計工具收費，是整條鏈毛利率最高的一段</div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">EDA / IP 設計工具</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">Synopsys</span>
+          <span class="chain-chip">Cadence</span>
+          <span class="chain-chip">ARM</span>
+        </div>
+        <div class="chain-cat-desc">晶片設計軟體與矽智財授權，全球被 3 家業者高度壟斷</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">IC 設計</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2454 聯發科</span>
+          <span class="chain-chip">3661 世芯-KY</span>
+          <span class="chain-chip">3034 聯詠</span>
+          <span class="chain-chip">2379 瑞昱</span>
+          <span class="chain-chip">3443 創意電子</span>
+        </div>
+        <div class="chain-cat-desc">只畫電路圖不蓋廠，委託晶圓代工生產，毛利率通常 45–58%</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">矽晶圓材料</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">6488 環球晶</span>
+          <span class="chain-chip">6182 合晶科技</span>
+        </div>
+        <div class="chain-cat-desc">晶圓代工最上游原料，台積電擴產直接受惠</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">半導體設備 / 廠務</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2404 漢唐</span>
+          <span class="chain-chip">3583 辛耘</span>
+        </div>
+        <div class="chain-cat-desc">機電廠務工程與濕製程設備，跟著晶圓廠擴產週期成長</div>
+      </div>
+    </div>
+
+    <div class="chain-arrow">→</div>
+
+    <!-- 中游 -->
+    <div class="chain-col mid">
+      <div class="chain-col-hd">
+        <span class="chain-col-tag">02 MIDSTREAM</span>
+        <span class="chain-col-name">中游｜製造與封測</span>
+      </div>
+      <div class="chain-col-desc">真正造晶片的人：資本支出最龐大，技術門檻最高，台灣最強的一段</div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">晶圓代工</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2330 台積電</span>
+          <span class="chain-chip">2303 聯電</span>
+          <span class="chain-chip">5347 世界先進</span>
+          <span class="chain-chip">6789 采鈺</span>
+        </div>
+        <div class="chain-cat-desc">依 IC 設計圖代工生產晶片，台積電先進製程全球市佔超過 90%</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">記憶體 / 化合物半導體</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2344 華邦電</span>
+          <span class="chain-chip">2408 南亞科</span>
+          <span class="chain-chip">3105 穩懋</span>
+          <span class="chain-chip">2455 全新</span>
+        </div>
+        <div class="chain-cat-desc">DRAM/NAND 與 GaAs 功率元件，景氣循環特性強</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">先進封裝與測試</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">3711 日月光投控</span>
+          <span class="chain-chip">2449 京元電</span>
+          <span class="chain-chip">6223 旺矽</span>
+          <span class="chain-chip">6239 力成</span>
+          <span class="chain-chip">3374 精材</span>
+        </div>
+        <div class="chain-cat-desc">CoWoS/SiP 先進封裝需求隨 AI 晶片大幅升級，是下方剖面圖的主角</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">ABF 載板</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2383 台光電</span>
+          <span class="chain-chip">3037 欣興</span>
+        </div>
+        <div class="chain-cat-desc">連接晶片與主機板的關鍵基板，AI 伺服器拉動高階載板需求</div>
+      </div>
+    </div>
+
+    <div class="chain-arrow">→</div>
+
+    <!-- 下游 -->
+    <div class="chain-col down">
+      <div class="chain-col-hd">
+        <span class="chain-col-tag">03 DOWNSTREAM</span>
+        <span class="chain-col-name">下游｜終端應用</span>
+      </div>
+      <div class="chain-col-desc">賣算力的人：把晶片組裝成伺服器、裝置賣給終端客戶，貼近品牌與市場需求</div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">AI 伺服器組裝</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2382 廣達</span>
+          <span class="chain-chip">6669 緯穎</span>
+          <span class="chain-chip">2356 英業達</span>
+          <span class="chain-chip">3231 緯創</span>
+          <span class="chain-chip">2317 鴻海</span>
+        </div>
+        <div class="chain-cat-desc">組裝 GPU 伺服器整機出貨給雲端業者，直接受惠 NVIDIA 出貨量</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">品牌與終端</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2357 華碩</span>
+          <span class="chain-chip">2376 技嘉</span>
+        </div>
+        <div class="chain-cat-desc">兼具品牌與代工雙引擎，主機板/顯卡直接面向消費與企業市場</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">散熱與電源</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">3017 奇鋐</span>
+          <span class="chain-chip">8996 高力</span>
+          <span class="chain-chip">2308 台達電</span>
+        </div>
+        <div class="chain-cat-desc">AI 機櫃功耗飆升，液冷散熱與電源模組滲透率快速提升</div>
+      </div>
+
+      <div class="chain-cat">
+        <div class="chain-cat-name">網通設備</div>
+        <div class="chain-cat-companies">
+          <span class="chain-chip">2345 智邦</span>
+          <span class="chain-chip">4906 正文</span>
+        </div>
+        <div class="chain-cat-desc">資料中心高速乙太網路交換器，隨 AI 叢集規模擴大需求成長</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="drill-hint">往下拆解單一 AI 晶片的封裝結構 ↓</div>
 
   <div class="diagram-wrap">
   <svg viewBox="0 0 1696 848" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI晶片封裝供應鏈解剖圖">
