@@ -367,6 +367,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <button class="theme-period-tab" data-period="p5" onclick="switchThemePeriod('p5',this)">一週</button>
     <button class="theme-period-tab" data-period="p30" onclick="switchThemePeriod('p30',this)">一個月</button>
     <button class="theme-period-tab" data-period="p180" onclick="switchThemePeriod('p180',this)">半年</button>
+    <button class="theme-period-tab" data-period="p365" onclick="switchThemePeriod('p365',this)">一年</button>
   </div>
   <div class="theme-review-grid" id="theme-review-grid"></div>
   <div class="sec-hd" style="margin-top:4px">🎯 機會點快覽<span class="src-tag">點擊直接展開個股詳情</span></div>
@@ -791,8 +792,8 @@ function renderMarketSummary() {
   });
 
   const pKey = themePeriod || "p1";
-  const periodLabel = pKey === "p1" ? "今日" : pKey === "p5" ? "近5日" : pKey === "p30" ? "近30日" : "近半年";
-  const hotThreshold = pKey === "p180" ? 20 : pKey === "p30" ? 5 : pKey === "p5" ? 2 : 1;
+  const periodLabel = pKey === "p1" ? "今日" : pKey === "p5" ? "近5日" : pKey === "p30" ? "近30日" : pKey === "p365" ? "近一年" : "近半年";
+  const hotThreshold = pKey === "p365" ? 35 : pKey === "p180" ? 20 : pKey === "p30" ? 5 : pKey === "p5" ? 2 : 1;
 
   const themes = Object.entries(themeMap).map(([name, stocks]) => {
     const valid = stocks.filter(s => s[pKey] != null);
@@ -2104,6 +2105,11 @@ function computeReturns(){
       const n = Math.min(126, closes.length - 1);
       const base = closes[closes.length - 1 - n];
       if(base > 0) s.p180 = Math.round((cur - base) / base * 1000) / 10;
+    }
+    if(s.p365 == null){
+      const n = Math.min(252, closes.length - 1);
+      const base = closes[closes.length - 1 - n];
+      if(base > 0) s.p365 = Math.round((cur - base) / base * 1000) / 10;
     }
   });
 }

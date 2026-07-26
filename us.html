@@ -284,6 +284,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <button class="pill" onclick="setThemePeriod('p5',this)">一週</button>
       <button class="pill" onclick="setThemePeriod('p30',this)">一個月</button>
       <button class="pill" onclick="setThemePeriod('p180',this)">半年</button>
+    <button class="pill" onclick="setThemePeriod('p365',this)">一年</button>
     </div>
     <div id="theme-recap-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
   </div>
@@ -600,7 +601,7 @@ function renderThemeRecap(){
   const themes = [...new Set(STOCKS.map(s=>s.theme))];
   const grid = document.getElementById("theme-recap-grid");
   if(!grid) return;
-  const periodLabel = {p1:"今日均",p5:"週均",p30:"月均",p180:"半年均"}[activeThemePeriod];
+  const periodLabel = {p1:"今日均",p5:"週均",p30:"月均",p180:"半年均",p365:"一年均"}[activeThemePeriod];
   grid.innerHTML = themes.map(theme=>{
     const group = STOCKS.filter(s=>s.theme===theme);
     const vals  = group.map(s=>s[activeThemePeriod]).filter(v=>v!=null);
@@ -940,6 +941,7 @@ function computeReturns(){
     if(s.p5==null&&closes.length>=6){const base=closes[closes.length-6];if(base>0)s.p5=Math.round((cur-base)/base*1000)/10;}
     if(s.p30==null){const n=Math.min(30,closes.length-1);const base=closes[closes.length-1-n];if(base>0)s.p30=Math.round((cur-base)/base*1000)/10;}
     if(s.p180==null){const n=Math.min(126,closes.length-1);const base=closes[closes.length-1-n];if(base>0)s.p180=Math.round((cur-base)/base*1000)/10;}
+    if(s.p365==null){const n=Math.min(252,closes.length-1);const base=closes[closes.length-1-n];if(base>0)s.p365=Math.round((cur-base)/base*1000)/10;}
   });
 }
 
