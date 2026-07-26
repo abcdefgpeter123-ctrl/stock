@@ -32,6 +32,14 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
 .metric .lbl{font-size:13px;color:#cbd5e1;margin-bottom:6px;letter-spacing:.03em;font-weight:500}
 .metric .val{font-size:20px;font-weight:500;font-family:var(--mono);color:var(--text)}
 .metric .chg{font-size:12px;margin-top:4px}
+.metric-clickable{cursor:pointer;transition:border-color .15s}
+.metric-clickable:hover{border-color:var(--border2)}
+.metric-clickable.active-metric{border-color:rgba(96,165,250,0.4);background:linear-gradient(180deg,var(--bg2),rgba(96,165,250,0.05))}
+.metric-hint{font-size:10px;opacity:.5}
+.market-chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px}
+.market-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.market-chart-title{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.market-chart-info{font-size:11px;color:var(--text3);font-family:var(--mono)}
 .vix-tooltip{position:relative;cursor:help}
 .vix-tooltip .vix-tip{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--border);border-radius:8px;padding:12px 14px;width:260px;font-size:12px;line-height:1.6;color:var(--text2);z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .vix-tooltip:hover .vix-tip{display:block}
@@ -192,18 +200,18 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 
   <!-- 大盤指數 -->
   <div class="metrics">
-    <div class="metric">
-      <div class="lbl">S&amp;P 500</div>
+    <div class="metric metric-clickable" onclick="showMarketChart('sp500',this)">
+      <div class="lbl">S&amp;P 500 <span class="metric-hint">📈</span></div>
       <div class="val" id="m-sp500">—</div>
       <div class="chg" id="m-sp500-chg">—</div>
     </div>
-    <div class="metric">
-      <div class="lbl">NASDAQ</div>
+    <div class="metric metric-clickable" onclick="showMarketChart('nasdaq',this)">
+      <div class="lbl">NASDAQ <span class="metric-hint">📈</span></div>
       <div class="val" id="m-nasdaq">—</div>
       <div class="chg" id="m-nasdaq-chg">—</div>
     </div>
-    <div class="metric">
-      <div class="lbl">Dow Jones</div>
+    <div class="metric metric-clickable" onclick="showMarketChart('dow',this)">
+      <div class="lbl">Dow Jones <span class="metric-hint">📈</span></div>
       <div class="val" id="m-dow">—</div>
       <div class="chg" id="m-dow-chg">—</div>
     </div>
@@ -221,6 +229,24 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
         由 CBOE 以 S&P500 期權隱含波動率計算。
       </div>
     </div>
+  </div>
+
+  <!-- 大盤走勢線圖 -->
+  <div class="market-chart-wrap" id="market-chart-wrap" style="display:none">
+    <div class="market-chart-head">
+      <span class="market-chart-title" id="market-chart-title">📈 大盤走勢</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="market-chart-info" id="market-chart-dr">—</span>
+        <div class="tp-periods">
+          <button class="tp-period" onclick="renderMarketChart('近月',this)">近月</button>
+          <button class="tp-period active" onclick="renderMarketChart('三月',this)">三月</button>
+          <button class="tp-period" onclick="renderMarketChart('六月',this)">六月</button>
+          <button class="tp-period" onclick="renderMarketChart('一年',this)">一年</button>
+        </div>
+        <button onclick="closeMarketChart()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">✕</button>
+      </div>
+    </div>
+    <canvas id="market-price-canvas" height="130" style="width:100%!important;display:block"></canvas>
   </div>
 
   <!-- 近期題材回顧 -->
@@ -451,6 +477,9 @@ let activeThemePeriod = "p1";
 const nameMap   = Object.fromEntries(STOCKS.map(s=>[s.code, s.name]));
 let analystTargets  = {};   // 分析師共識目標價 {code: {mean,high,low,count,rec,ratings,...}}
 let usTargetSortMode = "upside";
+let marketHistoryData = {};   // { sp500:{labels,closes}, nasdaq:{...}, dow:{...} } from us_data.json
+let _marketChart = null, _marketPeriod = '三月', _activeMarketIndex = null;
+const MARKET_INDEX_LABEL = { sp500:"S&P 500", nasdaq:"NASDAQ", dow:"Dow Jones" };
 
 const REC_LABEL = {
   "strongbuy":"強力買進","strong_buy":"強力買進","buy":"買進","outperform":"優於大盤",
@@ -640,6 +669,86 @@ function renderETFs(){
       </div>
     </div>`;
   }).join("");
+}
+
+// ── 大盤走勢線圖 ──────────────────────────────────────────
+function showMarketChart(key, el){
+  const wrap = document.getElementById('market-chart-wrap');
+  if(!wrap) return;
+  const alreadyActive = _activeMarketIndex === key && wrap.style.display !== 'none';
+  document.querySelectorAll('.metric-clickable').forEach(m => m.classList.remove('active-metric'));
+  if(alreadyActive){
+    wrap.style.display = 'none';
+    _activeMarketIndex = null;
+    return;
+  }
+  _activeMarketIndex = key;
+  if(el) el.classList.add('active-metric');
+  wrap.style.display = 'block';
+  document.getElementById('market-chart-title').textContent = `📈 ${MARKET_INDEX_LABEL[key]||key} 走勢`;
+  wrap.scrollIntoView({behavior:'smooth', block:'nearest'});
+  setTimeout(() => renderMarketChart(_marketPeriod), 50);
+}
+
+function closeMarketChart(){
+  const wrap = document.getElementById('market-chart-wrap');
+  if(wrap) wrap.style.display = 'none';
+  document.querySelectorAll('.metric-clickable').forEach(m => m.classList.remove('active-metric'));
+  _activeMarketIndex = null;
+}
+
+function renderMarketChart(period, btn){
+  _marketPeriod = period;
+  const wrap = document.getElementById('market-chart-wrap');
+  if(wrap) wrap.querySelectorAll('.tp-period').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(!_activeMarketIndex) return;
+  const hist = marketHistoryData[_activeMarketIndex];
+  if(!hist || !hist.closes || !hist.closes.length){
+    const canvas = document.getElementById('market-price-canvas');
+    if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+    document.getElementById('market-chart-dr').textContent = '尚無歷史資料（等待下次排程更新）';
+    return;
+  }
+  const allCloses = hist.closes, allLabels = hist.labels;
+  const n = period==='近月' ? 22 : period==='三月' ? 63 : period==='六月' ? 126 : period==='一年' ? 252 : null;
+  const closes = n ? allCloses.slice(-n) : allCloses;
+  const labels = n ? allLabels.slice(-n) : allLabels;
+  if(!closes.length) return;
+  const drEl = document.getElementById('market-chart-dr');
+  if(drEl && labels.length>=2) drEl.textContent = labels[0]+' ~ '+labels[labels.length-1];
+  const isUp = closes[closes.length-1] >= closes[0];
+  const color = isUp ? 'var(--up)' : 'var(--dn)';
+  const bgColor = isUp ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.07)';
+  const canvas = document.getElementById('market-price-canvas');
+  if(!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth || 900;
+  if(_marketChart) _marketChart.destroy();
+  const resolvedColor = getComputedStyle(document.documentElement).getPropertyValue(isUp?'--up':'--dn').trim() || color;
+  _marketChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [{ data: closes, borderColor: resolvedColor, borderWidth: 1.5,
+      pointRadius: 0, fill: true, backgroundColor: bgColor, tension: 0 }] },
+    options: {
+      responsive: false, animation: false,
+      layout: { padding: { right: 60, left: 4 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { displayColors: false, backgroundColor: 'rgba(10,20,35,0.95)',
+          borderColor: 'rgba(96,165,250,0.25)', borderWidth: 1,
+          titleColor: '#4a6a8a', bodyColor: '#e8edf5',
+          callbacks: { label: c => `${c.parsed.y.toLocaleString()}` } }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 7, font:{size:10}, color:'#a8bacf', maxRotation:0 },
+             grid: { display: false }, border: { display: false } },
+        y: { position: 'right', ticks: { font:{size:10}, color:'#a8bacf', maxTicksLimit:5,
+               callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0) },
+             grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false },
+             border: { display: false } }
+      }
+    }
+  });
 }
 
 // ── 我的最愛渲染 ─────────────────────────────────────────
@@ -1061,6 +1170,7 @@ async function loadData(){
     histories  = data.histories||{};
     instData   = data.inst_data||{};
     analystTargets = data.analyst_targets||{};
+    marketHistoryData = data.market_history||{};
 
     // 更新 ETF 持股（若有動態資料）
     if(data.etf_holdings){

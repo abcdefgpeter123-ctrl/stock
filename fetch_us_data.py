@@ -304,6 +304,18 @@ def main():
             emoji = "📈" if v["chgP"] >= 0 else "📉"
             print(f"   {emoji} {k}: {v['price']} ({v['chgP']:+.2f}%)")
 
+    # 1b. 三大指數歷史走勢（供前端點開看大盤走勢圖）
+    print("📊 大盤指數歷史走勢...")
+    index_symbols = {"sp500": "^GSPC", "nasdaq": "^IXIC", "dow": "^DJI"}
+    market_history = data.get("market_history", {})
+    for key, symbol in index_symbols.items():
+        closes, labels, *_ = fetch_history(symbol, period="1y")
+        if closes:
+            market_history[key] = {"labels": labels, "closes": [round(c, 1) for c in closes]}
+            print(f"   ✅ {key}: {len(closes)} 筆")
+        time.sleep(0.2)
+    data["market_history"] = market_history
+
     # 2. VIX
     print("😱 VIX 恐慌指數...")
     vix = fetch_vix()
