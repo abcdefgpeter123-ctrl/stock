@@ -63,6 +63,10 @@ thead{background:var(--bg3)}
 th{font-size:11px;font-weight:500;color:var(--text3);text-align:left;padding:10px 14px;white-space:nowrap;cursor:pointer;user-select:none;letter-spacing:.04em}
 th:hover{color:var(--text2)}
 th.sorted{color:var(--blue)}
+tr.theme-hd-row td{background:rgba(255,255,255,0.03);border-top:2px solid var(--border2)!important;padding:8px 12px!important;cursor:default}
+tr.theme-hd-row:first-child td{border-top:none!important}
+.theme-hd-label{font-size:12px;font-weight:600;color:var(--teal);letter-spacing:.5px;margin-right:10px}
+.theme-hd-desc{font-size:11px;color:var(--text3);line-height:1.5}
 td{padding:11px 14px;border-top:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap}
 tr:hover td{background:rgba(255,255,255,.02)}
 .code-cell{font-family:var(--mono);font-size:12px;color:var(--text3)}
@@ -395,6 +399,20 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 </div>
 
 <script>
+// ── 題材說明 ──────────────────────────────────────────────
+const US_THEME_DESCS = {
+  "雲端運算": "企業IT基礎設施雲端化，微軟Azure、亞馬遜AWS、Google Cloud三強鼎立，AI算力需求推升雲端資本支出",
+  "消費電子": "終端硬體裝置，蘋果iPhone/Mac全球市值最大，戴爾轉型AI伺服器硬體供應商",
+  "社群媒體": "社群平台廣告變現，Meta旗下Facebook/Instagram規模最大，Snap主攻年輕族群與AR濾鏡",
+  "AI半導體": "AI運算與網路晶片，輝達GPU霸主地位難以撼動，博通/超微/美光/Arista各據網通、CPU、記憶體、交換器利基",
+  "電動車":   "純電動車製造，特斯拉全球銷售龍頭，Rivian聚焦電動皮卡與商用車新創",
+  "金融消費": "支付網路與會員零售，Visa為全球最大無卡支付平台，好市多會員制倉儲零售現金流穩定",
+  "串流媒體": "訂閱制影音串流，Netflix全球用戶數最多，迪士尼靠IP內容與主題樂園多元變現",
+  "企業軟體": "SaaS訂閱雲端軟體，ServiceNow/Salesforce主攻企業流程與CRM，Intuit/Adobe分別專注財稅與創意工具",
+  "網路安全": "企業資安防護平台，Palo Alto以平台化策略整合防火牆與雲端安全，CrowdStrike主打雲端原生端點防護",
+  "醫療科技": "醫療器材與新藥研發，直覺外科手術機器人全球霸主，禮來GLP-1減重藥物引領熱潮",
+};
+
 // ── 股票清單 ──────────────────────────────────────────────
 const STOCKS = [
   {code:"MSFT",  name:"微軟",       theme:"雲端運算", p1:null,p5:null,p30:null,p180:null,
@@ -1187,7 +1205,15 @@ function render(){
   document.getElementById("stock-count").textContent=`${rows.length} 支`;
   const tbody = document.getElementById("tbody");
   setTimeout(initCharts, 50);
-  tbody.innerHTML = rows.map(s=>`
+
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">查無符合條件的股票</td></tr>`;
+    renderFavorites();
+    return;
+  }
+
+  function rowHtml(s){
+    return `
     <tr class="stock-row ${expandedStock===s.code?'expanded':''}" onclick="toggleStockDetail('${s.code}','main')">
       <td onclick="event.stopPropagation()">${favBtn(s.code)}</td>
       <td class="code-cell">
@@ -1203,8 +1229,22 @@ function render(){
       <td>${pct(s.p180)}</td>
       <td>${sigBadge(s)}</td>
     </tr>
-    ${expandedStock===s.code?`<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="10">${renderDetail(s.code)}</td></tr>`:""}
-  `).join("");
+    ${expandedStock===s.code?`<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="10">${renderDetail(s.code)}</td></tr>`:""}`;
+  }
+
+  // 依 STOCKS 宣告順序決定題材出現順序，再依此順序分組渲染（排序結果保留在各組內）
+  const themeOrder = [...new Set(STOCKS.map(s=>s.theme))];
+  const grouped = {};
+  rows.forEach(r => { (grouped[r.theme]||(grouped[r.theme]=[])).push(r); });
+
+  let html = "";
+  themeOrder.forEach(theme => {
+    if(!grouped[theme]?.length) return;
+    const desc = US_THEME_DESCS[theme] || "";
+    html += `<tr class="theme-hd-row"><td colspan="10"><span class="theme-hd-label">${theme}</span><span class="theme-hd-desc">${desc}</span></td></tr>`;
+    grouped[theme].forEach(s => { html += rowHtml(s); });
+  });
+  tbody.innerHTML = html;
   renderFavorites();
 }
 
