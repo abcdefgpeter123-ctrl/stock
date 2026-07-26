@@ -394,6 +394,87 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div id="venn-detail" class="venn-detail"></div>
   </div>
 
+  <!-- ── 法人目標價追蹤 ── -->
+  <div class="sec-hd" style="margin-top:18px">
+    🎯 法人目標價追蹤
+    <span style="display:flex;align-items:center;gap:8px">
+      <span class="src-tag">Yahoo Finance 每日同步</span>
+      <button class="sec-toggle" id="targets-toggle" onclick="toggleSection('targets-wrap',this)">▼ 收合</button>
+    </span>
+  </div>
+  <div id="targets-wrap">
+    <!-- 排序/篩選列 -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:11px;color:var(--text3)">排序：</span>
+      <button class="tp-period active" id="tsort-upside" onclick="setTargetSort('upside',this)">上漲空間</button>
+      <button class="tp-period" id="tsort-raised" onclick="setTargetSort('raised',this)">目標上調</button>
+      <button class="tp-period" id="tsort-count" onclick="setTargetSort('count',this)">分析師人數</button>
+      <button class="tp-period" id="tsort-rec" onclick="setTargetSort('rec',this)">評等強弱</button>
+      <button onclick="openAddTargetModal()" style="margin-left:auto;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.35);border-radius:6px;padding:5px 12px;color:#a78bfa;font-size:12px;cursor:pointer">＋ 手動輸入券商目標</button>
+    </div>
+    <div id="analyst-targets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
+
+    <!-- 手動輸入記錄 -->
+    <div id="manual-targets-section" style="display:none;margin-top:16px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:500">📋 手動輸入記錄</div>
+      <div style="overflow-x:auto">
+        <table id="manual-targets-table" style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="color:var(--text3);border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:6px 8px">日期</th>
+              <th style="text-align:left;padding:6px 8px">股票</th>
+              <th style="text-align:left;padding:6px 8px">券商</th>
+              <th style="text-align:left;padding:6px 8px">評等</th>
+              <th style="text-align:right;padding:6px 8px">舊目標</th>
+              <th style="text-align:right;padding:6px 8px">新目標</th>
+              <th style="text-align:right;padding:6px 8px">變化</th>
+              <th style="padding:6px 8px"></th>
+            </tr>
+          </thead>
+          <tbody id="manual-targets-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手動輸入 Modal -->
+  <div id="add-target-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">新增券商目標價</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">日期</div>
+          <input id="at-date" type="date" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">股票代號</div>
+          <input id="at-code" type="text" placeholder="2330" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">券商</div>
+          <input id="at-broker" type="text" placeholder="JP Morgan" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">評等</div>
+          <input id="at-rating" type="text" placeholder="Overweight" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">舊目標價</div>
+          <input id="at-old" type="number" placeholder="1200" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">新目標價</div>
+          <input id="at-new" type="number" placeholder="1350" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
+        </div>
+      </div>
+      <div id="at-status" style="font-size:11px;color:var(--text3);margin-bottom:10px;min-height:16px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('add-target-modal').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:8px 16px;color:var(--text3);cursor:pointer;font-size:12px">取消</button>
+        <button onclick="saveManualTarget()" style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:8px 16px;color:#a78bfa;cursor:pointer;font-size:12px;font-weight:500">儲存</button>
+      </div>
+    </div>
+  </div>
+
   <div class="fav-section" style="margin-top:24px">
     <div class="sec-hd">⭐ 我的最愛<span class="src-tag">點愛心 ☆ 加入/移除</span></div>
     <div id="fav-content"></div>
@@ -512,87 +593,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
         </thead>
         <tbody id="tbody"></tbody>
       </table>
-    </div>
-  </div>
-
-  <!-- ── 法人目標價追蹤 ── -->
-  <div class="sec-hd" style="margin-top:8px">
-    🎯 法人目標價追蹤
-    <span style="display:flex;align-items:center;gap:8px">
-      <span class="src-tag">Yahoo Finance 每日同步</span>
-      <button class="sec-toggle" id="targets-toggle" onclick="toggleSection('targets-wrap',this)">▼ 收合</button>
-    </span>
-  </div>
-  <div id="targets-wrap">
-    <!-- 排序/篩選列 -->
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-      <span style="font-size:11px;color:var(--text3)">排序：</span>
-      <button class="tp-period active" id="tsort-upside" onclick="setTargetSort('upside',this)">上漲空間</button>
-      <button class="tp-period" id="tsort-raised" onclick="setTargetSort('raised',this)">目標上調</button>
-      <button class="tp-period" id="tsort-count" onclick="setTargetSort('count',this)">分析師人數</button>
-      <button class="tp-period" id="tsort-rec" onclick="setTargetSort('rec',this)">評等強弱</button>
-      <button onclick="openAddTargetModal()" style="margin-left:auto;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.35);border-radius:6px;padding:5px 12px;color:#a78bfa;font-size:12px;cursor:pointer">＋ 手動輸入券商目標</button>
-    </div>
-    <div id="analyst-targets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
-
-    <!-- 手動輸入記錄 -->
-    <div id="manual-targets-section" style="display:none;margin-top:16px">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:500">📋 手動輸入記錄</div>
-      <div style="overflow-x:auto">
-        <table id="manual-targets-table" style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead>
-            <tr style="color:var(--text3);border-bottom:1px solid var(--border)">
-              <th style="text-align:left;padding:6px 8px">日期</th>
-              <th style="text-align:left;padding:6px 8px">股票</th>
-              <th style="text-align:left;padding:6px 8px">券商</th>
-              <th style="text-align:left;padding:6px 8px">評等</th>
-              <th style="text-align:right;padding:6px 8px">舊目標</th>
-              <th style="text-align:right;padding:6px 8px">新目標</th>
-              <th style="text-align:right;padding:6px 8px">變化</th>
-              <th style="padding:6px 8px"></th>
-            </tr>
-          </thead>
-          <tbody id="manual-targets-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- 手動輸入 Modal -->
-  <div id="add-target-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
-      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">新增券商目標價</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">日期</div>
-          <input id="at-date" type="date" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">股票代號</div>
-          <input id="at-code" type="text" placeholder="2330" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">券商</div>
-          <input id="at-broker" type="text" placeholder="JP Morgan" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">評等</div>
-          <input id="at-rating" type="text" placeholder="Overweight" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">舊目標價</div>
-          <input id="at-old" type="number" placeholder="1200" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">新目標價</div>
-          <input id="at-new" type="number" placeholder="1350" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text);outline:none;font-family:var(--mono)">
-        </div>
-      </div>
-      <div id="at-status" style="font-size:11px;color:var(--text3);margin-bottom:10px;min-height:16px"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('add-target-modal').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:8px 16px;color:var(--text3);cursor:pointer;font-size:12px">取消</button>
-        <button onclick="saveManualTarget()" style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:8px 16px;color:#a78bfa;cursor:pointer;font-size:12px;font-weight:500">儲存</button>
-      </div>
     </div>
   </div>
 
