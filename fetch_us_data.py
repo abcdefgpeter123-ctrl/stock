@@ -280,6 +280,89 @@ def fetch_analyst_targets(codes):
     return result
 
 
+def generate_us_daily_commentary(market, vix, prices):
+    """
+    整合今日美股大盤、VIX、題材表現，用規則式邏輯生成 4 句日評。
+    不依賴 Claude API，邏輯與 fetch_data_full.py 的台股日評對稱。
+    """
+    theme_map = {s["code"]: s["theme"] for s in US_STOCKS}
+
+    # ── 大盤（以 S&P500 為代表指數）
+    sp = market.get("sp500", {})
+    price = sp.get("price", 0)
+    chgP  = sp.get("chgP", 0)
+    chg   = sp.get("chg", 0)
+    if abs(chgP) >= 1.5:
+        trend_word = "大漲" if chgP > 0 else "大跌"
+    elif abs(chgP) >= 0.4:
+        trend_word = "上漲" if chgP > 0 else "下跌"
+    else:
+        trend_word = "小幅收紅" if chgP >= 0 else "小幅收黑"
+
+    nasdaq = market.get("nasdaq", {})
+    dow    = market.get("dow", {})
+    vix_price = vix.get("price") if vix else None
+    vix_chg   = vix.get("chg") if vix else None
+
+    s1 = (
+        f"今日美股 S&P500 {trend_word} {chgP:+.2f}%，收 {price:,.0f} 點（{chg:+.0f}）；"
+        f"那斯達克 {nasdaq.get('chgP', 0):+.2f}%，道瓊 {dow.get('chgP', 0):+.2f}%。"
+    )
+    if vix_price is not None:
+        vix_word = "恐慌情緒升溫" if (vix_chg or 0) > 0 else "恐慌情緒緩解"
+        s1 += f"VIX {vix_price:.1f}（{vix_chg:+.2f}），{vix_word}。"
+
+    # ── 題材強弱
+    theme_chg = {}
+    for code, theme in theme_map.items():
+        p = prices.get(code, {})
+        c = p.get("changeP")
+        if c is not None:
+            theme_chg.setdefault(theme, []).append(c)
+    theme_avg = {t: round(sum(v) / len(v), 2) for t, v in theme_chg.items() if v}
+    top3 = sorted(theme_avg.items(), key=lambda x: x[1], reverse=True)[:3]
+    bot3 = sorted(theme_avg.items(), key=lambda x: x[1])[:3]
+    top_txt = "、".join(f"{t}（{v:+.1f}%）" for t, v in top3)
+    bot_txt = "、".join(f"{t}（{v:+.1f}%）" for t, v in bot3)
+    s2 = f"題材面以{top_txt}表現較強；{bot_txt}相對落後。" if top_txt and bot_txt else ""
+
+    # ── 個股異動（單日 ±5%）
+    movers_up, movers_dn = [], []
+    for code, theme in theme_map.items():
+        p = prices.get(code, {})
+        c = p.get("changeP")
+        name = p.get("name", code)
+        if c is None:
+            continue
+        if c >= 5:
+            movers_up.append(f"{name}（{c:+.1f}%）")
+        elif c <= -5:
+            movers_dn.append(f"{name}（{c:+.1f}%）")
+
+    if movers_up and movers_dn:
+        s3 = f"個股表現分化，{movers_up[0]} 等強勢，{movers_dn[0]} 等承壓。"
+    elif movers_up:
+        s3 = f"個股亮點為 {movers_up[0]}{'、' + movers_up[1] if len(movers_up) > 1 else ''}，漲幅顯著。"
+    elif movers_dn:
+        s3 = f"留意 {movers_dn[0]}{'、' + movers_dn[1] if len(movers_dn) > 1 else ''} 等個股壓力。"
+    else:
+        s3 = "監控個股漲跌幅度溫和，無明顯異常波動。"
+
+    # ── 短線展望（綜合大盤漲跌 + VIX 水位）
+    if chgP >= 1 and (vix_price or 20) < 18:
+        s4 = "市場情緒偏樂觀，短線多方氣氛偏強，可留意強勢族群續漲機會。"
+    elif chgP <= -1 and (vix_price or 20) > 22:
+        s4 = "市場避險情緒升高，短線需注意支撐能否守穩，建議控管部位風險。"
+    elif abs(chgP) < 0.3:
+        s4 = "大盤方向未明，宜觀望等待訊號明朗化。"
+    else:
+        s4 = "整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。"
+
+    result = " ".join(x for x in [s1, s2, s3, s4] if x)
+    print(f"   ✅ 美股規則式日評生成完成（{len(result)} 字）")
+    return result
+
+
 def _sanitize_nan(obj):
     """遞迴將 NaN/Infinity 換成 None，避免寫出非合法 JSON（前端 JSON.parse 會整包失敗）。"""
     if isinstance(obj, float):
@@ -415,6 +498,14 @@ def main():
     # 與舊資料合併：單支股票這次抓取失敗時保留昨天資料，避免整批消失
     data["analyst_targets"] = {**prev_targets, **new_targets}
     print(f"   ✅ {len(new_targets)} 支目標價已更新")
+
+    # 8. 每日大盤日評
+    print("📝 生成美股每日大盤日評...")
+    commentary = generate_us_daily_commentary(data.get("market", {}), data.get("vix", {}), data.get("prices", {}))
+    if commentary:
+        data["market_summary"] = commentary
+    else:
+        print("   ⚠️ 日評生成失敗，保留前次資料")
 
     # 6. 更新時間
     data["updated_at"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")

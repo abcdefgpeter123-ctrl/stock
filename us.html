@@ -276,6 +276,12 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <canvas id="market-price-canvas" height="130" style="width:100%!important;display:block"></canvas>
   </div>
 
+  <!-- 每日大盤日評 -->
+  <div id="market-summary-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-left:3px solid var(--blue);border-radius:8px">
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:6px">📝 <span id="market-summary-date">今日</span>大盤日評</div>
+    <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
+  </div>
+
   <!-- 近期題材回顧 -->
   <div style="margin-bottom:24px">
     <div class="sec-hd">📊 近期大盤題材回顧</div>
@@ -1505,6 +1511,14 @@ async function loadData(){
     instData   = data.inst_data||{};
     analystTargets = data.analyst_targets||{};
     marketHistoryData = data.market_history||{};
+
+    // 每日大盤日評
+    if(data.market_summary){
+      document.getElementById("market-summary-text").textContent = data.market_summary;
+      document.getElementById("market-summary-bar").style.display = "block";
+      const dateEl = document.getElementById("market-summary-date");
+      if(dateEl && data.updated_at) dateEl.textContent = data.updated_at.split(" ")[0];
+    }
 
     // 更新 ETF 持股（若有動態資料）
     if(data.etf_holdings){
