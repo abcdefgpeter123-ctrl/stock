@@ -100,6 +100,9 @@ def fetch_stock_prices(codes):
             if len(h) >= 2:
                 prev  = h["Close"].iloc[-2]
                 cur   = h["Close"].iloc[-1]
+                if pd.isna(prev) or pd.isna(cur) or prev == 0:
+                    print(f"   ⚠️ {code}: 收盤價缺漏或無效，跳過本次更新")
+                    continue
                 chg   = cur - prev
                 chgP  = chg / prev * 100
                 prices[code] = {
@@ -114,6 +117,9 @@ def fetch_stock_prices(codes):
                 }
             elif len(h) == 1:
                 cur = h["Close"].iloc[-1]
+                if pd.isna(cur):
+                    print(f"   ⚠️ {code}: 收盤價無效，跳過本次更新")
+                    continue
                 prices[code] = {
                     "name":    name_map.get(code, code),
                     "price":   round(cur, 2),
@@ -332,8 +338,10 @@ def main():
     print(f"📊 抓取 {len(US_STOCKS)} 支個股價格...")
     codes = [s["code"] for s in US_STOCKS]
     prices = fetch_stock_prices(codes)
-    data["prices"] = prices
-    print(f"   ✅ 成功: {len(prices)} 支")
+    # 與舊資料合併：單支股票這次抓取失敗（缺漏/NaN）時保留昨天資料，避免整批價格消失
+    old_prices = data.get("prices", {})
+    data["prices"] = {**old_prices, **prices} if isinstance(old_prices, dict) else prices
+    print(f"   ✅ 成功: {len(prices)} 支（沿用舊資料 {len(data['prices']) - len(prices)} 支）")
 
     # 4. 歷史走勢（用於圖表 + p5/p30/p180 計算）
     print(f"📉 抓取歷史走勢...")
