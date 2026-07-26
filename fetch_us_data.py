@@ -10,27 +10,32 @@ import os
 import requests
 
 US_STOCKS = [
-    {"code": "MSFT",  "name": "微軟",         "theme": "科技巨頭"},
-    {"code": "AAPL",  "name": "蘋果",         "theme": "科技巨頭"},
-    {"code": "GOOGL", "name": "Alphabet",     "theme": "科技巨頭"},
-    {"code": "AMZN",  "name": "亞馬遜",       "theme": "科技巨頭"},
-    {"code": "META",  "name": "Meta",         "theme": "科技巨頭"},
+    {"code": "MSFT",  "name": "微軟",         "theme": "雲端運算"},
+    {"code": "AMZN",  "name": "亞馬遜",       "theme": "雲端運算"},
+    {"code": "GOOGL", "name": "Alphabet",     "theme": "雲端運算"},
+    {"code": "AAPL",  "name": "蘋果",         "theme": "消費電子"},
+    {"code": "DELL",  "name": "戴爾",         "theme": "消費電子"},
+    {"code": "META",  "name": "Meta",         "theme": "社群媒體"},
+    {"code": "SNAP",  "name": "Snap",         "theme": "社群媒體"},
     {"code": "NVDA",  "name": "輝達",         "theme": "AI半導體"},
     {"code": "AVGO",  "name": "博通",         "theme": "AI半導體"},
     {"code": "AMD",   "name": "超微",         "theme": "AI半導體"},
     {"code": "MU",    "name": "美光",         "theme": "AI半導體"},
     {"code": "ANET",  "name": "Arista網路",   "theme": "AI半導體"},
     {"code": "TSLA",  "name": "特斯拉",       "theme": "電動車"},
+    {"code": "RIVN",  "name": "Rivian",       "theme": "電動車"},
     {"code": "V",     "name": "Visa",         "theme": "金融消費"},
     {"code": "COST",  "name": "好市多",       "theme": "金融消費"},
     {"code": "NFLX",  "name": "Netflix",      "theme": "串流媒體"},
+    {"code": "DIS",   "name": "迪士尼",       "theme": "串流媒體"},
     {"code": "NOW",   "name": "ServiceNow",   "theme": "企業軟體"},
     {"code": "CRM",   "name": "Salesforce",   "theme": "企業軟體"},
     {"code": "INTU",  "name": "Intuit",       "theme": "企業軟體"},
+    {"code": "ADBE",  "name": "Adobe",        "theme": "企業軟體"},
     {"code": "PANW",  "name": "Palo Alto",    "theme": "網路安全"},
+    {"code": "CRWD",  "name": "CrowdStrike",  "theme": "網路安全"},
     {"code": "ISRG",  "name": "直覺外科",     "theme": "醫療科技"},
     {"code": "LLY",   "name": "禮來",         "theme": "醫療科技"},
-    {"code": "ADBE",  "name": "Adobe",        "theme": "企業軟體"},
 ]
 
 ALL_CODES = [s["code"] for s in US_STOCKS] + ["QQQ", "VOO", "SOXX"]
