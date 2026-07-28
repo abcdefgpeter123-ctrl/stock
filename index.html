@@ -360,6 +360,24 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
   </div>
 
+  <!-- 現在市場狀態（牛熊燈號） -->
+  <div id="market-status-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="market-status-emoji" style="font-size:26px;line-height:1">—</span>
+        <div>
+          <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:2px">現在市場狀態</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span id="market-status-label" style="font-size:17px;font-weight:700">—</span>
+            <span id="market-status-score" style="font-size:12px;color:var(--text3);font-family:var(--mono)">—</span>
+          </div>
+        </div>
+      </div>
+      <a href="health_check.html" style="font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap">完整每日健檢 →</a>
+    </div>
+    <div id="market-status-desc" style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6"></div>
+  </div>
+
   <!-- 題材回顧 + 機會點摘要 -->
   <div class="sec-hd" id="theme-review-hd">📈 近期大盤題材回顧</div>
   <div class="theme-period-tabs">
@@ -1952,6 +1970,54 @@ function computeMA(allCloses, period) {
   return result;
 }
 
+// ── 現在市場狀態（牛熊燈號，6 項自動指標，簡化版 STEP1） ──
+const MARKET_STATUS_LEVELS = [
+  { min:5, label:'大牛', emoji:'🐂', desc:'市場資金充沛，聚焦主流族群，可積極布局', color:'#ef4444' },
+  { min:4, label:'小牛', emoji:'🐮', desc:'開始輪動，找補漲股，逢拉回可分批進場', color:'#2dd4bf' },
+  { min:2, label:'橫盤', emoji:'😐', desc:'方向不明，縮小操作範圍，保持耐心觀望', color:'#facc15' },
+  { min:1, label:'小熊', emoji:'🐻', desc:'訊號偏弱，建立觀察名單，準備下一波', color:'#fb923c' },
+  { min:0, label:'大熊', emoji:'🐻‍❄️', desc:'多項指標翻空，幾乎不買，保留現金', color:'#22c55e' },
+];
+
+function renderMarketStatus() {
+  const bar = document.getElementById("market-status-bar");
+  if (!bar || !twiiHistoryData || !twiiHistoryData.closes || twiiHistoryData.closes.length < 120) return;
+
+  const closes = twiiHistoryData.closes;
+  const last   = closes[closes.length - 1];
+  const ma5v   = computeMA(closes, 5).at(-1);
+  const ma20v  = computeMA(closes, 20).at(-1);
+  const ma60v  = computeMA(closes, 60).at(-1);
+  const ma120v = computeMA(closes, 120).at(-1);
+
+  const checks = [
+    { pass: ma5v  != null && last > ma5v },
+    { pass: ma20v != null && last > ma20v },
+    { pass: ma60v != null && last > ma60v },
+    { pass: ma20v != null && ma60v  != null && ma20v > ma60v },
+    { pass: ma60v != null && ma120v != null && ma60v > ma120v },
+  ];
+
+  const tsmcCloses = histories['2330']?.closes;
+  if (tsmcCloses && tsmcCloses.length >= 20) {
+    const tsmcLast = tsmcCloses[tsmcCloses.length - 1];
+    const tsmcMa20 = computeMA(tsmcCloses, 20).at(-1);
+    checks.push({ pass: tsmcMa20 != null && tsmcLast > tsmcMa20 });
+  }
+
+  const score = checks.filter(c => c.pass).length;
+  const max   = checks.length;
+  const level = MARKET_STATUS_LEVELS.find(l => score >= Math.round(l.min * max / 6)) || MARKET_STATUS_LEVELS.at(-1);
+
+  document.getElementById("market-status-emoji").textContent = level.emoji;
+  const labelEl = document.getElementById("market-status-label");
+  labelEl.textContent = level.label;
+  labelEl.style.color = level.color;
+  document.getElementById("market-status-score").textContent = `${score} / ${max} 項指標翻多`;
+  document.getElementById("market-status-desc").textContent = level.desc + "（僅計技術面自動指標，完整判斷含法人籌碼與基本面請見每日健檢）";
+  bar.style.display = "block";
+}
+
 // ── 均線切換 ──────────────────────────────────────────────
 function toggleMALine(code, ma, btn) {
   if (!_maActive[code]) _maActive[code] = new Set();
@@ -2791,6 +2857,7 @@ async function loadData(){
       twiiHistoryData = data.twii_history;
       document.getElementById('twii-chart-wrap').style.display = 'block';
       setTimeout(() => renderTwiiChart(_twiiPeriod), 80);
+      renderMarketStatus();
     }
     if(data.movers)           moversData     = data.movers;
     if(data.pe_river)         peRiverData    = data.pe_river;

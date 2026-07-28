@@ -282,6 +282,23 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
   </div>
 
+  <!-- 現在市場狀態（牛熊燈號） -->
+  <div id="market-status-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="market-status-emoji" style="font-size:26px;line-height:1">—</span>
+        <div>
+          <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:2px">現在市場狀態</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span id="market-status-label" style="font-size:17px;font-weight:700">—</span>
+            <span id="market-status-score" style="font-size:12px;color:var(--text3);font-family:var(--mono)">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="market-status-desc" style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6"></div>
+  </div>
+
   <!-- 近期題材回顧 -->
   <div style="margin-bottom:24px">
     <div class="sec-hd">📊 近期大盤題材回顧</div>
@@ -647,6 +664,56 @@ function _maOf(closes, n) {
   if (!closes || closes.length < n) return null;
   const slice = closes.slice(-n);
   return slice.reduce((a, b) => a + b, 0) / n;
+}
+
+// ── 現在市場狀態（牛熊燈號，6 項自動指標） ──────────────────
+const MARKET_STATUS_LEVELS = [
+  { min:5, label:'大牛', emoji:'🐂', desc:'市場資金充沛，聚焦主流族群，可積極布局', color:'var(--up)' },
+  { min:4, label:'小牛', emoji:'🐮', desc:'開始輪動，找補漲股，逢拉回可分批進場', color:'#2dd4bf' },
+  { min:2, label:'橫盤', emoji:'😐', desc:'方向不明，縮小操作範圍，保持耐心觀望', color:'#facc15' },
+  { min:1, label:'小熊', emoji:'🐻', desc:'訊號偏弱，建立觀察名單，準備下一波', color:'#fb923c' },
+  { min:0, label:'大熊', emoji:'🐻‍❄️', desc:'多項指標翻空，幾乎不買，保留現金', color:'var(--dn)' },
+];
+
+function renderMarketStatus() {
+  const bar = document.getElementById("market-status-bar");
+  if (!bar) return;
+  const sp = marketHistoryData.sp500;
+  if (!sp || !sp.closes || sp.closes.length < 120) return;
+
+  const closes = sp.closes;
+  const last   = closes[closes.length - 1];
+  const ma5v   = _maOf(closes, 5);
+  const ma20v  = _maOf(closes, 20);
+  const ma60v  = _maOf(closes, 60);
+  const ma120v = _maOf(closes, 120);
+
+  const checks = [
+    { pass: ma5v  != null && last > ma5v },
+    { pass: ma20v != null && last > ma20v },
+    { pass: ma60v != null && last > ma60v },
+    { pass: ma20v != null && ma60v  != null && ma20v > ma60v },
+    { pass: ma60v != null && ma120v != null && ma60v > ma120v },
+  ];
+
+  const nvdaCloses = histories['NVDA']?.closes;
+  if (nvdaCloses && nvdaCloses.length >= 20) {
+    const nvdaLast = nvdaCloses[nvdaCloses.length - 1];
+    const nvdaMa20 = _maOf(nvdaCloses, 20);
+    checks.push({ pass: nvdaMa20 != null && nvdaLast > nvdaMa20 });
+  }
+
+  const score = checks.filter(c => c.pass).length;
+  const max   = checks.length;
+  const level = MARKET_STATUS_LEVELS.find(l => score >= Math.round(l.min * max / 6)) || MARKET_STATUS_LEVELS.at(-1);
+
+  document.getElementById("market-status-emoji").textContent = level.emoji;
+  const labelEl = document.getElementById("market-status-label");
+  labelEl.textContent = level.label;
+  labelEl.style.color = level.color;
+  document.getElementById("market-status-score").textContent = `${score} / ${max} 項指標翻多`;
+  document.getElementById("market-status-desc").textContent = level.desc + "（以 S&P500 均線排列＋輝達(NVDA)站上20MA 判斷，僅供參考）";
+  bar.style.display = "block";
 }
 
 // 題材補漲：同題材內龍頭已大漲、其他成員尚未反應
@@ -1519,6 +1586,7 @@ async function loadData(){
       const dateEl = document.getElementById("market-summary-date");
       if(dateEl && data.updated_at) dateEl.textContent = data.updated_at.split(" ")[0];
     }
+    renderMarketStatus();
 
     // 更新 ETF 持股（若有動態資料）
     if(data.etf_holdings){
