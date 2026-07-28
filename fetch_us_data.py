@@ -52,22 +52,19 @@ def fetch_market_indices():
     for key, symbol in indices.items():
         try:
             t = yf.Ticker(symbol)
-            h = t.history(period="2d", interval="1d")
-            if len(h) >= 2:
-                prev  = h["Close"].iloc[-2]
-                cur   = h["Close"].iloc[-1]
-                if pd.isna(prev) or pd.isna(cur) or prev == 0:
-                    print(f"   ⚠️ {symbol}: 收盤價缺漏或無效（prev={prev}, cur={cur}），跳過本次更新")
-                    continue
-                chg   = cur - prev
-                chgP  = chg / prev * 100
-                result[key] = {"price": round(cur, 2), "chg": round(chg, 2), "chgP": round(chgP, 2)}
-            elif len(h) == 1:
-                cur = h["Close"].iloc[-1]
-                if pd.isna(cur):
-                    print(f"   ⚠️ {symbol}: 收盤價無效，跳過本次更新")
-                    continue
-                result[key] = {"price": round(cur, 2), "chg": 0, "chgP": 0}
+            # period="2d" 偶爾只回傳 1 筆（週一效應/開盤前查詢），改用 5d 確保拿到 >=2 筆真實收盤
+            h = t.history(period="5d", interval="1d")
+            if len(h) < 2:
+                print(f"   ⚠️ {symbol}: 僅取得 {len(h)} 筆收盤價，資料不足，跳過本次更新")
+                continue
+            prev  = h["Close"].iloc[-2]
+            cur   = h["Close"].iloc[-1]
+            if pd.isna(prev) or pd.isna(cur) or prev == 0:
+                print(f"   ⚠️ {symbol}: 收盤價缺漏或無效（prev={prev}, cur={cur}），跳過本次更新")
+                continue
+            chg   = cur - prev
+            chgP  = chg / prev * 100
+            result[key] = {"price": round(cur, 2), "chg": round(chg, 2), "chgP": round(chgP, 2)}
             time.sleep(0.3)
         except Exception as e:
             print(f"   ⚠️ {symbol}: {e}")
@@ -77,10 +74,12 @@ def fetch_market_indices():
 def fetch_vix():
     try:
         t = yf.Ticker("^VIX")
-        h = t.history(period="2d", interval="1d")
+        h = t.history(period="5d", interval="1d")
         if len(h) >= 2:
             prev = h["Close"].iloc[-2]
             cur  = h["Close"].iloc[-1]
+            if pd.isna(prev) or pd.isna(cur) or prev == 0:
+                return None
             chg  = cur - prev
             chgP = chg / prev * 100
             return {"price": round(cur, 2), "chg": round(chg, 2), "chgP": round(chgP, 2)}
@@ -96,37 +95,28 @@ def fetch_stock_prices(codes):
     for code in codes:
         try:
             t = yf.Ticker(code)
-            h = t.history(period="2d", interval="1d")
-            if len(h) >= 2:
-                prev  = h["Close"].iloc[-2]
-                cur   = h["Close"].iloc[-1]
-                if pd.isna(prev) or pd.isna(cur) or prev == 0:
-                    print(f"   ⚠️ {code}: 收盤價缺漏或無效，跳過本次更新")
-                    continue
-                chg   = cur - prev
-                chgP  = chg / prev * 100
-                prices[code] = {
-                    "name":    name_map.get(code, code),
-                    "price":   round(cur, 2),
-                    "change":  round(chg, 2),
-                    "changeP": round(chgP, 2),
-                    "open":    round(float(h["Open"].iloc[-1]), 2),
-                    "high":    round(float(h["High"].iloc[-1]), 2),
-                    "low":     round(float(h["Low"].iloc[-1]), 2),
-                    "vol":     int(h["Volume"].iloc[-1]),
-                }
-            elif len(h) == 1:
-                cur = h["Close"].iloc[-1]
-                if pd.isna(cur):
-                    print(f"   ⚠️ {code}: 收盤價無效，跳過本次更新")
-                    continue
-                prices[code] = {
-                    "name":    name_map.get(code, code),
-                    "price":   round(cur, 2),
-                    "change":  0, "changeP": 0,
-                    "open": round(cur, 2), "high": round(cur, 2),
-                    "low": round(cur, 2), "vol": 0,
-                }
+            # period="2d" 偶爾只回傳 1 筆（週一效應/開盤前查詢），改用 5d 確保拿到 >=2 筆真實收盤
+            h = t.history(period="5d", interval="1d")
+            if len(h) < 2:
+                print(f"   ⚠️ {code}: 僅取得 {len(h)} 筆收盤價，資料不足，跳過本次更新")
+                continue
+            prev  = h["Close"].iloc[-2]
+            cur   = h["Close"].iloc[-1]
+            if pd.isna(prev) or pd.isna(cur) or prev == 0:
+                print(f"   ⚠️ {code}: 收盤價缺漏或無效，跳過本次更新")
+                continue
+            chg   = cur - prev
+            chgP  = chg / prev * 100
+            prices[code] = {
+                "name":    name_map.get(code, code),
+                "price":   round(cur, 2),
+                "change":  round(chg, 2),
+                "changeP": round(chgP, 2),
+                "open":    round(float(h["Open"].iloc[-1]), 2),
+                "high":    round(float(h["High"].iloc[-1]), 2),
+                "low":     round(float(h["Low"].iloc[-1]), 2),
+                "vol":     int(h["Volume"].iloc[-1]),
+            }
             time.sleep(0.2)
         except Exception as e:
             print(f"   ⚠️ {code}: {e}")
