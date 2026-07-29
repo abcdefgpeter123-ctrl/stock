@@ -308,11 +308,12 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <div class="chg" id="m-margin-chg">—</div>
       <div class="vix-tip">
         <div class="vix-tip-title">融資有沒有洗乾淨？</div>
-        融資餘額是全市場「借錢買股票」的總量。股價跌但融資降幅不夠大，代表散戶還在硬扛，籌碼未出清；融資快速下降（尤其大於指數跌幅）通常代表斷頭賣壓已出盡。<br><br>
-        <b>解讀參考：</b><br>
-        🟢 融資降幅 &gt; 指數跌幅：籌碼偏向出清<br>
-        🟡 融資小幅下降：尚未完全洗清<br>
-        🔴 指數跌、融資逆勢增加：風險未解<br><br>
+        融資餘額是全市場「借錢買股票」的總量。判斷方式：把「融資降幅」除以「指數跌幅」算出比值，比值越高代表籌碼出清越徹底。<br><br>
+        <b>解讀參考（指數下跌時）：</b><br>
+        🟢 比值 ≥ 100%：融資降幅追上或超過指數跌幅，籌碼偏向出清<br>
+        🟡 比值 30%–100%：融資有降但不夠多，尚未完全洗清<br>
+        🔴 比值 &lt; 30%，或融資逆勢增加：籌碼仍重，風險未解<br>
+        🔴 指數上漲且融資漲幅 &gt; 指數漲幅：追高加碼，留意過熱<br><br>
         <span id="m-margin-hint" style="color:var(--text2);font-weight:500"></span><br><br>
         <span style="color:var(--text3)">資料來源：TWSE OpenAPI（MI_MARGN，全市場加總）</span>
       </div>
@@ -2303,15 +2304,19 @@ function updateMargin(margin, twiiChgP){
   const sign = margin.change_pct >= 0 ? "+" : "";
   chgEl.innerHTML = `<span class="${margin.change_pct>=0?'up':'dn'}">${sign}${margin.change_pct.toFixed(2)}%</span>`;
 
-  // 洗盤判斷：比對融資增減% 與 加權指數當日漲跌%
+  // 洗盤判斷：融資降幅 ÷ 指數跌幅 = 比值，比值越高代表籌碼出清越徹底
   let hint = "", hintColor = "var(--text3)";
   if(twiiChgP != null && twiiChgP < -0.3){
-    if(margin.change_pct <= twiiChgP){
-      hint = "🟢 融資降幅 ≥ 指數跌幅，籌碼偏向出清";
+    const ratio = margin.change_pct <= 0 ? (margin.change_pct / twiiChgP) * 100 : -Infinity;
+    if(ratio >= 100){
+      hint = `🟢 融資降幅比值 ${ratio.toFixed(0)}%（≥100%），籌碼偏向出清`;
       hintColor = "#4ade80";
-    } else if(margin.change_pct < 0){
-      hint = "🟡 融資小幅下降，尚未完全洗清";
+    } else if(ratio >= 30){
+      hint = `🟡 融資降幅比值 ${ratio.toFixed(0)}%（30–100%區間），尚未完全洗清`;
       hintColor = "#facc15";
+    } else if(ratio >= 0){
+      hint = `🔴 融資降幅比值僅 ${ratio.toFixed(0)}%（<30%），籌碼仍重`;
+      hintColor = "#f87171";
     } else {
       hint = "🔴 指數下跌但融資逆勢增加，風險未解";
       hintColor = "#f87171";
