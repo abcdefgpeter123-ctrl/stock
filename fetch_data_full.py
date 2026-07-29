@@ -1170,6 +1170,45 @@ def generate_weekly_summary(all_prices, histories, inst, twii):
     return result
 
 
+# ── 融資餘額（觀察融資是否洗乾淨）──────────────────────────
+
+def fetch_margin_summary():
+    """
+    從 TWSE OpenAPI MI_MARGN 抓全市場融資餘額（加總所有個股，單位：張）。
+    回傳 {balance_today, balance_prev, change_lots, change_pct} 或 None。
+    """
+    try:
+        url = "https://openapi.twse.com.tw/v1/exchangeReport/MI_MARGN"
+        r = requests.get(url, headers=HEADERS, timeout=25)
+        rows = r.json()
+        if not isinstance(rows, list) or not rows:
+            return None
+
+        def to_int(v):
+            try:
+                return int(str(v).replace(",", "").strip() or 0)
+            except Exception:
+                return 0
+
+        today = sum(to_int(row.get("融資今日餘額")) for row in rows)
+        prev  = sum(to_int(row.get("融資前日餘額")) for row in rows)
+        if today <= 0 or prev <= 0:
+            return None
+
+        change_lots = today - prev
+        change_pct  = round(change_lots / prev * 100, 2)
+        return {
+            "balance_today": today,
+            "balance_prev":  prev,
+            "change_lots":   change_lots,
+            "change_pct":    change_pct,
+            "date": datetime.date.today().strftime("%Y/%m/%d"),
+        }
+    except Exception as e:
+        print(f"   ⚠️ 融資餘額: {e}")
+        return None
+
+
 # ── 加權指數 ──────────────────────────────────────────────
 
 def fetch_twii():
@@ -2124,6 +2163,20 @@ def main():
         print(f"✅ USD/TWD: {usdtwd['price']} ({usdtwd['chg']:+.3f})")
     else:
         print(f"   ⚠️ USD/TWD 抓取失敗，保留前次資料")
+
+    # 1b. 融資餘額（觀察融資是否洗乾淨）
+    margin = fetch_margin_summary()
+    if margin:
+        # 保留近 30 日走勢（供前端畫小趨勢圖）
+        history = data.get("margin", {}).get("history", [])
+        if not history or history[-1].get("date") != margin["date"]:
+            history.append({"date": margin["date"], "balance": margin["balance_today"]})
+            history = history[-30:]
+        margin["history"] = history
+        data["margin"] = margin
+        print(f"✅ 融資餘額: {margin['balance_today']:,} 張（{margin['change_pct']:+.2f}%）")
+    else:
+        print(f"   ⚠️ 融資餘額抓取失敗，保留前次資料")
 
     print("📈 大盤歷史走勢...")
     twii_closes, twii_dates = fetch_twii_history()

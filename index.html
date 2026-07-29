@@ -303,6 +303,21 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div class="metric"><div class="lbl">投信</div><div class="val" id="m-trust">—</div><div class="chg" id="m-trust-chg">—</div></div>
     <div class="metric"><div class="lbl">自營商</div><div class="val" id="m-dealer">—</div><div class="chg" id="m-dealer-chg">—</div></div>
     <div class="metric vix-tooltip">
+      <div class="lbl">融資餘額 ⓘ</div>
+      <div class="val" id="m-margin">—</div>
+      <div class="chg" id="m-margin-chg">—</div>
+      <div class="vix-tip">
+        <div class="vix-tip-title">融資有沒有洗乾淨？</div>
+        融資餘額是全市場「借錢買股票」的總量。股價跌但融資降幅不夠大，代表散戶還在硬扛，籌碼未出清；融資快速下降（尤其大於指數跌幅）通常代表斷頭賣壓已出盡。<br><br>
+        <b>解讀參考：</b><br>
+        🟢 融資降幅 &gt; 指數跌幅：籌碼偏向出清<br>
+        🟡 融資小幅下降：尚未完全洗清<br>
+        🔴 指數跌、融資逆勢增加：風險未解<br><br>
+        <span id="m-margin-hint" style="color:var(--text2);font-weight:500"></span><br><br>
+        <span style="color:var(--text3)">資料來源：TWSE OpenAPI（MI_MARGN，全市場加總）</span>
+      </div>
+    </div>
+    <div class="metric vix-tooltip">
       <div class="lbl">美元／台幣 ⓘ</div>
       <div class="val" id="m-usdtwd">—</div>
       <div class="chg" id="m-usdtwd-chg">—</div>
@@ -2276,6 +2291,41 @@ function updateMetrics(){
   }
 }
 
+function updateMargin(margin, twiiChgP){
+  if(!margin || margin.balance_today == null) return;
+  const el    = document.getElementById("m-margin");
+  const chgEl = document.getElementById("m-margin-chg");
+  const hintEl = document.getElementById("m-margin-hint");
+  if(!el) return;
+
+  const wan = margin.balance_today / 10000;  // 張 → 萬張，較易讀
+  el.textContent = wan.toFixed(1) + "萬張";
+  const sign = margin.change_pct >= 0 ? "+" : "";
+  chgEl.innerHTML = `<span class="${margin.change_pct>=0?'up':'dn'}">${sign}${margin.change_pct.toFixed(2)}%</span>`;
+
+  // 洗盤判斷：比對融資增減% 與 加權指數當日漲跌%
+  let hint = "", hintColor = "var(--text3)";
+  if(twiiChgP != null && twiiChgP < -0.3){
+    if(margin.change_pct <= twiiChgP){
+      hint = "🟢 融資降幅 ≥ 指數跌幅，籌碼偏向出清";
+      hintColor = "#4ade80";
+    } else if(margin.change_pct < 0){
+      hint = "🟡 融資小幅下降，尚未完全洗清";
+      hintColor = "#facc15";
+    } else {
+      hint = "🔴 指數下跌但融資逆勢增加，風險未解";
+      hintColor = "#f87171";
+    }
+  } else if(twiiChgP != null && twiiChgP > 0.3 && margin.change_pct > twiiChgP){
+    hint = "🔴 指數上漲、融資同步加碼追高，留意過熱";
+    hintColor = "#f87171";
+  } else {
+    hint = "目前無明顯洗盤或追高訊號";
+  }
+  if(hintEl){ hintEl.textContent = hint; hintEl.style.color = hintColor; }
+  el.style.color = hintColor === "var(--text3)" ? "var(--text)" : hintColor;
+}
+
 function updateUsdTwd(fx){
   if(!fx || fx.price == null) return;
   const el    = document.getElementById("m-usdtwd");
@@ -2781,6 +2831,7 @@ async function loadData(){
     if(data.institutional){
       setInstMetrics(data.institutional);
     }
+    if(data.margin) updateMargin(data.margin, data.twii?.chgP);
     if(data.usdtwd) updateUsdTwd(data.usdtwd);
     if(data.prices){
       priceCache = data.prices;
