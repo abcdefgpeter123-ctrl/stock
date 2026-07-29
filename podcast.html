@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PODCAST精華 · 台股儀表板</title>
+<style>
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2233;
+  --border:rgba(167,139,250,0.18);--border2:rgba(167,139,250,0.32);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --accent:#a78bfa;--up:#4ade80;--dn:#f87171;--warn:#fb923c;
+  --font:'Noto Sans TC',sans-serif;--mono:'JetBrains Mono','Fira Mono',monospace;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;font-size:14px;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.page{max-width:760px;margin:0 auto;padding:28px 16px 80px}
+
+nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
+.nav-a{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:13px;text-decoration:none;
+  background:var(--bg2);border:1px solid rgba(255,255,255,0.08);color:var(--text3);transition:all .15s}
+.nav-a:hover{color:var(--accent);border-color:var(--accent);text-decoration:none}
+.nav-a.active{background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.4);color:var(--accent);font-weight:500}
+
+.page-hd{margin-bottom:24px}
+.page-hd h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.page-hd p{font-size:13px;color:var(--text3)}
+
+.note-bar{background:rgba(167,139,250,0.06);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.7}
+.note-bar strong{color:var(--text2)}
+
+.ep-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px 26px}
+.ep-eyebrow{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:8px}
+.ep-title{font-size:19px;font-weight:700;color:var(--text);margin-bottom:6px}
+.ep-meta{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
+.ep-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--text3)}
+
+.summary-list{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.summary-list li{position:relative;padding-left:20px;font-size:14px;color:var(--text2);line-height:1.75}
+.summary-list li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+.ep-actions{display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:18px}
+.btn-listen{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;
+  background:rgba(167,139,250,0.12);border:1px solid var(--border2);color:var(--accent)}
+.btn-listen:hover{background:rgba(167,139,250,0.2);text-decoration:none}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);background:var(--bg2);border:1px dashed var(--border);border-radius:12px}
+.empty-state .icon{font-size:36px;margin-bottom:12px}
+.empty-state .msg{font-size:14px;margin-bottom:6px;color:var(--text2)}
+.empty-state .sub{font-size:12px}
+
+.updated-tag{font-size:11px;color:var(--text3);text-align:right;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav>
+    <a href="index.html" class="nav-a">🇹🇼 台股</a>
+    <a href="us.html" class="nav-a">🇺🇸 美股</a>
+    <a href="weekly_report.html" class="nav-a">📋 週報</a>
+    <a href="anatomy.html" class="nav-a">🔬 晶片圖</a>
+    <a href="health_check.html" class="nav-a">📋 健檢</a>
+    <a href="podcast.html" class="nav-a active">🎙️ Podcast精華</a>
+    <a href="feedback.html" class="nav-a">💬 留言板</a>
+  </nav>
+
+  <div class="page-hd">
+    <h1>🎙️ PODCAST精華</h1>
+    <p>自動追蹤股癌 Gooaye 最新集數，AI 轉錄＋摘要重點</p>
+  </div>
+
+  <div class="note-bar">
+    <strong>📌 說明：</strong>內容由語音轉文字（Whisper）+ AI（Claude）自動摘要，可能有轉錄誤差或理解偏差，僅供參考，不代表原節目完整觀點。已自動略過業配/贊助商內容。完整內容建議直接收聽原節目。
+  </div>
+
+  <div id="ep-content">
+    <div class="empty-state">
+      <div class="icon">🎧</div>
+      <div class="msg">尚未產生摘要</div>
+      <div class="sub">每日自動排程執行後會顯示最新一集重點</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+async function loadPodcast() {
+  try {
+    const res = await fetch('podcast_summary.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.summary) return;
+
+    const bullets = data.summary
+      .split('\n')
+      .map(l => l.replace(/^[•\-\*]\s*/, '').trim())
+      .filter(l => l.length > 0);
+
+    const epNo = data.episode_no ? `EP${data.episode_no}` : '';
+    const title = (data.title || '').replace(/^EP\s*\d+\s*\|?\s*/i, '').trim();
+
+    document.getElementById('ep-content').innerHTML = `
+      <div class="ep-card">
+        <div class="ep-eyebrow">LATEST EPISODE</div>
+        <div class="ep-title">${epNo ? epNo + ' ' : ''}${title || data.title || ''}</div>
+        <div class="ep-meta">
+          <span>📅 ${data.pub_date || '—'}</span>
+          <span class="dot"></span>
+          <span>股癌 Gooaye</span>
+        </div>
+        <ul class="summary-list">
+          ${bullets.map(b => `<li>${esc(b)}</li>`).join('')}
+        </ul>
+        <div class="ep-actions">
+          <a class="btn-listen" href="${data.show_url || '#'}" target="_blank" rel="noopener">🎧 前往收聽完整節目</a>
+        </div>
+      </div>
+      <div class="updated-tag">摘要更新時間：${data.updated_at || '—'}</div>
+    `;
+  } catch (e) {
+    console.error('載入失敗:', e);
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+loadPodcast();
+</script>
+</body>
+</html>

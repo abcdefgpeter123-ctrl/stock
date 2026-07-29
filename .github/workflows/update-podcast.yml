@@ -1,0 +1,45 @@
+name: Update Podcast Summary
+
+on:
+  schedule:
+    # 每天台灣時間 12:00 執行（UTC 04:00），股癌通常上午到中午發布新集數
+    - cron: '0 4 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'fetch_podcast_summary.py'
+  workflow_dispatch:  # 允許手動觸發
+
+permissions:
+  contents: write
+
+jobs:
+  update-podcast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure ffmpeg is available
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Install dependencies
+        run: pip3 install requests openai-whisper --break-system-packages --quiet
+
+      - name: Fetch + transcribe + summarize latest episode
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 fetch_podcast_summary.py
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add podcast_summary.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update podcast summary $(date +'%Y-%m-%d %H:%M')"
+            git pull --no-rebase --no-edit
+            git push
+          fi
