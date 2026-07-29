@@ -78,11 +78,25 @@ def download_audio(url, dest):
 
 
 def transcribe_segments(path):
-    """回傳 whisper 的 segments 列表（含 start/end/text），保留語音停頓資訊供分段用"""
+    """
+    回傳 whisper 的 segments 列表（含 start/end/text），保留語音停頓資訊供分段用。
+    initial_prompt 刻意寫成有標點的完整句子——Whisper 會模仿提示詞的標點風格，
+    否則中文轉錄預設幾乎不會輸出任何標點符號（實測 20000+ 字 0 標點）。
+    """
     import whisper
     model = whisper.load_model("base")
-    result = model.transcribe(path, language="zh", initial_prompt="股癌 Gooaye 財經 podcast 股票 台股 美股 投資")
+    result = model.transcribe(
+        path, language="zh",
+        initial_prompt="以下是普通話的句子，這是一個關於股票、財經、投資的節目，內容包含台股、美股、總體經濟的討論。"
+    )
     return result["segments"]
+
+
+def _normalize_punct(text):
+    """半形標點 → 全形，統一中文排版"""
+    return (text.replace(",", "，").replace("!", "！")
+                .replace("?", "？").replace(":", "：")
+                .replace(";", "；"))
 
 
 def trim_ads_and_paragraph(segments):
@@ -123,7 +137,7 @@ def trim_ads_and_paragraph(segments):
     if cur:
         paragraphs.append("".join(cur).strip())
 
-    return [p for p in paragraphs if p]
+    return [_normalize_punct(p) for p in paragraphs if p]
 
 
 def main():
