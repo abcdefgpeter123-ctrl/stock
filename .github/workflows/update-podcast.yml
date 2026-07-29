@@ -26,9 +26,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install requests openai-whisper --break-system-packages --quiet
 
-      - name: Fetch + transcribe + summarize latest episode
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Fetch + transcribe latest episode
         run: python3 fetch_podcast_summary.py
 
       - name: Commit and push if changed
