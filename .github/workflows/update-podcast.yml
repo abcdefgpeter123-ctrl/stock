@@ -35,6 +35,10 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          if [ ! -f podcast_summary.json ]; then
+            echo "podcast_summary.json 未產生（本次未取得新摘要），略過提交"
+            exit 0
+          fi
           git add podcast_summary.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
