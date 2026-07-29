@@ -1,0 +1,42 @@
+name: Update US Stock Data
+
+on:
+  schedule:
+    # 每天台灣時間 07:00 執行（UTC 前一日 23:00），週一到週五
+    # 美股收盤約台灣時間 04:00-05:00，07:00 抓取有 2-3 小時緩衝確保資料穩定
+    # 目的：讓台股開盤（09:00）前就能參考美股走勢
+    - cron: '0 23 * * 0-4'
+  push:
+    branches: [main]
+    paths:
+      - 'fetch_us_data.py'
+  workflow_dispatch:  # 允許手動觸發
+
+permissions:
+  contents: write
+
+jobs:
+  update-us-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip3 install requests yfinance pandas --break-system-packages --quiet
+
+      - name: Fetch US stock data
+        run: python3 fetch_us_data.py
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add us_data.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update US stock data $(date +'%Y-%m-%d %H:%M')"
+            git pull --no-rebase --no-edit
+            git push
+          fi

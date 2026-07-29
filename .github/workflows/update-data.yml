@@ -9,7 +9,6 @@ on:
     branches: [main]
     paths:
       - 'fetch_data_full.py'
-      - 'fetch_us_data.py'
       - 'generate_report.py'
   workflow_dispatch:  # 允許手動觸發
 
@@ -31,9 +30,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python3 fetch_data_full.py
 
-      - name: Fetch US stock data
-        run: python3 fetch_us_data.py
-
       - name: Generate weekly report (Fridays only)
         run: |
           # 判斷今天是否為週五（台灣時間，UTC+8）
@@ -50,7 +46,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data.json company_info.json us_data.json weekly_report.html targets.json
+          git add data.json company_info.json weekly_report.html targets.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
