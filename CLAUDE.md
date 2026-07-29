@@ -114,12 +114,21 @@ ETF_ETFINFO_CODES = ["0050", "0056", "00929", "00891"]  # etfinfo.tw 自動抓�
 
 ## GitHub Actions
 
-**檔案**：`.github/workflows/update-data.yml`
+兩支獨立排程，分開跑台股／美股資料：
 
+**`.github/workflows/update-data.yml`**（台股）
 - **執行時間**：週一到週五，UTC 10:30（台灣 18:30）
-- **runner**：`self-hosted`（本機 Mac，台灣 IP，launchd 常駐服務）
+- **runner**：`ubuntu-latest`（GitHub-hosted）
 - **依賴**：`requests yfinance anthropic beautifulsoup4`
-- **寫入檔案**：`data.json`、`company_info.json`
+- **寫入檔案**：`data.json`、`company_info.json`、週五另產生 `weekly_report.html`
+- 選在 18:30 是因為 TWSE 盤後資料（尤其 ETF 申購買回清單）約 17:00 後才陸續發布完整，留緩衝時間
+
+**`.github/workflows/update-us-data.yml`**（美股）
+- **執行時間**：週一到週五，台灣時間 07:00（UTC 前一日 23:00，cron `0 23 * * 0-4`）
+- **runner**：`ubuntu-latest`（GitHub-hosted，只打 Yahoo Finance，無需台灣 IP）
+- **依賴**：`requests yfinance pandas`
+- **寫入檔案**：`us_data.json`
+- 選在 07:00 是為了台股開盤（09:00）前就能參考美股走勢：美股收盤約台灣時間 04:00–05:00，07:00 抓取留有 2–3 小時緩衝確保 Yahoo Finance 資料穩定
 
 ### Runner 管理
 
