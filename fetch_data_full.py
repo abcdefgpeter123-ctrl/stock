@@ -2167,14 +2167,21 @@ def main():
     # 1b. 融資餘額（觀察融資是否洗乾淨）
     margin = fetch_margin_summary()
     if margin:
-        # 保留近 30 日走勢（供前端畫小趨勢圖）
+        # 大盤下跌時才計算「洗盤比值」＝融資降幅 ÷ 指數跌幅（跌越多、融資降越多才有意義）
+        twii_chg_p = (twii or {}).get("chgP")
+        ratio = None
+        if twii_chg_p is not None and twii_chg_p < -0.3 and margin["change_pct"] <= 0:
+            ratio = round(margin["change_pct"] / twii_chg_p * 100, 1)
+        margin["ratio"] = ratio
+
+        # 保留近 120 個交易日走勢（供前端算歷史百分位，約半年）
         history = data.get("margin", {}).get("history", [])
         if not history or history[-1].get("date") != margin["date"]:
-            history.append({"date": margin["date"], "balance": margin["balance_today"]})
-            history = history[-30:]
+            history.append({"date": margin["date"], "balance": margin["balance_today"], "ratio": ratio})
+            history = history[-120:]
         margin["history"] = history
         data["margin"] = margin
-        print(f"✅ 融資餘額: {margin['balance_today']:,} 張（{margin['change_pct']:+.2f}%）")
+        print(f"✅ 融資餘額: {margin['balance_today']:,} 張（{margin['change_pct']:+.2f}%，比值 {ratio}）")
     else:
         print(f"   ⚠️ 融資餘額抓取失敗，保留前次資料")
 
