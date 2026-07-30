@@ -2412,7 +2412,7 @@ def main():
     data["updated_at"] = datetime.datetime.now(tz_tw).strftime("%Y/%m/%d %H:%M")
 
     with open("data.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
 
     print(f"\n🎉 完成！更新時間: {data['updated_at']}")
 
