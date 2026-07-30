@@ -50,7 +50,8 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 .score-check.checked::after{content:'✓';font-size:13px;color:#fff;font-weight:700}
 .score-check.auto-yes{background:rgba(34,197,94,0.2);border-color:var(--dn);cursor:default}
 .score-check.auto-yes::after{content:'✓';font-size:13px;color:var(--dn);font-weight:700}
-.score-check.auto-no{background:var(--bg3);border-color:var(--border);cursor:default;opacity:.5}
+.score-check.auto-no{background:rgba(248,113,113,0.12);border-color:var(--red);cursor:default}
+.score-check.auto-no::after{content:'✕';font-size:12px;color:var(--red);font-weight:700}
 .auto-tag{font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;letter-spacing:.04em}
 
 .score-total{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:16px 20px;margin-top:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
@@ -397,8 +398,8 @@ const INDICATORS = [
   { id:'ma20_60',    label:'20MA > 60MA（多頭排列）',pts:'+1', auto:true },
   { id:'ma60_120',   label:'60MA > 120MA',        pts:'+1', auto:true },
   { id:'tsmc_20ma',  label:'台積電（2330）站上 20MA', pts:'+1', auto:true },
-  { id:'ai_20ma',    label:'AI 族群站上 20MA',    pts:'+1', auto:false, hint:'AI 族群：廣達、緯創、英業達、技嘉均線多頭？' },
-  { id:'advance',    label:'上市上漲家數 > 下跌家數', pts:'+1', auto:false, hint:'今日盤後再手動確認' },
+  { id:'ai_20ma',    label:'AI 族群站上 20MA',    pts:'+1', auto:true, hint:'AI伺服器題材成分股平均站上20MA' },
+  { id:'advance',    label:'觀察名單上漲家數 > 下跌家數', pts:'+1', auto:true, hint:'比較目前觀察清單今日漲跌家數' },
 ];
 
 const MARKET_LEVELS = [
@@ -506,6 +507,34 @@ function computeAutoIndicators() {
     const c = tsmc.closes;
     const last = c[c.length-1];
     auto.tsmc_20ma = last > ma(c, 20);
+  }
+
+  // AI伺服器題材成分股：平均是否站上 20MA
+  const aiCodes = WATCH_STOCKS.filter(s => s.theme === 'AI伺服器').map(s => s.code);
+  const aiRatios = aiCodes.map(code => {
+    const h = histories[code];
+    if (!h?.closes?.length || h.closes.length < 20) return null;
+    const c = h.closes;
+    const last = c[c.length - 1];
+    const ma20v = ma(c, 20);
+    return ma20v ? last / ma20v : null;
+  }).filter(v => v != null);
+  if (aiRatios.length) {
+    const avgRatio = aiRatios.reduce((a, b) => a + b, 0) / aiRatios.length;
+    auto.ai_20ma = avgRatio > 1;
+  }
+
+  // 觀察名單今日上漲家數 > 下跌家數
+  const upDownCodes = WATCH_STOCKS.map(s => s.code);
+  let upCnt = 0, dnCnt = 0;
+  upDownCodes.forEach(code => {
+    const chg = priceData[code]?.changeP;
+    if (chg == null) return;
+    if (chg > 0) upCnt++;
+    else if (chg < 0) dnCnt++;
+  });
+  if (upCnt + dnCnt > 0) {
+    auto.advance = upCnt > dnCnt;
   }
 
   state.autoResults = auto;
