@@ -2179,11 +2179,10 @@ def main():
             ratio = round(margin["change_pct"] / twii_chg_p * 100, 1)
         margin["ratio"] = ratio
 
-        # 保留近 120 個交易日走勢（供前端算歷史百分位，約半年）
+        # 保留完整歷史（已回補至 2006 年初，供前端算歷史百分位，不要再裁短）
         history = data.get("margin", {}).get("history", [])
         if not history or history[-1].get("date") != margin["date"]:
             history.append({"date": margin["date"], "balance": margin["balance_today"], "ratio": ratio})
-            history = history[-120:]
         margin["history"] = history
         data["margin"] = margin
         print(f"✅ 融資餘額: {margin['balance_today']:,} 張（{margin['change_pct']:+.2f}%，比值 {ratio}）")
