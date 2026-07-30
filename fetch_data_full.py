@@ -2251,8 +2251,14 @@ def main():
         merged_inst_stocks = {**old_inst_stocks, **inst_stocks}
     else:
         merged_inst_stocks = inst_stocks
+    # T86 回傳全市場（含全部個股/權證/ETF，2萬多筆），但前端只會查詢觀察清單的股票，
+    # 其餘完全用不到卻會被打包進 data.json 拖慢每次載入，這裡先裁到只留觀察清單需要的代號。
+    _watchlist_codes = set(FALLBACK_CODES) | {
+        c for g in THEME_GROUPS.values() for c in list(g["leaders"]) + list(g["members"])
+    }
+    merged_inst_stocks = {k: v for k, v in merged_inst_stocks.items() if k in _watchlist_codes}
     data["inst_stocks"] = merged_inst_stocks
-    print(f"   📊 法人資料合併：新 {len(inst_stocks)} 支 + 沿用舊資料 {len(merged_inst_stocks) - len(inst_stocks)} 支")
+    print(f"   📊 法人資料合併：新 {len(inst_stocks)} 支 + 沿用舊資料，裁剪後保留 {len(merged_inst_stocks)} 支（觀察清單範圍）")
 
     # 5. 機會點自動偵測（同時收集30日歷史供圖表用）
     print("🔍 機會點偵測中...")
