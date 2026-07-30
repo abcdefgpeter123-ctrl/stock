@@ -543,14 +543,19 @@ def update_company_info(all_prices, company_info, api_key=None, max_new=50):
     """
     today_str = datetime.date.today().strftime("%Y/%m/%d")
 
-    # ── 優先補齊的代號（主清單 + 題材分組）
-    priority = set()
+    # ── 優先補齊的代號（主清單 FALLBACK_CODES + 題材分組，涵蓋所有監控清單用到的股票）
+    # 舊版只用 THEME_GROUPS（47支），FALLBACK_CODES（74支）裡有些股票（如台泥、中華電、華航）
+    # 從未被納入，導致這些股票的 EPS 永遠是空的、健檢頁面永遠顯示「無資料」。
+    priority = set(FALLBACK_CODES)
     for g in THEME_GROUPS.values():
         priority.update(g["leaders"])
         priority.update(g["members"])
 
-    # ── 更新本益比 + 季 EPS（優先清單）
-    pe_codes = list(priority)[:60]  # 每天最多抓 60 支，避免超時
+    # ── 更新本益比 + 季 EPS（優先補還沒有 EPS 的代號，其餘才輪流補新資料）
+    missing = [c for c in priority if not company_info.get(c, {}).get("eps")]
+    have    = [c for c in priority if company_info.get(c, {}).get("eps")]
+    pe_codes = (missing + have)[:60]  # 每天最多抓 60 支，避免超時
+    print(f"   （尚無 EPS 的股票 {len(missing)} 支，優先補齊）")
     print(f"   📊 更新 {len(pe_codes)} 支本益比與季 EPS...")
     for code in pe_codes:
         pe_data = fetch_trailing_pe(code)
