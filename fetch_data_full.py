@@ -2144,6 +2144,67 @@ def fetch_inst_stocks(all_prices, target_days=5):
 
 # ── 主程式 ────────────────────────────────────────────────
 
+# ── histories 壓縮（縮短首頁載入）───────────────────────────
+RECENT_DAYS = 280   # data.json 只留最近約 280 個交易日（足夠算到「一年」漲幅 252 天）
+
+
+def compact_histories(data):
+    """
+    histories 原本佔 data.json 八成以上體積，這裡做三件事：
+
+    1. 日期表去重 — 101 支股票的 labels 幾乎完全相同（只有 7 種），
+       抽成共用的 data["history_dates"]，每支股票只存索引 l。
+    2. 成交量改存「張」（÷1000）— 每個數字少 3 位數。
+    3. 只保留最近 RECENT_DAYS 天，更早的 5 年資料另存 history_5y.json，
+       使用者按下「五年」時前端才去抓。
+
+    效果：gzip 後約 1050KB → 250KB。
+    """
+    histories = data.get("histories") or {}
+    if not histories:
+        return
+
+    date_table = []          # 共用日期陣列清單
+    date_index = {}          # tuple(labels) → 索引字串
+    tail = {}                # 早於 RECENT_DAYS 的部分，存進 history_5y.json
+
+    for code, h in histories.items():
+        labels  = h.get("labels") or []
+        closes  = h.get("closes") or []
+        volumes = h.get("volumes") or []
+        if not labels or not closes:
+            continue
+
+        # 切出「早期」與「近期」兩段
+        if len(labels) > RECENT_DAYS:
+            tail[code] = {
+                "labels":  labels[:-RECENT_DAYS],
+                "closes":  closes[:-RECENT_DAYS],
+                "volumes": [round(v / 1000) for v in volumes[:-RECENT_DAYS]],
+            }
+            labels  = labels[-RECENT_DAYS:]
+            closes  = closes[-RECENT_DAYS:]
+            volumes = volumes[-RECENT_DAYS:]
+
+        key = tuple(labels)
+        if key not in date_index:
+            date_index[key] = str(len(date_table))
+            date_table.append(labels)
+
+        h["l"]       = date_index[key]
+        h["closes"]  = closes
+        h["volumes"] = [round(v / 1000) for v in volumes]
+        h.pop("labels", None)
+
+    data["history_dates"] = date_table
+
+    with open("history_5y.json", "w", encoding="utf-8") as f:
+        json.dump(tail, f, ensure_ascii=False, separators=(",", ":"))
+
+    print(f"   🗜️ histories 壓縮：共用日期表 {len(date_table)} 組、"
+          f"近期保留 {RECENT_DAYS} 天，{len(tail)} 支的 5 年資料移至 history_5y.json")
+
+
 def main():
     print("🚀 台股資料抓取 v3 開始...")
     print(f"   時間: {datetime.datetime.now()}")
@@ -2417,6 +2478,9 @@ def main():
     # 6. 時間戳
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))
     data["updated_at"] = datetime.datetime.now(tz_tw).strftime("%Y/%m/%d %H:%M")
+
+    # 7. 壓縮 histories，縮短首頁載入時間
+    compact_histories(data)
 
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))

@@ -1888,8 +1888,34 @@ function switchTpPeriod(code, period, btn) {
       }
       area.innerHTML = `<canvas data-tp-code="${code}" style="width:100%;display:block"></canvas>`;
     }
-    setTimeout(initTpCharts, 50);
+    if (period === '五年') {
+      // 5 年歷史不放在 data.json（會拖慢每次開頁），第一次按「五年」才載入
+      loadFullHistory().then(() => setTimeout(initTpCharts, 50));
+    } else {
+      setTimeout(initTpCharts, 50);
+    }
   }
+}
+
+// ── 5 年歷史延後載入 ─────────────────────────────────────
+let _fullHistoryPromise = null;
+function loadFullHistory() {
+  if (_fullHistoryPromise) return _fullHistoryPromise;
+  _fullHistoryPromise = fetch(`history_5y.json?_=${Date.now()}`)
+    .then(r => r.ok ? r.json() : {})
+    .then(tail => {
+      Object.entries(tail).forEach(([code, old]) => {
+        const h = histories[code];
+        if (!h || h._full) return;
+        h.labels  = old.labels.concat(h.labels);
+        h.closes  = old.closes.concat(h.closes);
+        if (h.volumes) h.volumes = old.volumes.map(v => v * 1000).concat(h.volumes);
+        h._full = true;
+      });
+      console.log(`5 年歷史已載入（${Object.keys(tail).length} 支）`);
+    })
+    .catch(e => { console.warn('5 年歷史載入失敗，改用現有資料', e); _fullHistoryPromise = null; });
+  return _fullHistoryPromise;
 }
 
 function renderPeRiver(code) {
@@ -2940,6 +2966,13 @@ async function loadData(){
       oppCodes = new Set(opps.map(o => o.code));
     }
     if(data.histories){
+      // data.json 的 histories 是壓縮格式（共用日期表 + 成交量以「張」為單位），
+      // 這裡還原成原本的 {labels, closes, volumes} 形狀，讓後面所有繪圖程式不用改。
+      const dateTable = data.history_dates || [];
+      Object.values(data.histories).forEach(h => {
+        if(h.l != null && dateTable[h.l]) h.labels = dateTable[h.l];   // 共用參考，不複製
+        if(h.volumes) h.volumes = h.volumes.map(v => v * 1000);
+      });
       histories = data.histories;
     }
     if(data.inst_stocks){
