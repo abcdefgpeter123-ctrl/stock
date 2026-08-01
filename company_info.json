@@ -108,8 +108,8 @@
     "industry": "伺服器業",
     "major_clients": "Meta、Google、Microsoft",
     "generated": "2026/05/22",
-    "pe": 17.0,
-    "eps": 288.07,
+    "pe": 18.7,
+    "eps": 287.83,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -185,7 +185,7 @@
     "major_clients": "Apple、Samsung",
     "generated": "2026/05/22",
     "pe": 25.9,
-    "eps": 155.66,
+    "eps": 155.75,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -1062,8 +1062,8 @@
     "industry": "半導體業",
     "major_clients": "Google、Amazon、Meta、台積電",
     "generated": "2026/05/31",
-    "pe": 114.5,
-    "eps": 33.22,
+    "pe": 115.0,
+    "eps": 33.1,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -1115,7 +1115,7 @@
     "major_clients": "台積電、聯電",
     "generated": "2026/05/31",
     "pe": 20.6,
-    "eps": 53.43,
+    "eps": 53.46,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -1203,7 +1203,7 @@
     "major_clients": "Dell、HP、Super Micro、雲端大廠",
     "generated": "2026/05/31",
     "pe": 70.9,
-    "eps": 110.67,
+    "eps": 110.69,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -1317,8 +1317,8 @@
   },
   "2345": {
     "generated": "2026/06/05",
-    "pe": 36.8,
-    "eps": 52.53,
+    "pe": 40.5,
+    "eps": 52.49,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -1410,8 +1410,8 @@
   },
   "6173": {
     "generated": "2026/06/05",
-    "pe": 35.5,
-    "eps": 3.73,
+    "pe": 38.9,
+    "eps": 3.74,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -2008,8 +2008,8 @@
   },
   "3583": {
     "generated": "2026/07/30",
-    "pe": 45.6,
-    "eps": 14.26,
+    "pe": 45.5,
+    "eps": 14.3,
     "quarterly_eps": [
       {
         "q": "2025Q1",
