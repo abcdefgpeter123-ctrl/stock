@@ -228,6 +228,12 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-fund-block.inline{align-items:center}
 .tp-fund-lbl{font-size:10px;color:#a8bacf;white-space:nowrap;min-width:52px;padding-top:2px;text-transform:uppercase;letter-spacing:.06em}
 .tp-fund-text{font-size:12px;color:var(--text2);line-height:1.65;flex:1}
+.tp-revenue-wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.tp-revenue-canvas-wrap{width:88px;height:88px;flex-shrink:0}
+.tp-revenue-legend{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
+.tp-revenue-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2)}
+.tp-revenue-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.tp-revenue-pct{font-family:var(--mono);color:var(--text);font-weight:600;margin-left:auto}
 .tp-fund-val{font-family:var(--mono);font-size:16px;font-weight:600}
 .tp-fund-avg{font-size:11px;color:#a8bacf;margin-left:8px}
 .tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
@@ -1464,6 +1470,7 @@ function renderDetail(code) {
   const core  = si.core_product || ci.core_products || "";
   const story = si.recent_story || ci.recent_story  || "";
   const risks = si.risks || [];
+  const revenue = si.revenue || [];
   const pros  = ci.pros  || [];
   const cons  = ci.cons  || [];
   const pe     = si.pe ?? ci.pe_ratio ?? ci.pe ?? null;
@@ -1481,7 +1488,7 @@ function renderDetail(code) {
     const h = etf.holdings.find(h => h.code === code);
     return h ? { etfCode: etf.code, etfName: etf.name, weight: h.weight, live: etf._holdingsLive } : null;
   }).filter(Boolean);
-  const hasFundamentals = !!(core || story || risks.length || pe != null || epsRaw != null || epsCalc != null || activeETFWeights.length);
+  const hasFundamentals = !!(core || story || risks.length || pe != null || epsRaw != null || epsCalc != null || activeETFWeights.length || revenue.length);
 
   return `<div class="tp-wrap">
     <!-- 頂部：代號 + 股價 -->
@@ -1542,6 +1549,19 @@ function renderDetail(code) {
     <!-- 基本面 -->
     ${hasFundamentals ? `<div class="tp-fundamentals">
       ${core  ? `<div class="tp-fund-block"><span class="tp-fund-lbl">核心產品</span><span class="tp-fund-text">${core}</span></div>` : ""}
+      ${revenue.length ? `<div class="tp-fund-block">
+        <span class="tp-fund-lbl">收入來源</span>
+        <div class="tp-revenue-wrap">
+          <div class="tp-revenue-canvas-wrap"><canvas data-revenue-code="${code}"></canvas></div>
+          <div class="tp-revenue-legend">
+            ${revenue.map((r, i) => `<div class="tp-revenue-item">
+              <span class="tp-revenue-dot" style="background:${REVENUE_COLORS[i % REVENUE_COLORS.length]}"></span>
+              <span>${r.name}</span>
+              <span class="tp-revenue-pct">${r.pct}%</span>
+            </div>`).join("")}
+          </div>
+        </div>
+      </div>` : ""}
       ${(()=>{
         const at = analystTargets[code];
         const pr = (priceCache[code]||{}).price || 0;
@@ -1807,6 +1827,46 @@ function initTpCharts() {
       }
     });
   });
+
+  initRevenueCharts();
+}
+
+function initRevenueCharts() {
+  document.querySelectorAll('canvas[data-revenue-code]').forEach(canvas => {
+    const code = canvas.dataset.revenueCode;
+    const si = stockInfo[code] || {};
+    const revenue = si.revenue || [];
+    const old = Chart.getChart(canvas);
+    if (old) old.destroy();
+    if (!revenue.length) return;
+
+    new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: revenue.map(r => r.name),
+        datasets: [{
+          data: revenue.map(r => r.pct),
+          backgroundColor: revenue.map((_, i) => REVENUE_COLORS[i % REVENUE_COLORS.length]),
+          borderColor: '#0b0f1a',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        cutout: '62%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            backgroundColor: 'rgba(10,20,35,0.95)',
+            borderColor: 'rgba(96,165,250,0.25)', borderWidth: 1,
+            titleColor: '#4a6a8a', bodyColor: '#e8edf5',
+            callbacks: { label: c => `${c.label}: ${c.parsed}%` }
+          }
+        }
+      }
+    });
+  });
 }
 
 function switchTpPeriod(code, period, btn) {
@@ -1952,6 +2012,8 @@ function toggleSection(id, btn) {
   el.style.display = isOpen ? 'none' : '';
   btn.textContent = isOpen ? '▶ 展開' : '▼ 收合';
 }
+
+const REVENUE_COLORS = ['#60a5fa','#a78bfa','#4ade80','#facc15','#fb923c','#f87171','#2dd4bf','#e879f9'];
 
 let priceCache = {};
 let nameCache = {};   // code → 中文名稱（來自 data.json prices.name）
