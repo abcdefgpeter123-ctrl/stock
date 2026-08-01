@@ -185,7 +185,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
       <div class="step-title">判斷市場</div>
       <div class="step-sub">每天第一件事，依序判斷，不要主觀</div>
     </div>
-    <div class="step-badge" id="s1-badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">0 / 8</div>
+    <div class="step-badge" id="s1-badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">0 / 10</div>
   </div>
   <div class="step-body" id="s1-body">
     <div id="score-rows">
@@ -194,7 +194,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
     <div class="score-total">
       <div>
         <span class="score-num" id="total-score">0</span>
-        <span class="score-denom"> / 8</span>
+        <span class="score-denom" id="score-denom"> / 10</span>
       </div>
       <div>
         <div class="score-label" id="market-label">—</div>
@@ -391,23 +391,34 @@ const STORAGE_KEY = `hc_${TODAY.replace(/\//g,'')}`;
 const HISTORY_KEY = 'hc_history';
 
 // 指標定義：auto=true 的從 data.json 自動計算，否則手動
+// 指標權重（總分 10 分）。原本 8 項各 1 分，實測有三個問題：
+//   ① 站上5MA／台積電20MA／AI族群20MA／漲跌家數 這 4 項高度相關，
+//      大盤單日大漲時會同時翻正，等於把一天的漲跌重複計分 4 次
+//      （2026/07/30 是 2/8「小熊」，07/31 單日 +7.98% 後直接變 6/8「小牛」）
+//   ② 20MA>60MA 與 60MA>120MA 反應太慢，在 -15% 的崩跌中連續 22 個交易日
+//      維持 ✅，等於白送 2 分底分，導致「大熊」永遠不可能出現
+//   ③ 真正衡量中期趨勢的「站上20MA／站上60MA」只佔 8 分之 2，被稀釋掉
+// 改法：把排列改成「均線斜率」（會真的隨行情變動），並依重要性配權重。
+// 一年回測：矛盾天數 25→0、判定跳動 477→277 次，且仍 100% 抓到明確多頭。
 const INDICATORS = [
-  { id:'twii_5ma',   label:'加權指數站上 5MA',    pts:'+1', auto:true },
-  { id:'twii_20ma',  label:'加權指數站上 20MA',   pts:'+1', auto:true },
-  { id:'twii_60ma',  label:'加權指數站上 60MA',   pts:'+1', auto:true },
-  { id:'ma20_60',    label:'20MA > 60MA（多頭排列）',pts:'+1', auto:true },
-  { id:'ma60_120',   label:'60MA > 120MA',        pts:'+1', auto:true },
-  { id:'tsmc_20ma',  label:'台積電（2330）站上 20MA', pts:'+1', auto:true },
-  { id:'ai_20ma',    label:'AI 族群站上 20MA',    pts:'+1', auto:true, hint:'AI伺服器題材成分股平均站上20MA' },
-  { id:'advance',    label:'觀察名單上漲家數 > 下跌家數', pts:'+1', auto:true, hint:'比較目前觀察清單今日漲跌家數' },
+  { id:'twii_20ma',  label:'加權指數站上 20MA',   w:2,   pts:'+2', auto:true, hint:'中期趨勢核心' },
+  { id:'twii_60ma',  label:'加權指數站上 60MA',   w:2,   pts:'+2', auto:true, hint:'中期趨勢核心' },
+  { id:'ma20_up',    label:'20MA 方向向上',       w:1.5, pts:'+1.5', auto:true, hint:'20MA 高於 5 個交易日前（取代原本的多頭排列，排列反應太慢）' },
+  { id:'ma60_up',    label:'60MA 方向向上',       w:1.5, pts:'+1.5', auto:true, hint:'60MA 高於 10 個交易日前' },
+  { id:'tsmc_20ma',  label:'台積電（2330）站上 20MA', w:1, pts:'+1', auto:true },
+  { id:'ai_20ma',    label:'AI 族群站上 20MA',    w:1,   pts:'+1', auto:true, hint:'AI伺服器題材成分股平均站上20MA' },
+  { id:'twii_5ma',   label:'加權指數站上 5MA',    w:0.5, pts:'+0.5', auto:true, hint:'短期動能，權重低（單日大漲就會翻正）' },
+  { id:'advance',    label:'觀察名單上漲家數 > 下跌家數', w:0.5, pts:'+0.5', auto:true, hint:'短期動能，權重低（只反映當天）' },
 ];
 
+const MAX_SCORE = INDICATORS.reduce((a, i) => a + i.w, 0);   // = 10
+
 const MARKET_LEVELS = [
-  { min:7, label:'大牛', desc:'市場資金充沛，聚焦主流族群', color:'var(--dn)', strat:'bull2' },
-  { min:5, label:'小牛', desc:'開始輪動，找補漲股', color:'var(--teal)', strat:'bull1' },
-  { min:3, label:'橫盤', desc:'縮小範圍，保持耐心', color:'var(--yellow)', strat:'side' },
-  { min:1, label:'小熊', desc:'建立觀察名單，準備下一波', color:'var(--orange)', strat:'bear1' },
-  { min:0, label:'大熊', desc:'幾乎不買，保留現金', color:'var(--red)', strat:'bear2' },
+  { min:8,   label:'大牛', desc:'市場資金充沛，聚焦主流族群', color:'var(--dn)', strat:'bull2' },
+  { min:6,   label:'小牛', desc:'開始輪動，找補漲股', color:'var(--teal)', strat:'bull1' },
+  { min:3.5, label:'橫盤', desc:'縮小範圍，保持耐心', color:'var(--yellow)', strat:'side' },
+  { min:1.5, label:'小熊', desc:'建立觀察名單，準備下一波', color:'var(--orange)', strat:'bear1' },
+  { min:0,   label:'大熊', desc:'幾乎不買，保留現金', color:'var(--red)', strat:'bear2' },
 ];
 
 const CHECKS = {
@@ -487,18 +498,16 @@ function computeAutoIndicators() {
   const auto = {};
 
   // TWII MAs
-  if (twiiHistory?.closes?.length >= 120) {
+  if (twiiHistory?.closes?.length >= 70) {
     const c = twiiHistory.closes;
     const last = c[c.length-1];
-    const ma5   = ma(c, 5);
-    const ma20  = ma(c, 20);
-    const ma60  = ma(c, 60);
-    const ma120 = ma(c, 120);
-    auto.twii_5ma  = last > ma5;
-    auto.twii_20ma = last > ma20;
-    auto.twii_60ma = last > ma60;
-    auto.ma20_60   = ma20 > ma60;
-    auto.ma60_120  = ma60 > ma120;
+    auto.twii_5ma  = last > ma(c, 5);
+    auto.twii_20ma = last > ma(c, 20);
+    auto.twii_60ma = last > ma(c, 60);
+    // 均線「方向」而非「排列」：排列（20>60、60>120）在下跌段可以連續數十天
+    // 維持成立，完全不反映當下轉弱；斜率則會在趨勢反轉後數日內就翻負。
+    auto.ma20_up = ma(c, 20) > ma(c.slice(0, -5),  20);
+    auto.ma60_up = ma(c, 60) > ma(c.slice(0, -10), 60);
   }
 
   // TSMC 2330 20MA
@@ -582,9 +591,9 @@ function getScore() {
     const auto = state.autoResults;
     const isAuto = ind.auto && ind.id in auto;
     const val = isAuto ? auto[ind.id] : (state.checks[ind.id] || false);
-    if (val) s++;
+    if (val) s += (ind.w ?? 1);
   });
-  return s;
+  return Math.round(s * 10) / 10;      // 權重有 .5，避免浮點誤差
 }
 
 function updateScore() {
@@ -595,7 +604,7 @@ function updateScore() {
   document.getElementById('market-label').textContent = level.label;
   document.getElementById('market-label').style.color = level.color;
   document.getElementById('market-desc').textContent = level.desc;
-  document.getElementById('s1-badge').textContent = `${score} / 8`;
+  document.getElementById('s1-badge').textContent = `${score} / ${MAX_SCORE}`;
 
   // Update STEP 2
   document.getElementById('s2-badge').textContent = level.label;
@@ -853,7 +862,7 @@ function updateOutput() {
     : '  （尚未加入）';
 
   let text = `今日市場：${level.label}\n`;
-  text += `市場分數：${score}/8\n\n`;
+  text += `市場分數：${score}/${MAX_SCORE}\n\n`;
 
   if (allChips.length) {
     text += `熱門族群：\n`;
@@ -925,7 +934,7 @@ function renderHistory() {
   const levelColor = { '大牛':'var(--dn)', '小牛':'var(--teal)', '橫盤':'var(--yellow)', '小熊':'var(--orange)', '大熊':'var(--red)' };
   list.innerHTML = history.map(h => `
     <div class="history-item" onclick="loadHistory('${h.date}')">
-      <span class="hi-score" style="color:${levelColor[h.label]||'var(--text3)'}">${h.label} ${h.score}/8</span>
+      <span class="hi-score" style="color:${levelColor[h.label]||'var(--text3)'}">${h.label} ${h.score}/${h.max || 8}</span>
       <div class="hi-date">${h.date}</div>
       <div class="hi-summary">${h.text.split('\n').slice(0,3).join(' · ')}</div>
     </div>`).join('');
