@@ -2,12 +2,8 @@ name: Update Podcast Summary
 
 on:
   schedule:
-    # 每天台灣時間 12:00 執行（UTC 04:00），股癌通常上午到中午發布新集數
-    - cron: '0 4 * * *'
-  push:
-    branches: [main]
-    paths:
-      - 'fetch_podcast_summary.py'
+    # 每天台灣時間 07:30 執行（UTC 23:30 前一日），趕在開盤前把昨晚到今早的新集數摘要好
+    - cron: '30 23 * * *'
   workflow_dispatch:  # 允許手動觸發
 
 permissions:
@@ -15,18 +11,36 @@ permissions:
 
 jobs:
   update-podcast:
-    runs-on: ubuntu-latest
+    # 必須跑在自架的 Mac runner：Whisper large-v3 需要 Apple Silicon GPU 加速，
+    # Ollama 的模型有 4.7GB，在 GitHub-hosted runner 上每次都要重新下載且只有 CPU，
+    # 實務上跑不完。Mac 在排程時間必須是開機且醒著的狀態，否則當天會跳過。
+    runs-on: self-hosted
+    timeout-minutes: 180
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure ffmpeg is available
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-
       - name: Install dependencies
-        run: pip3 install requests openai-whisper --break-system-packages --quiet
+        run: |
+          pip3 install --quiet --break-system-packages \
+            requests mlx-whisper opencc-python-reimplemented
 
-      - name: Fetch + transcribe latest episode
+      - name: Ensure Ollama is running
+        run: |
+          if ! curl -sf http://localhost:11434/api/tags >/dev/null; then
+            echo "Ollama 未啟動，背景啟動中..."
+            nohup ollama serve >/tmp/ollama.log 2>&1 &
+            for i in $(seq 1 30); do
+              curl -sf http://localhost:11434/api/tags >/dev/null && break
+              sleep 2
+            done
+          fi
+          curl -sf http://localhost:11434/api/tags >/dev/null \
+            || { echo "❌ Ollama 啟動失敗"; exit 1; }
+          ollama list | grep -q qwen2.5:7b || ollama pull qwen2.5:7b
+
+      - name: Fetch + transcribe + summarize
         run: python3 fetch_podcast_summary.py
 
       - name: Commit and push if changed
@@ -34,10 +48,10 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           if [ ! -f podcast_summary.json ]; then
-            echo "podcast_summary.json 未產生（本次未取得新摘要），略過提交"
+            echo "podcast_summary.json 未產生，略過提交"
             exit 0
           fi
-          git add podcast_summary.json
+          git add podcast_summary.json podcast_sources.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

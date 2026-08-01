@@ -43,6 +43,22 @@ nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
 .transcript p{font-size:13.5px;color:var(--text2);line-height:1.85;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)}
 .transcript p:last-child{border-bottom:none}
 
+/* ── 精華（Ollama 本機摘要）── */
+.hl{display:flex;flex-direction:column;gap:18px;margin-bottom:20px}
+.hl-sec{}
+.hl-topic{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--accent);margin-bottom:9px}
+.hl-topic::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--accent);flex-shrink:0}
+.hl-pts{display:flex;flex-direction:column;gap:7px;padding-left:11px}
+.hl-pt{display:flex;gap:9px;font-size:13.5px;color:var(--text2);line-height:1.75}
+.hl-pt::before{content:"▸";color:var(--text3);flex-shrink:0}
+
+.ep-show{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:600;
+  background:rgba(167,139,250,0.14);border:1px solid var(--border2);color:var(--accent)}
+
+.tr-toggle{background:none;border:1px solid var(--border);color:var(--text3);font-family:inherit;font-size:12px;
+  padding:7px 14px;border-radius:20px;cursor:pointer;transition:all .15s}
+.tr-toggle:hover{color:var(--accent);border-color:var(--border2)}
+
 .ep-actions{display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:18px}
 .btn-listen{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;
   background:rgba(167,139,250,0.12);border:1px solid var(--border2);color:var(--accent)}
@@ -71,18 +87,18 @@ nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
 
   <div class="page-hd">
     <h1>🎙️ PODCAST精華</h1>
-    <p>自動追蹤股癌 Gooaye 最新集數，語音轉文字整理</p>
+    <p>每天自動追蹤多個財經 Podcast，有新集數就自動摘要</p>
   </div>
 
   <div class="note-bar">
-    <strong>📌 說明：</strong>內容為語音轉文字（Whisper，本機執行，非 AI 摘要）逐字稿，已用關鍵字啟發式自動跳過開頭業配/贊助商內容，並依語音停頓分段方便閱讀。<b>非重點摘要</b>，可能有同音字轉錄誤差，完整內容建議直接收聽原節目。
+    <strong>📌 說明：</strong>每天自動檢查各節目 RSS，有新集數就下載音檔，用 <strong>Whisper large-v3</strong> 轉逐字稿，再用本機 <strong>Ollama</strong> 摘要成重點（全程在自己電腦上跑，不經過任何雲端 API）。業配與閒聊由模型自行判斷後濾除。<b>內容由 AI 產生且語音辨識可能有同音字誤差，僅供快速瀏覽，投資決策請以原節目為準。</b>
   </div>
 
   <div id="ep-content">
     <div class="empty-state">
       <div class="icon">🎧</div>
       <div class="msg">尚未產生內容</div>
-      <div class="sub">每日自動排程執行後會顯示最新一集逐字稿</div>
+      <div class="sub">每日自動排程執行後會顯示各節目最新一集精華</div>
     </div>
   </div>
 
@@ -94,32 +110,78 @@ async function loadPodcast() {
     const res = await fetch('podcast_summary.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
-    if (!data || !data.paragraphs || !data.paragraphs.length) return;
 
-    const epNo = data.episode_no ? `EP${data.episode_no}` : '';
-    const title = (data.title || '').replace(/^EP\s*\d+\s*\|?\s*/i, '').trim();
+    // 舊版是單一集數的物件，新版是 episodes 陣列——兩種都能顯示
+    const eps = data.episodes
+      || (data.paragraphs ? [{ show: '股癌 Gooaye', show_url: data.show_url, title: data.title,
+                               episode_no: data.episode_no, pub_date: data.pub_date,
+                               transcript: data.paragraphs, highlights: [] }] : []);
+    if (!eps.length) return;
 
-    document.getElementById('ep-content').innerHTML = `
-      <div class="ep-card">
-        <div class="ep-eyebrow">LATEST EPISODE</div>
-        <div class="ep-title">${epNo ? epNo + ' ' : ''}${title || data.title || ''}</div>
-        <div class="ep-meta">
-          <span>📅 ${data.pub_date || '—'}</span>
-          <span class="dot"></span>
-          <span>股癌 Gooaye</span>
-        </div>
-        <div class="transcript">
-          ${data.paragraphs.map(p => `<p>${esc(p)}</p>`).join('')}
-        </div>
-        <div class="ep-actions">
-          <a class="btn-listen" href="${data.show_url || '#'}" target="_blank" rel="noopener">🎧 前往收聽完整節目</a>
-        </div>
-      </div>
-      <div class="updated-tag">內容更新時間：${data.updated_at || '—'}</div>
-    `;
+    document.getElementById('ep-content').innerHTML =
+      eps.map(renderEpisode).join('') +
+      `<div class="updated-tag">內容更新時間：${esc(data.updated_at || '—')}</div>`;
   } catch (e) {
     console.error('載入失敗:', e);
   }
+}
+
+function renderEpisode(ep, i) {
+  // 標題本身常已含集數（有的在開頭「EP684 |」，有的在中間「DJ有事嗎 | Ep.257」），
+  // 只有開頭那種才剝掉並改用統一格式，中間那種就原樣保留，避免顯示成「EP257 … Ep.257」
+  const raw     = (ep.title || '').trim();
+  const leading = raw.match(/^EP\s*\.?\s*(\d+)\s*[|｜.]?\s*/i);
+  const title   = leading ? raw.slice(leading[0].length).trim() : raw;
+  const epNo    = leading ? `EP${leading[1]}` : '';
+  const hl    = ep.highlights || [];
+  const tr    = ep.transcript || [];
+
+  const highlightsHtml = hl.length ? `
+    <div class="hl">
+      ${hl.map(s => `
+        <div class="hl-sec">
+          <div class="hl-topic">${esc(s.topic)}</div>
+          <div class="hl-pts">
+            ${(s.points || []).map(p => `<div class="hl-pt"><span>${esc(p)}</span></div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>` : '';
+
+  // 沒有精華時（例如摘要失敗）才直接把逐字稿攤開，否則收在按鈕後面
+  const transcriptHtml = tr.length ? (hl.length ? `
+    <div class="transcript" id="tr-${i}" style="display:none">
+      ${tr.map(p => `<p>${esc(p)}</p>`).join('')}
+    </div>` : `
+    <div class="transcript">${tr.map(p => `<p>${esc(p)}</p>`).join('')}</div>`) : '';
+
+  const toggle = (hl.length && tr.length)
+    ? `<button class="tr-toggle" onclick="toggleTr(${i}, this)">📄 展開完整逐字稿（${tr.length} 段）</button>` : '';
+
+  return `
+    <div class="ep-card" style="margin-bottom:18px">
+      <div class="ep-eyebrow">${hl.length ? '本集精華' : '逐字稿'}</div>
+      <div class="ep-title">${esc((epNo ? epNo + ' ' : '') + (title || ep.title || ''))}</div>
+      <div class="ep-meta">
+        <span class="ep-show">${esc(ep.show || '')}</span>
+        <span>📅 ${esc(ep.pub_date || '—')}</span>
+        ${ep.duration_min ? `<span class="dot"></span><span>⏱ ${ep.duration_min} 分鐘</span>` : ''}
+      </div>
+      ${highlightsHtml}
+      ${transcriptHtml}
+      <div class="ep-actions">
+        <a class="btn-listen" href="${esc(ep.show_url || '#')}" target="_blank" rel="noopener">🎧 收聽完整節目</a>
+        ${toggle}
+      </div>
+    </div>`;
+}
+
+function toggleTr(i, btn) {
+  const el = document.getElementById(`tr-${i}`);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'flex';
+  btn.textContent = open ? btn.textContent.replace('收合', '展開')
+                         : btn.textContent.replace('展開', '收合');
 }
 
 function esc(s) {

@@ -1,0 +1,47 @@
+{
+  "_comment": "要自動追蹤的 Podcast 清單。feed 網址是用 itunes.apple.com/search 查出來的（免 API key）。要新增節目：查到 feedUrl 後照格式加一筆即可。max_minutes 擋掉異常長的集數，避免單集吃掉整個排程時間。",
+  "shows": [
+    {
+      "id": "gooaye",
+      "name": "股癌 Gooaye",
+      "rss": "https://feeds.soundon.fm/podcasts/954689a5-3096-43a4-a80b-7810b219cef3.xml",
+      "url": "https://podcasts.apple.com/tw/podcast/gooaye-%E8%82%A1%E7%99%8C/id1500839292",
+      "max_minutes": 120
+    },
+    {
+      "id": "mkuan",
+      "name": "M觀點",
+      "rss": "https://feeds.soundon.fm/podcasts/b8f5a471-f4f7-4763-9678-65887beda63a.xml",
+      "url": "https://podcasts.apple.com/tw/podcast/id1487378625",
+      "max_minutes": 120
+    },
+    {
+      "id": "macromicro",
+      "name": "財經M平方",
+      "rss": "https://feeds.soundon.fm/podcasts/d2aab16c-3a70-4023-b52b-e50f07852ecd.xml",
+      "url": "https://podcasts.apple.com/tw/podcast/id1522682178",
+      "max_minutes": 120
+    },
+    {
+      "id": "haojiao",
+      "name": "游庭皓的財經皓角",
+      "rss": "https://feeds.soundcloud.com/users/soundcloud:users:735679489/sounds.rss",
+      "url": "https://podcasts.apple.com/tw/podcast/id1488295306",
+      "max_minutes": 90
+    },
+    {
+      "id": "moneydj",
+      "name": "MoneyDJ財經新聞",
+      "rss": "https://feeds.soundon.fm/podcasts/489a6945-a341-40ca-88ab-73c174057634.xml",
+      "url": "https://podcasts.apple.com/tw/podcast/id1531443831",
+      "max_minutes": 60
+    },
+    {
+      "id": "yilufa",
+      "name": "財經一路發",
+      "rss": "https://feed.firstory.me/rss/user/ckuydilxj0ys508026gxkhbp4",
+      "url": "https://podcasts.apple.com/tw/podcast/id1531106786",
+      "max_minutes": 60
+    }
+  ]
+}
