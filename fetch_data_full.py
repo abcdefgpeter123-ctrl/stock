@@ -1615,8 +1615,7 @@ def fetch_yahoo(code):
             result = r.json()["chart"]["result"][0]
             meta  = result["meta"]
             price = meta["regularMarketPrice"]
-            prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
-            if not price or not prev:
+            if not price:
                 continue
             mkt_ts = meta.get("regularMarketTime")
             mkt_date = (datetime.datetime.fromtimestamp(mkt_ts).strftime("%Y/%m/%d")
@@ -1627,6 +1626,15 @@ def fetch_yahoo(code):
             highs  = [v for v in quote.get("high",  []) if v is not None]
             lows   = [v for v in quote.get("low",   []) if v is not None]
             vols   = [v for v in quote.get("volume",[]) if v is not None]
+            closes = [v for v in quote.get("close", []) if v is not None]
+            # meta.previousClose 在連續漲跌停等異常情況下常常是好幾天前的舊值，
+            # 優先用同一批請求裡「昨日」的實際收盤價（closes[-2]）計算漲跌，較可靠
+            if len(closes) >= 2:
+                prev = closes[-2]
+            else:
+                prev = meta.get("previousClose") or meta.get("chartPreviousClose")
+            if not prev:
+                continue
             open_p = round(opens[-1],  2) if opens  else round(meta.get("regularMarketOpen",  0) or 0, 2)
             high_p = round(highs[-1],  2) if highs  else round(meta.get("regularMarketDayHigh",0) or 0, 2)
             low_p  = round(lows[-1],   2) if lows   else round(meta.get("regularMarketDayLow", 0) or 0, 2)
