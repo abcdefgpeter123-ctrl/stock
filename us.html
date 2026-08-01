@@ -165,6 +165,11 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-revenue-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2)}
 .tp-revenue-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .tp-revenue-pct{font-family:var(--mono);color:var(--text);font-weight:600;margin-left:auto}
+.tp-revenue-dim{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin-bottom:3px}
+.tp-dim-tag{font-size:10.5px;font-weight:600;color:#60a5fa;background:rgba(96,165,250,0.12);
+  border:1px solid rgba(96,165,250,0.3);border-radius:4px;padding:1px 7px;flex-shrink:0}
+.tp-dim-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.tp-revenue-note{font-size:10.5px;color:var(--text3);margin-top:4px;opacity:.75}
 /* ── 看盤介面樣式 ─────────────────────────────────────── */
 .tp-wrap{background:#07101e;border-radius:0 0 var(--r) var(--r);overflow:hidden}
 .tp-top{background:#0c1829;border-bottom:1px solid rgba(96,165,250,0.12);padding:10px 14px 8px}
@@ -450,132 +455,132 @@ const STOCKS = [
    desc:"全球最大軟體公司，旗下有 Windows、Office 365、Azure 雲端平台及 GitHub，並大力押注 OpenAI/Copilot AI 整合。",
    bull:"Azure 雲端市佔持續追上 AWS；Copilot 滲透企業後每座位授權大幅提升 ARPU；Teams 與 Office 綁定黏性高。",
    risk:"AI 資本支出龐大壓縮短期自由現金流；反壟斷審查加劇；企業 IT 預算緊縮時訂閱成長可能放緩。",
-   revenue:[{name:"智慧雲端(Azure)",pct:40},{name:"生產力與商業流程(Office/LinkedIn)",pct:32},{name:"個人運算(Windows/Xbox/Surface)",pct:28}]},
+   revenue:[{name:"智慧雲端(Azure)",pct:40},{name:"生產力與商業流程(Office/LinkedIn)",pct:32},{name:"個人運算(Windows/Xbox/Surface)",pct:28}],revenue_dim:"業務別"},
   {code:"AMZN",  name:"亞馬遜",     theme:"雲端運算", p1:null,p5:null,p30:null,p180:null,
    desc:"電商龍頭兼 AWS 雲端市佔第一（約 31%），廣告業務是第三大獲利引擎，物流網路自建降低成本。",
    bull:"AWS 仍是雲端最大份額且 AI 算力需求爆發；廣告業務毛利率高且成長快；零售業務轉虧為盈。",
    risk:"AWS AI 基礎建設資本支出超 1,000 億美元壓縮現金流；電商競爭 Temu/Shein；監管反壟斷風險。",
-   revenue:[{name:"電商零售",pct:60},{name:"AWS雲端",pct:17},{name:"廣告",pct:8},{name:"訂閱服務/其他",pct:15}]},
+   revenue:[{name:"電商零售",pct:60},{name:"AWS雲端",pct:17},{name:"廣告",pct:8},{name:"訂閱服務/其他",pct:15}],revenue_dim:"業務別"},
   {code:"GOOGL", name:"Alphabet",   theme:"雲端運算", p1:null,p5:null,p30:null,p180:null,
    desc:"Google 母公司，搜尋廣告佔收入約 57%，GCP 雲端第三名，YouTube 廣告持續成長，Waymo 自駕為長期選擇權。",
    bull:"Gemini AI 整合 Search 捍衛廣告護城河；GCP 成長加速；YouTube Shorts 廣告貨幣化提升。",
    risk:"AI 搜尋顛覆傳統廣告模式；DOJ 反壟斷判決可能拆分業務；中國市場缺席限制規模。",
-   revenue:[{name:"搜尋廣告",pct:57},{name:"Google Cloud",pct:13},{name:"YouTube廣告",pct:10},{name:"網路聯播廣告",pct:5},{name:"訂閱/硬體/其他",pct:15}]},
+   revenue:[{name:"搜尋廣告",pct:57},{name:"Google Cloud",pct:13},{name:"YouTube廣告",pct:10},{name:"網路聯播廣告",pct:5},{name:"訂閱/硬體/其他",pct:15}],revenue_dim:"業務別"},
   {code:"AAPL",  name:"蘋果",       theme:"消費電子", p1:null,p5:null,p30:null,p180:null,
    desc:"全球市值最大消費電子公司，iPhone 佔收入約 50%，服務（App Store、訂閱）已成第二大引擎，Apple Silicon 強化垂直整合。",
    bull:"服務收入毛利率超 70% 且持續雙位數成長；Apple Intelligence 帶動換機潮；印度製造分散地緣風險。",
    risk:"iPhone 在中國市佔面臨華為競爭；App Store 反壟斷訴訟可能壓縮服務毛利；AI 功能落後 Android 競品疑慮。",
-   revenue:[{name:"iPhone",pct:50},{name:"服務(App Store等)",pct:25},{name:"Mac",pct:8},{name:"iPad",pct:7},{name:"穿戴/其他",pct:10}]},
+   revenue:[{name:"iPhone",pct:50},{name:"服務(App Store等)",pct:25},{name:"Mac",pct:8},{name:"iPad",pct:7},{name:"穿戴/其他",pct:10}],revenue_dim:"產品別"},
   {code:"DELL",  name:"戴爾",       theme:"消費電子", p1:null,p5:null,p30:null,p180:null,
    desc:"全球PC與伺服器硬體大廠，近年積極轉型AI伺服器解決方案供應商，PowerEdge搭配輝達GPU為新成長引擎。",
    bull:"AI伺服器（PowerEdge XE9680等）出貨強勁成長，直接受惠輝達GPU需求；企業PC換機潮回溫。",
    risk:"PC硬體毛利率偏低，競爭激烈；AI伺服器業務仍偏組裝代工性質，毛利有限；供應鏈成本波動。",
-   revenue:[{name:"基礎設施解決方案(伺服器/儲存)",pct:50},{name:"終端使用者運算(PC)",pct:45},{name:"其他",pct:5}]},
+   revenue:[{name:"基礎設施解決方案(伺服器/儲存)",pct:50},{name:"終端使用者運算(PC)",pct:45},{name:"其他",pct:5}],revenue_dim:"產品別"},
   {code:"META",  name:"Meta",       theme:"社群媒體", p1:null,p5:null,p30:null,p180:null,
    desc:"Facebook、Instagram、WhatsApp 母公司，全球社群廣告收入第二，Llama 開源 AI 及 Reality Labs AR/VR 為長期佈局。",
    bull:"廣告 AI 優化 ROI 提升吸引廣告主；Threads 持續成長搶 X 用戶；Llama 生態圈提升開發者黏性。",
    risk:"Reality Labs 持續燒錢（年虧超 150 億美元）；青少年用戶流失；歐盟數位市場法規罰款風險。",
-   revenue:[{name:"廣告(Facebook/Instagram)",pct:97},{name:"Reality Labs/其他",pct:3}]},
+   revenue:[{name:"廣告(Facebook/Instagram)",pct:97},{name:"Reality Labs/其他",pct:3}],revenue_dim:"業務別"},
   {code:"SNAP",  name:"Snap",       theme:"社群媒體", p1:null,p5:null,p30:null,p180:null,
    desc:"Snapchat 母公司，主打年輕族群社群媒體與擴增實境濾鏡，廣告為主要收入來源。",
    bull:"AR廣告格式滲透率提升；訂閱服務Snapchat+成長快速；年輕用戶黏著度高。",
    risk:"獲利能力仍待改善，長期處於虧損；與Meta/TikTok競爭激烈；廣告主預算易受景氣影響。",
-   revenue:[{name:"廣告",pct:100}]},
+   revenue:[{name:"廣告",pct:96},{name:"訂閱(Snapchat+)/其他",pct:4}],revenue_dim:"業務別"},
   {code:"NVDA",  name:"輝達",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
    desc:"AI 加速運算晶片霸主，H100/H200/Blackwell GPU 主導資料中心 AI 訓練市場，CUDA 生態圈構建深厚護城河。",
    bull:"Blackwell 架構需求遠超供給；推論市場爆發帶動 GB200 NVL72 超強需求；軟體護城河 CUDA 難以替代。",
    risk:"客戶（微軟、Google、亞馬遜）加速自研 AI 晶片；出口管制限制中國市場；估值高本益比承壓。",
-   revenue:[{name:"資料中心(AI GPU)",pct:88},{name:"遊戲顯卡",pct:8},{name:"專業視覺化/車用/其他",pct:4}]},
+   revenue:[{name:"資料中心(AI GPU)",pct:88},{name:"遊戲顯卡",pct:8},{name:"專業視覺化/車用/其他",pct:4}],revenue_dim:"應用別"},
   {code:"AVGO",  name:"博通",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
    desc:"半導體與基礎設施軟體雙引擎，網路晶片（Tomahawk、Jericho）主導 AI 叢集互連，VMware 併購強化軟體訂閱收入。",
    bull:"Google、Meta 等超大規模客戶自研 XPU 大量採用博通網路晶片；VMware 訂閱轉型提升毛利。",
    risk:"高度依賴少數超大規模客戶；VMware 整合風險；中國出口管制影響部分業務。",
-   revenue:[{name:"半導體解決方案",pct:60},{name:"基礎設施軟體(VMware)",pct:40}]},
+   revenue:[{name:"半導體解決方案",pct:60},{name:"基礎設施軟體(VMware)",pct:40}],revenue_dim:"應用別"},
   {code:"AMD",   name:"超微",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
    desc:"CPU（Ryzen/EPYC）與 GPU（MI300/MI350）兩線競爭英特爾與輝達，EPYC 伺服器市佔突破 30%。",
    bull:"MI300X 成為 NVIDIA H100 最主要替代方案；EPYC 伺服器份額持續蠶食英特爾；ROCm 生態圈改善。",
    risk:"AI GPU 技術與軟體生態圈仍大幅落後 NVIDIA；出口管制限制中國 AI 晶片銷售；PC 市場成長平緩。",
-   revenue:[{name:"資料中心(EPYC/MI系列)",pct:50},{name:"客戶端(Ryzen)",pct:25},{name:"遊戲",pct:15},{name:"嵌入式",pct:10}]},
+   revenue:[{name:"資料中心(EPYC/MI系列)",pct:50},{name:"客戶端(Ryzen)",pct:25},{name:"遊戲",pct:15},{name:"嵌入式",pct:10}],revenue_dim:"應用別"},
   {code:"MU",    name:"美光",       theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
    desc:"全球三大 DRAM 廠之一，HBM3E 高頻寬記憶體受惠 AI GPU 需求爆炸，NAND Flash 亦持續復甦。",
    bull:"HBM 市佔率快速提升（NVIDIA H200/B200 主要供應商）；AI 推論對 HBM 需求長期增長；DRAM 景氣週期向上。",
    risk:"記憶體產業週期性強；Samsung/SK Hynix 競爭激烈；中國市場出口管制；HBM 良率爬坡風險。",
-   revenue:[{name:"DRAM",pct:70},{name:"NAND Flash",pct:30}]},
+   revenue:[{name:"DRAM",pct:70},{name:"NAND Flash",pct:30}],revenue_dim:"應用別"},
   {code:"ANET",  name:"Arista網路", theme:"AI半導體", p1:null,p5:null,p30:null,p180:null,
    desc:"雲端網路交換機龍頭，EOS 作業系統穩定性高受大型雲端客戶青睞，AI 叢集 400G/800G 網路架構首選供應商。",
    bull:"AI 叢集對高速乙太網路需求爆炸；微軟、Meta 大量採購 800G 方案；競爭對手 Cisco 轉型緩慢。",
    risk:"高度集中於少數超大規模客戶（微軟、Meta）；InfiniBand（Mellanox）在訓練叢集互連競爭；估值偏高。",
-   revenue:[{name:"雲端網路交換器",pct:90},{name:"服務/軟體",pct:10}]},
+   revenue:[{name:"雲端網路交換器",pct:90},{name:"服務/軟體",pct:10}],revenue_dim:"應用別"},
   {code:"TSLA",  name:"特斯拉",     theme:"電動車",   p1:null,p5:null,p30:null,p180:null,
    desc:"全球電動車銷售龍頭，Supercharger 網路、FSD 全自動駕駛軟體及 Optimus 人形機器人為長期成長催化劑。",
    bull:"FSD v13 訂閱滲透率提升；Robotaxi 商業化帶來高毛利軟體收入；能源儲存業務（Megapack）高速成長。",
    risk:"電動車價格戰壓縮毛利；中國比亞迪市佔擴張；馬斯克投入政治活動影響品牌形象；FSD 監管風險。",
-   revenue:[{name:"汽車銷售",pct:80},{name:"服務/其他",pct:10},{name:"能源儲存/發電",pct:10}]},
+   revenue:[{name:"汽車銷售",pct:80},{name:"服務/其他",pct:10},{name:"能源儲存/發電",pct:10}],revenue_dim:"產品別"},
   {code:"RIVN",  name:"Rivian",     theme:"電動車",   p1:null,p5:null,p30:null,p180:null,
    desc:"美國純電動皮卡與商用車新創，亞馬遜為主要投資人與物流車隊客戶，R2平價車款為下一階段成長關鍵。",
    bull:"R2車款預計大幅降低生產成本並擴大客群；亞馬遜物流車隊訂單提供穩定需求；電池技術持續優化。",
    risk:"生產規模仍小，尚未達到獲利門檻；資本支出龐大燒錢速度快；電動車價格戰壓縮毛利空間。",
-   revenue:[{name:"R1系列車輛",pct:70},{name:"商用車(EDV)",pct:20},{name:"監管積分/軟體",pct:10}]},
+   revenue:[{name:"R1系列車輛",pct:70},{name:"商用車(EDV)",pct:20},{name:"監管積分/軟體",pct:10}],revenue_dim:"產品別"},
   {code:"V",     name:"Visa",       theme:"金融消費", p1:null,p5:null,p30:null,p180:null,
    desc:"全球最大支付網路，不承擔信用風險的純平台商業模式，從每筆交易收取手續費，網路效應構成極深護城河。",
    bull:"全球現金轉向無卡支付長期趨勢；新興市場滲透率仍低；跨境交易費率較高且旅遊復甦受益。",
    risk:"中央銀行數位貨幣（CBDC）長期威脅；監管機構壓低手續費率；即時支付（FedNow）分流部分交易。",
-   revenue:[{name:"服務費",pct:35},{name:"資料處理費",pct:35},{name:"國際交易費",pct:25},{name:"其他",pct:5}]},
+   revenue:[{name:"服務費",pct:35},{name:"資料處理費",pct:35},{name:"國際交易費",pct:25},{name:"其他",pct:5}],revenue_dim:"業務別"},
   {code:"COST",  name:"好市多",     theme:"金融消費", p1:null,p5:null,p30:null,p180:null,
    desc:"會員制倉儲零售商，以低毛利商品吸引高續約率（>90%）會員，會員費為主要利潤來源，自有品牌 Kirkland 深受歡迎。",
    bull:"會員費漲價直接增厚利潤；電商業務高速成長；高收入族群抗通膨消費黏性強。",
    risk:"本益比偏高（>50x）；實體展店速度有限；消費景氣下行若高收入族群縮減開支影響客流。",
-   revenue:[{name:"商品銷售",pct:97},{name:"會員費",pct:3}]},
+   revenue:[{name:"商品銷售",pct:97},{name:"會員費",pct:3}],revenue_dim:"業務別"},
   {code:"NFLX",  name:"Netflix",    theme:"串流媒體", p1:null,p5:null,p30:null,p180:null,
    desc:"全球最大串流平台，訂閱用戶超 3 億，廣告支援方案（AVOD）開拓新收入流，自製內容護城河持續加深。",
    bull:"廣告層訂閱變現空間大；帳號共享管制完成後付費用戶大增；直播體育（NFL、WWE）提升黏性。",
    risk:"內容成本居高不下；迪士尼+/Apple TV+ 競爭加劇；廣告市場景氣影響 AVOD 收入。",
-   revenue:[{name:"訂閱(串流)",pct:95},{name:"廣告",pct:5}]},
+   revenue:[{name:"訂閱(串流)",pct:95},{name:"廣告",pct:5}],revenue_dim:"業務別"},
   {code:"DIS",   name:"迪士尼",     theme:"串流媒體", p1:null,p5:null,p30:null,p180:null,
    desc:"全球娛樂媒體巨頭，主題樂園、影視內容（漫威/皮克斯/星際大戰）與Disney+串流三大事業群。",
    bull:"Disney+串流訂閱獲利轉正；主題樂園門票與周邊消費持續成長；內容IP授權變現空間大。",
    risk:"串流內容成本高昂，需與Netflix/HBO Max競爭；主題樂園受景氣循環影響；傳統電視頻道用戶流失。",
-   revenue:[{name:"娛樂(影視/串流)",pct:45},{name:"體驗(主題樂園)",pct:40},{name:"體育(ESPN)",pct:15}]},
+   revenue:[{name:"娛樂(影視/串流)",pct:45},{name:"體驗(主題樂園)",pct:40},{name:"體育(ESPN)",pct:15}],revenue_dim:"業務別"},
   {code:"NOW",   name:"ServiceNow", theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
    desc:"企業 IT 流程自動化平台龍頭，Now Platform 整合 IT、HR、客服等工作流，AI 功能「Now Assist」加速滲透。",
    bull:"AI Agent 功能大幅提升自動化效率，推動升級高階方案；企業數位轉型需求剛性強；客戶留存率超 99%。",
    risk:"估值高（本益比 60x+）；企業 IT 預算凍結時訂閱成長放緩；Salesforce、Microsoft 功能重疊競爭。",
-   revenue:[{name:"訂閱服務",pct:97},{name:"專業服務/其他",pct:3}]},
+   revenue:[{name:"訂閱服務",pct:97},{name:"專業服務/其他",pct:3}],revenue_dim:"業務別"},
   {code:"CRM",   name:"Salesforce", theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
    desc:"全球最大 CRM 軟體公司，Sales Cloud/Service Cloud 為核心，Agentforce AI 自主代理人是最新成長引擎。",
    bull:"Agentforce 代理人平台開創新收入層；數據雲（Data Cloud）免費整合推動升級；盈利改善股東回報提升。",
    risk:"競爭對手 Microsoft Dynamics 和 HubSpot 搶佔市場；AI 代理人尚未大規模貢獻收入；成長趨緩估值壓力。",
-   revenue:[{name:"訂閱與支援",pct:93},{name:"專業服務/其他",pct:7}]},
+   revenue:[{name:"訂閱與支援",pct:93},{name:"專業服務/其他",pct:7}],revenue_dim:"業務別"},
   {code:"INTU",  name:"Intuit",     theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
    desc:"TurboTax 個人報稅與 QuickBooks 中小企業財務軟體雙品牌，Credit Karma 提供貸款媒合，AI 整合加速自動化。",
    bull:"AI 功能提升報稅與記帳效率吸引留存；中小企業財務 SaaS 黏性極高；Credit Karma 貸款媒合受益降息。",
    risk:"IRS 免費報稅計畫「Direct File」威脅 TurboTax；利率高位壓縮 Credit Karma 貸款媒合量；成長趨緩。",
-   revenue:[{name:"中小企業與自雇(QuickBooks)",pct:55},{name:"消費者(TurboTax)",pct:30},{name:"Credit Karma",pct:10},{name:"ProTax",pct:5}]},
+   revenue:[{name:"中小企業與自雇(QuickBooks)",pct:55},{name:"消費者(TurboTax)",pct:30},{name:"Credit Karma",pct:10},{name:"ProTax",pct:5}],revenue_dim:"業務別"},
   {code:"PANW",  name:"Palo Alto",  theme:"網路安全", p1:null,p5:null,p30:null,p180:null,
    desc:"企業網路安全平台龍頭，以「平台化」策略整合防火牆、雲端安全（Prisma）、端點安全（Cortex），AI SOC 是新焦點。",
    bull:"平台化策略讓客戶整合供應商、減少支出，PANW 反受益；AI 驅動威脅偵測競爭優勢強；遞延收入高能見度高。",
    risk:"「平台化免費贈送」短期壓縮帳單收入成長率引發市場疑慮；網安預算緊縮；競爭對手 CrowdStrike 積極進攻。",
-   revenue:[{name:"訂閱與支援",pct:75},{name:"產品(硬體)",pct:25}]},
+   revenue:[{name:"訂閱與支援",pct:75},{name:"產品(硬體)",pct:25}],revenue_dim:"業務別"},
   {code:"CRWD",  name:"CrowdStrike",theme:"網路安全", p1:null,p5:null,p30:null,p180:null,
    desc:"雲端原生端點資安平台領導廠商，Falcon平台以AI偵測威脅，訂閱模式收入穩定成長。",
    bull:"AI驅動威脅偵測技術領先同業；平台化策略推升客戶單價（多模組交叉銷售）；雲端資安需求剛性強。",
    risk:"2024年全球當機事故曾衝擊品牌信任；競爭對手Palo Alto/SentinelOne搶市；估值偏高本益比壓力。",
-   revenue:[{name:"訂閱服務",pct:95},{name:"專業服務",pct:5}]},
+   revenue:[{name:"訂閱服務",pct:95},{name:"專業服務",pct:5}],revenue_dim:"業務別"},
   {code:"ISRG",  name:"直覺外科",   theme:"醫療科技", p1:null,p5:null,p30:null,p180:null,
    desc:"達文西手術機器人全球霸主，裝機基數超 9,000 台，刀頭耗材與服務形成高毛利重複性收入，da Vinci 5 是最新世代。",
    bull:"da Vinci 5 升級推動大型醫院換機；軟組織手術適應症擴增（泌尿、婦科、普外）；中國市場逐步開放。",
    risk:"競爭對手 Medtronic Hugo 和 J&J Ottava 進場；手術量成長受醫院人力短缺限制；估值高本益比 60x+。",
-   revenue:[{name:"儀器與配件耗材",pct:60},{name:"系統銷售",pct:25},{name:"服務",pct:15}]},
+   revenue:[{name:"儀器與配件耗材",pct:60},{name:"系統銷售",pct:25},{name:"服務",pct:15}],revenue_dim:"產品別"},
   {code:"LLY",   name:"禮來",       theme:"醫療科技", p1:null,p5:null,p30:null,p180:null,
    desc:"GLP-1 藥物（Mounjaro 糖尿病 / Zepbound 減重）引領全球熱潮，阿茲海默症新藥 Kisunla 開拓新市場。",
    bull:"全球肥胖症治療市場超 1,000 億美元潛力；GLP-1 心血管保護適應症擴大報銷範圍；產能持續擴充滿足需求。",
    risk:"Novo Nordisk（Ozempic）競爭激烈；GLP-1 仿製藥上市時程提前；產能瓶頸影響銷售增長；政治藥價壓力。",
-   revenue:[{name:"糖尿病/減重(Mounjaro/Zepbound)",pct:45},{name:"腫瘤",pct:15},{name:"免疫",pct:15},{name:"神經/其他",pct:25}]},
+   revenue:[{name:"糖尿病/減重(Mounjaro/Zepbound)",pct:45},{name:"腫瘤",pct:15},{name:"免疫",pct:15},{name:"神經/其他",pct:25}],revenue_dim:"產品別"},
   {code:"ADBE",  name:"Adobe",      theme:"企業軟體", p1:null,p5:null,p30:null,p180:null,
    desc:"創意軟體訂閱（Photoshop/Premiere/Illustrator）與行銷數位體驗平台（AEM）雙引擎，Firefly AI 生成模型商用化。",
    bull:"Firefly AI 整合 Creative Cloud 強化護城河；企業行銷數位化需求剛性；訂閱模式現金流穩定。",
    risk:"Canva/Figma 等新興工具搶奪中低階創意用戶；AI 生成圖片降低專業設計需求；Figma 收購被否後成長策略待觀察。",
-   revenue:[{name:"數位媒體(Creative Cloud)",pct:73},{name:"數位體驗(行銷)",pct:25},{name:"出版/其他",pct:2}]},
+   revenue:[{name:"數位媒體(Creative Cloud)",pct:73},{name:"數位體驗(行銷)",pct:25},{name:"出版/其他",pct:2}],revenue_dim:"業務別"},
 ];
 
 const ETFS = [
@@ -612,6 +617,14 @@ const ETFS = [
 ];
 
 const REVENUE_COLORS = ['#60a5fa','#a78bfa','#4ade80','#facc15','#fb923c','#f87171','#2dd4bf','#e879f9'];
+// 各維度的白話說明——原本只寫「收入來源」，看不出是依什麼在拆，
+// 而實際資料混了好幾種拆法（台積電是終端應用、環球晶是產品品項、金控是事業群）
+const REVENUE_DIM_DESC = {
+  "應用別": "產品最終用在哪些終端市場",
+  "產品別": "公司銷售的產品品項",
+  "業務別": "各事業群 / 服務別",
+  "航線別": "各航線的營收比重",
+};
 
 // ── 狀態 ──────────────────────────────────────────────────
 const FAV_KEY = "us_stock_favorites";
@@ -1435,11 +1448,16 @@ function renderDetail(code){
         <div class="tp-revenue-wrap">
           <div class="tp-revenue-canvas-wrap"><canvas data-revenue-code="${code}"></canvas></div>
           <div class="tp-revenue-legend">
+            <div class="tp-revenue-dim">
+              <span class="tp-dim-tag">${s.revenue_dim||"業務別"}</span>
+              <span class="tp-dim-desc">${REVENUE_DIM_DESC[s.revenue_dim]||REVENUE_DIM_DESC["業務別"]}</span>
+            </div>
             ${s.revenue.map((r,i)=>`<div class="tp-revenue-item">
               <span class="tp-revenue-dot" style="background:${REVENUE_COLORS[i%REVENUE_COLORS.length]}"></span>
               <span>${r.name}</span>
               <span class="tp-revenue-pct">${r.pct}%</span>
             </div>`).join("")}
+            <div class="tp-revenue-note">佔比為概略估算，非引用財報數字</div>
           </div>
         </div>
       </div>`:""}

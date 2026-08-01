@@ -234,6 +234,11 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .tp-revenue-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2)}
 .tp-revenue-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .tp-revenue-pct{font-family:var(--mono);color:var(--text);font-weight:600;margin-left:auto}
+.tp-revenue-dim{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin-bottom:3px}
+.tp-dim-tag{font-size:10.5px;font-weight:600;color:#60a5fa;background:rgba(96,165,250,0.12);
+  border:1px solid rgba(96,165,250,0.3);border-radius:4px;padding:1px 7px;flex-shrink:0}
+.tp-dim-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.tp-revenue-note{font-size:10.5px;color:var(--text3);margin-top:4px;opacity:.75}
 .tp-fund-val{font-family:var(--mono);font-size:16px;font-weight:600}
 .tp-fund-avg{font-size:11px;color:#a8bacf;margin-left:8px}
 .tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
@@ -1550,15 +1555,20 @@ function renderDetail(code) {
     ${hasFundamentals ? `<div class="tp-fundamentals">
       ${core  ? `<div class="tp-fund-block"><span class="tp-fund-lbl">核心產品</span><span class="tp-fund-text">${core}</span></div>` : ""}
       ${revenue.length ? `<div class="tp-fund-block">
-        <span class="tp-fund-lbl">收入來源</span>
+        <span class="tp-fund-lbl">營收拆解</span>
         <div class="tp-revenue-wrap">
           <div class="tp-revenue-canvas-wrap"><canvas data-revenue-code="${code}"></canvas></div>
           <div class="tp-revenue-legend">
+            <div class="tp-revenue-dim">
+              <span class="tp-dim-tag">${si.revenue_dim || "產品別"}</span>
+              <span class="tp-dim-desc">${REVENUE_DIM_DESC[si.revenue_dim] || REVENUE_DIM_DESC["產品別"]}</span>
+            </div>
             ${revenue.map((r, i) => `<div class="tp-revenue-item">
               <span class="tp-revenue-dot" style="background:${REVENUE_COLORS[i % REVENUE_COLORS.length]}"></span>
               <span>${r.name}</span>
               <span class="tp-revenue-pct">${r.pct}%</span>
             </div>`).join("")}
+            <div class="tp-revenue-note">佔比為概略估算，非引用財報數字</div>
           </div>
         </div>
       </div>` : ""}
@@ -2040,6 +2050,14 @@ function toggleSection(id, btn) {
 }
 
 const REVENUE_COLORS = ['#60a5fa','#a78bfa','#4ade80','#facc15','#fb923c','#f87171','#2dd4bf','#e879f9'];
+// 各維度的白話說明——原本只寫「收入來源」，看不出是依什麼在拆，
+// 而實際資料混了好幾種拆法（台積電是終端應用、環球晶是產品品項、金控是事業群）
+const REVENUE_DIM_DESC = {
+  "應用別": "產品最終用在哪些終端市場",
+  "產品別": "公司銷售的產品品項",
+  "業務別": "各事業群 / 服務別",
+  "航線別": "各航線的營收比重",
+};
 
 let priceCache = {};
 let nameCache = {};   // code → 中文名稱（來自 data.json prices.name）
