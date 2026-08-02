@@ -129,10 +129,13 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   <a href="feedback.html" class="back-link">💬 留言板</a>
 </nav>
 
+<div id="auth-mount"></div>
+
 <div class="note">
-  <strong>📌 資料存在哪：</strong>所有紀錄只存在<strong>你目前這台裝置的瀏覽器</strong>裡（localStorage），
-  不會上傳到任何地方，換裝置或清除瀏覽器資料就會消失。
-  請定期用下方的「匯出備份」存成檔案。現價與損益來自每日自動更新的行情資料，僅供參考。
+  <strong>📌 資料存在哪：</strong>所有紀錄只存在<strong>你目前這台裝置的瀏覽器</strong>裡，
+  不會上傳到任何地方，換裝置或清除瀏覽器資料就會消失。設定管理密碼後，內容會用該密碼加密
+  （密碼不儲存於任何位置，忘記無法還原）。請定期用「匯出備份」存成檔案。
+  現價與損益來自每日自動更新的行情資料，僅供參考。
 </div>
 
 <!-- ── 總覽 ── -->
@@ -143,8 +146,8 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   </div>
 </div>
 
-<!-- ── 新增/編輯 ── -->
-<div class="card">
+<!-- ── 新增/編輯（僅管理模式） ── -->
+<div class="card" id="form-card">
   <div class="card-hd">
     <h2 id="form-title">➕ 新增交易</h2>
     <span class="sub" id="form-hint"></span>
@@ -200,8 +203,8 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   <div class="card-bd" id="holdings-bd"></div>
 </div>
 
-<!-- ── 交易紀錄 ── -->
-<div class="card">
+<!-- ── 交易紀錄（僅管理模式） ── -->
+<div class="card" id="tx-card">
   <div class="card-hd">
     <h2>🧾 全部交易</h2>
     <span class="sub" id="tx-count"></span>
@@ -217,6 +220,7 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   </div>
 </div>
 
+<script src="auth.js"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  資料
@@ -268,12 +272,30 @@ function estimateFee(market, sideVal, qty, price) {
 
 // ══════════════════════════════════════════════════════
 //  儲存 / 讀取
+//  設定過管理密碼後一律走加密保險庫（auth.js）；
+//  還沒設定密碼時沿用舊的明碼 localStorage，讓沒設密碼的人照樣能用。
 // ══════════════════════════════════════════════════════
-function load() {
+let vault = null;   // 解鎖後的完整保險庫內容（含 trades / 最愛）
+
+async function load() {
+  if (Auth.isSetup()) {
+    if (!Auth.isAdmin()) { trades = []; return; }    // 訪客看不到明細
+    vault  = await Auth.load() || {};
+    trades = vault.trades || [];
+    return;
+  }
   try { trades = JSON.parse(localStorage.getItem(KEY) || '[]'); }
   catch { trades = []; }
 }
-function save() {
+
+async function save() {
+  if (Auth.isSetup()) {
+    if (!Auth.isAdmin()) return;
+    vault = vault || {};
+    vault.trades = trades;
+    await Auth.save(vault);
+    return;
+  }
   localStorage.setItem(KEY, JSON.stringify(trades));
 }
 
@@ -320,7 +342,7 @@ function updateCalc() {
     `${side === 'buy' ? '總支出' : '實收'} ${cur(market)}${fmt(net)}`;
 }
 
-function saveTx() {
+async function saveTx() {
   const code  = document.getElementById('f-code').value.trim().toUpperCase();
   const date  = document.getElementById('f-date').value;
   const qty   = +document.getElementById('f-qty').value;
@@ -349,7 +371,7 @@ function saveTx() {
   if (editingId) trades = trades.map(t => t.id === editingId ? rec : t);
   else           trades.push(rec);
 
-  save(); cancelEdit(); renderAll();
+  await save(); cancelEdit(); renderAll();
 }
 
 function editTx(id) {
@@ -382,12 +404,12 @@ function cancelEdit() {
   setSide('buy');
 }
 
-function delTx(id) {
+async function delTx(id) {
   const t = trades.find(x => x.id === id);
   if (!t) return;
   if (!confirm(`確定刪除這筆紀錄？\n${t.date} ${t.side==='buy'?'買':'賣'} ${t.name} ${fmt(t.qty)} 股`)) return;
   trades = trades.filter(x => x.id !== id);
-  save(); renderAll();
+  await save(); renderAll();
 }
 
 function todayStr() {
@@ -431,7 +453,57 @@ function holdingQty(code, excludeId) {
 // ══════════════════════════════════════════════════════
 //  Render
 // ══════════════════════════════════════════════════════
-function renderAll() { renderSummary(); renderHoldings(); renderTx(); }
+// 訪客模式：只有設定過密碼、且目前未解鎖時成立
+const isGuest = () => Auth.isSetup() && !Auth.isAdmin();
+
+function renderAll() {
+  const guest = isGuest();
+  // 新增表單與完整交易列表含金額與理由，訪客一律不顯示
+  document.getElementById('form-card').style.display = guest ? 'none' : '';
+  document.getElementById('tx-card').style.display   = guest ? 'none' : '';
+  if (guest) { renderGuest(); return; }
+  renderSummary(); renderHoldings(); renderTx();
+}
+
+/**
+ * 訪客模式畫面：顯示報酬率，金額全部遮蔽。
+ * 資料來自保險庫的 guest 摘要——那份摘要在寫入時就只存代號／名稱／報酬率，
+ * 本來就沒有金額可以外洩，不是靠前端遮起來而已。
+ */
+function renderGuest() {
+  const g = Auth.guestData();
+  const cls = v => v == null ? 'neu' : v > 0 ? 'up' : v < 0 ? 'dn' : 'neu';
+  const sg  = v => v > 0 ? '+' : '';
+  const mask = '<span style="letter-spacing:2px;color:var(--text3)">●●●●</span>';
+
+  document.getElementById('sum-note').textContent = '';
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-box"><div class="sum-lbl">持股市值</div>
+      <div class="sum-val">${mask}</div><div class="sum-sub">登入後顯示</div></div>
+    <div class="sum-box"><div class="sum-lbl">未實現損益</div>
+      <div class="sum-val">${mask}</div>
+      <div class="sum-sub ${cls(g.totalPct)}">${g.totalPct == null ? '—' : sg(g.totalPct)+g.totalPct.toFixed(2)+'%'}</div></div>
+    <div class="sum-box"><div class="sum-lbl">已實現損益</div>
+      <div class="sum-val">${mask}</div><div class="sum-sub">登入後顯示</div></div>
+    <div class="sum-box"><div class="sum-lbl">交易筆數</div>
+      <div class="sum-val">${g.txCount ?? 0}</div><div class="sum-sub">${(g.positions||[]).length} 檔持股</div></div>`;
+
+  const pos = g.positions || [];
+  document.getElementById('holdings-bd').innerHTML = pos.length
+    ? `<div style="overflow-x:auto"><table>
+        <thead><tr><th>股票</th><th>股數</th><th>均價</th><th>現價</th><th>市值</th><th>未實現</th><th>報酬率</th></tr></thead>
+        <tbody>${pos.map(p => `<tr>
+          <td><span class="stk-name">${esc(p.name)}</span> <span class="stk-code">${esc(p.code)}</span></td>
+          <td>${mask}</td><td>${mask}</td>
+          <td>${priceOf(p.code) != null ? fmt(priceOf(p.code),2) : '—'}</td>
+          <td>${mask}</td><td>${mask}</td>
+          <td class="${cls(p.pct)}">${p.pct == null ? '—' : sg(p.pct)+p.pct.toFixed(2)+'%'}</td>
+        </tr>`).join('')}</tbody></table></div>
+       <div style="margin-top:12px;font-size:11.5px;color:var(--text3)">
+         🔒 訪客模式僅顯示報酬率，股數與金額已加密。輸入管理密碼後可查看完整明細與買賣理由。
+       </div>`
+    : `<div class="empty">🔒 訪客模式<br><span style="font-size:12px">輸入管理密碼後顯示持股與交易紀錄</span></div>`;
+}
 
 function renderSummary() {
   const pos = computePositions();
@@ -573,7 +645,7 @@ function importData(input) {
   const file = input.files?.[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const data = JSON.parse(e.target.result);
       const incoming = Array.isArray(data) ? data : data.trades;
@@ -586,7 +658,7 @@ function importData(input) {
         if (!confirm('這會刪除目前所有紀錄，確定嗎？')) return;
         trades = incoming;
       }
-      save(); renderAll();
+      await save(); renderAll();
       alert('匯入完成');
     } catch (err) {
       alert('匯入失敗：' + err.message);
@@ -612,10 +684,26 @@ async function loadPrices() {
 // ══════════════════════════════════════════════════════
 //  Init
 // ══════════════════════════════════════════════════════
-load();
-cancelEdit();
-renderAll();
-loadPrices();
+// 讓 auth.js 產生訪客摘要時能取得現價（算報酬率用）
+window.__priceLookup = code => priceOf(code);
+
+// 登入狀態改變時重新載入資料並重繪
+async function onAuthChange() {
+  await load();
+  cancelEdit();
+  renderAll();
+}
+
+(async () => {
+  await Auth.restoreSession();          // 同分頁換頁不用重打密碼
+  AuthUI.mount('auth-mount', onAuthChange);
+  await load();
+  cancelEdit();
+  renderAll();
+  await loadPrices();                   // 有現價後訪客摘要的報酬率才算得出來
+  if (Auth.isAdmin()) await save();     // 順便用最新價刷新一次訪客摘要
+  renderAll();
+})();
 </script>
 </body>
 </html>
