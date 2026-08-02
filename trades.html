@@ -68,6 +68,35 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .seg button.on-buy{background:rgba(239,68,68,0.18);color:var(--up)}
 .seg button.on-sell{background:rgba(34,197,94,0.18);color:var(--dn)}
 
+/* ── 持股卡片（沿用大盤題材回顧的版型）── */
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.pos-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.pos-card:hover{border-color:var(--border2)}
+.pos-card.win{border-left:3px solid var(--up)}
+.pos-card.lose{border-left:3px solid var(--dn)}
+.pos-name{font-size:11px;color:var(--text3);letter-spacing:.05em;margin-bottom:6px;
+  display:flex;align-items:center;gap:5px}
+.pos-name b{color:var(--text2);font-weight:600;letter-spacing:0;font-size:12px}
+.pos-name .caret{margin-left:auto;font-size:9px}
+.pos-pct{font-size:22px;font-weight:700;line-height:1;font-family:var(--mono)}
+.pos-sub{font-size:11px;color:var(--text3);margin-top:5px;font-family:var(--mono)}
+.pos-pl{font-size:11.5px;margin-top:3px;font-family:var(--mono)}
+.pos-detail{display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
+.pos-card.open .pos-detail{display:block}
+.pos-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:11px;font-family:var(--mono)}
+.pos-row span:first-child{color:var(--text3);font-family:var(--font)}
+.pos-txs{margin-top:9px;display:flex;flex-direction:column;gap:7px}
+.pos-tx{background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.pos-tx-hd{display:flex;align-items:center;gap:7px;font-size:11px;margin-bottom:4px;flex-wrap:wrap}
+.pos-tx-hd .tx-date{margin-left:auto;font-size:10.5px}
+.pos-tx-num{font-size:11px;color:var(--text2);font-family:var(--mono);line-height:1.6}
+.pos-tx-why{font-size:11.5px;color:var(--text2);line-height:1.65;margin-top:5px;
+  padding:6px 9px;background:rgba(255,255,255,0.03);border-left:2px solid var(--border2);
+  border-radius:0 4px 4px 0;white-space:pre-wrap}
+.pos-tx-why.empty{color:var(--text3);font-style:italic;opacity:.65}
+.pos-acts{display:flex;gap:8px;margin-top:6px}
+
 /* ── 持股表 ── */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.04em;padding:7px 8px;
@@ -199,7 +228,7 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
 
 <!-- ── 目前持股 ── -->
 <div class="card">
-  <div class="card-hd"><h2>📊 目前持股</h2><span class="sub">點一列可看該股所有交易與理由</span></div>
+  <div class="card-hd"><h2>📊 目前持股</h2><span class="sub">點卡片展開，可看該股每一筆買賣與當初的理由</span></div>
   <div class="card-bd" id="holdings-bd"></div>
 </div>
 
@@ -422,10 +451,11 @@ function todayStr() {
 //  賣出時以「當下的平均成本」認列已實現損益，剩餘股數的均價不變
 // ══════════════════════════════════════════════════════
 function computePositions() {
-  const pos = {};   // code → {qty, cost, realized, market, name, txs[]}
+  const pos = {};   // code → {qty, cost, realized, soldCost, market, name, txs[]}
   [...trades].sort((a,b) => a.date.localeCompare(b.date) || a.id - b.id).forEach(t => {
     const p = pos[t.code] || (pos[t.code] =
-      { code:t.code, name:t.name, market:t.market, qty:0, cost:0, realized:0, txs:[] });
+      { code:t.code, name:t.name, market:t.market, qty:0, cost:0,
+        realized:0, soldCost:0, txs:[] });
     p.name = t.name || p.name;
     p.txs.push(t);
     if (t.side === 'buy') {
@@ -435,6 +465,7 @@ function computePositions() {
       const avg = p.qty > 0 ? p.cost / p.qty : 0;
       const sellQty = Math.min(t.qty, p.qty);
       p.realized += (t.price * t.qty - t.fee) - avg * sellQty;   // 賣出費用直接扣損益
+      p.soldCost += avg * sellQty;            // 已賣出部分的成本，用來算已實現報酬率
       p.qty  -= t.qty;
       p.cost -= avg * sellQty;
       if (p.qty <= 0) { p.qty = 0; p.cost = 0; }
@@ -490,18 +521,22 @@ function renderGuest() {
 
   const pos = g.positions || [];
   document.getElementById('holdings-bd').innerHTML = pos.length
-    ? `<div style="overflow-x:auto"><table>
-        <thead><tr><th>股票</th><th>股數</th><th>均價</th><th>現價</th><th>市值</th><th>未實現</th><th>報酬率</th></tr></thead>
-        <tbody>${pos.map(p => `<tr>
-          <td><span class="stk-name">${esc(p.name)}</span> <span class="stk-code">${esc(p.code)}</span></td>
-          <td>${mask}</td><td>${mask}</td>
-          <td>${priceOf(p.code) != null ? fmt(priceOf(p.code),2) : '—'}</td>
-          <td>${mask}</td><td>${mask}</td>
-          <td class="${cls(p.pct)}">${p.pct == null ? '—' : sg(p.pct)+p.pct.toFixed(2)+'%'}</td>
-        </tr>`).join('')}</tbody></table></div>
-       <div style="margin-top:12px;font-size:11.5px;color:var(--text3)">
-         🔒 訪客模式僅顯示報酬率，股數與金額已加密。輸入管理密碼後可查看完整明細與買賣理由。
-       </div>`
+    ? `<div class="pos-grid">${pos.map(p => {
+        const c = cls(p.pct);
+        const edge = p.pct == null || p.pct === 0 ? '' : (p.pct > 0 ? ' win' : ' lose');
+        const arrow = p.pct == null ? '' : p.pct > 0 ? '↑' : p.pct < 0 ? '↓' : '→';
+        const pr = priceOf(p.code);
+        return `<div class="pos-card${edge}" style="cursor:default">
+          <div class="pos-name"><b>${esc(p.name)}</b><span>${esc(p.code)}</span>
+            <span class="caret">🔒</span></div>
+          <div class="pos-pct ${c}">${arrow} ${p.pct == null ? '—' : sg(p.pct)+p.pct.toFixed(2)+'%'}</div>
+          <div class="pos-sub">現價 ${pr != null ? fmt(pr,2) : '—'}</div>
+          <div class="pos-pl">${mask}</div>
+        </div>`;
+      }).join('')}</div>
+      <div style="margin-top:12px;font-size:11.5px;color:var(--text3)">
+        🔒 訪客模式僅顯示報酬率，股數與金額已加密。輸入管理密碼後可查看完整明細與買賣理由。
+      </div>`
     : `<div class="empty">🔒 訪客模式<br><span style="font-size:12px">輸入管理密碼後顯示持股與交易紀錄</span></div>`;
 }
 
@@ -542,38 +577,88 @@ function renderSummary() {
 }
 
 function renderHoldings() {
-  const pos = Object.values(computePositions()).filter(p => p.qty > 0)
-    .sort((a,b) => (priceOf(b.code)||0)*b.qty - (priceOf(a.code)||0)*a.qty);
-  const bd = document.getElementById('holdings-bd');
-  if (!pos.length) {
-    bd.innerHTML = `<div class="empty">目前沒有持股<br><span style="font-size:12px">新增一筆買進紀錄後會出現在這裡</span></div>`;
+  const all = Object.values(computePositions());
+  const bd  = document.getElementById('holdings-bd');
+  if (!all.length) {
+    bd.innerHTML = `<div class="empty">目前沒有任何紀錄<br><span style="font-size:12px">新增一筆買進紀錄後會出現在這裡</span></div>`;
     return;
   }
-  bd.innerHTML = `<div style="overflow-x:auto"><table>
-    <thead><tr><th>股票</th><th>股數</th><th>均價</th><th>現價</th><th>市值</th><th>未實現</th><th>報酬率</th></tr></thead>
-    <tbody>${pos.map(p => {
-      const avg = p.qty ? p.cost / p.qty : 0;
-      const pr  = priceOf(p.code);
-      const mv  = pr != null ? pr * p.qty : null;
-      const pl  = mv != null ? mv - p.cost : null;
-      const pct = (pl != null && p.cost) ? pl / p.cost * 100 : null;
-      const c   = pl == null ? 'neu' : pl > 0 ? 'up' : pl < 0 ? 'dn' : 'neu';
-      const sg  = v => v > 0 ? '+' : '';
-      const open = openCode === p.code;
-      return `<tr class="clickable" onclick="toggleCode('${p.code}')">
-          <td><span class="stk-name">${esc(p.name)}</span>
-              <span class="stk-code">${p.code} ${open ? '▲' : '▼'}</span></td>
-          <td>${fmt(p.qty)}</td>
-          <td>${fmt(avg,2)}</td>
-          <td>${pr != null ? fmt(pr,2) : '—'}</td>
-          <td>${mv != null ? fmt(mv) : '—'}</td>
-          <td class="${c}">${pl != null ? sg(pl)+fmt(pl) : '—'}</td>
-          <td class="${c}">${pct != null ? sg(pct)+pct.toFixed(2)+'%' : '—'}</td>
-        </tr>
-        ${open ? `<tr><td colspan="7" style="background:var(--bg4);padding:14px">
-          ${p.txs.map(txCard).join('')}
-        </td></tr>` : ''}`;
-    }).join('')}</tbody></table></div>`;
+
+  // 持有中的排前面（依市值），已出清的排後面（依最後交易日）
+  const held   = all.filter(p => p.qty > 0)
+    .sort((a,b) => (priceOf(b.code)||0)*b.qty - (priceOf(a.code)||0)*a.qty);
+  const closed = all.filter(p => p.qty <= 0)
+    .sort((a,b) => (b.txs.at(-1)?.date || '').localeCompare(a.txs.at(-1)?.date || ''));
+
+  bd.innerHTML = `<div class="pos-grid">${[...held, ...closed].map(posCard).join('')}</div>`;
+}
+
+/**
+ * 單檔股票的小卡，版型比照大盤題材回顧：
+ * 收合時只看報酬率，點擊展開才顯示成本與每一筆買賣（含當初寫的理由）。
+ * 顏色沿用台股習慣：賺＝紅、賠＝綠。
+ */
+function posCard(p) {
+  const isHeld = p.qty > 0;
+  const pr  = priceOf(p.code);
+  const avg = isHeld ? p.cost / p.qty : 0;
+
+  // 持有中看未實現，已出清看已實現
+  const pl   = isHeld ? (pr != null ? pr * p.qty - p.cost : null) : p.realized;
+  const base = isHeld ? p.cost : p.soldCost;
+  const pct  = (pl != null && base > 0) ? pl / base * 100 : null;
+
+  const c    = pl == null ? 'neu' : pl > 0 ? 'up' : pl < 0 ? 'dn' : 'neu';
+  const sg   = v => v > 0 ? '+' : '';
+  const open = openCode === p.code;
+  const edge = pl == null || pl === 0 ? '' : (pl > 0 ? ' win' : ' lose');
+  const arrow = pct == null ? '' : pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+
+  const rows = isHeld
+    ? [['股數', fmt(p.qty)], ['均價', fmt(avg,2)],
+       ['現價', pr != null ? fmt(pr,2) : '—'],
+       ['成本', cur(p.market)+fmt(p.cost)],
+       ['市值', pr != null ? cur(p.market)+fmt(pr*p.qty) : '—'],
+       ...(p.realized ? [['已實現', `<span class="${p.realized>0?'up':'dn'}">${sg(p.realized)}${fmt(p.realized)}</span>`]] : [])]
+    : [['買進成本', cur(p.market)+fmt(p.soldCost)],
+       ['已實現損益', `<span class="${c}">${sg(p.realized)}${fmt(p.realized)}</span>`],
+       ['交易筆數', p.txs.length + ' 筆']];
+
+  return `<div class="pos-card${edge}${open ? ' open' : ''}" onclick="toggleCode('${p.code}')">
+    <div class="pos-name">
+      <b>${esc(p.name)}</b><span>${esc(p.code)}</span>
+      ${isHeld ? '' : '<span style="color:var(--text3)">已出清</span>'}
+      <span class="caret">${open ? '▲' : '▼'}</span>
+    </div>
+    <div class="pos-pct ${c}">${arrow} ${pct == null ? '—' : sg(pct)+pct.toFixed(2)+'%'}</div>
+    <div class="pos-sub">${isHeld ? `${fmt(p.qty)} 股 · 均價 ${fmt(avg,2)}` : `${p.txs.length} 筆交易`}</div>
+    <div class="pos-pl ${c}">${pl == null ? '' : (isHeld ? '未實現 ' : '已實現 ') + sg(pl) + cur(p.market) + fmt(pl)}</div>
+
+    <div class="pos-detail">
+      ${rows.map(([k,v]) => `<div class="pos-row"><span>${k}</span><span>${v}</span></div>`).join('')}
+      <div class="pos-txs">${p.txs.map(posTx).join('')}</div>
+    </div>
+  </div>`;
+}
+
+/** 展開後的單筆買賣（點擊不要冒泡回卡片，否則會把卡片收起來） */
+function posTx(t) {
+  const amt = t.qty * t.price;
+  const net = t.side === 'buy' ? amt + t.fee : amt - t.fee;
+  return `<div class="pos-tx" onclick="event.stopPropagation()">
+    <div class="pos-tx-hd">
+      <span class="tag tag-${t.side}">${t.side === 'buy' ? '買進' : '賣出'}</span>
+      <span class="tx-date">${esc(t.date)}</span>
+    </div>
+    <div class="pos-tx-num">${fmt(t.qty)} 股 × ${fmt(t.price,2)}
+      <span style="color:var(--text3)">・費用 ${fmt(t.fee)}・${t.side==='buy'?'支出':'實收'} ${cur(t.market)}${fmt(net)}</span>
+    </div>
+    <div class="pos-tx-why ${t.why ? '' : 'empty'}">${t.why ? esc(t.why) : '（未填寫理由）'}</div>
+    <div class="pos-acts">
+      <button class="lnk" onclick="editTx(${t.id})">編輯</button>
+      <button class="lnk del" onclick="delTx(${t.id})">刪除</button>
+    </div>
+  </div>`;
 }
 
 function toggleCode(code) {
