@@ -77,6 +77,29 @@ nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
 .badge-data{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25)}
 .badge-other{background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)}
 .badge-done{background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.2)}
+.badge-hidden{background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid rgba(148,163,184,0.25)}
+.issue-card.hidden-item{opacity:.5;border-style:dashed}
+
+/* ── 管理列 ── */
+.admin-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg2);
+  border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.ad-state{font-size:12.5px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.ad-state b{color:var(--accent)}
+.ad-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ad-dot.on{background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.6)}
+.ad-dot.off{background:var(--text3)}
+.ad-sub{font-size:11.5px;color:var(--text3)}
+.ad-err{font-size:11.5px;color:#f87171}
+.admin-bar input{background:var(--bg3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+  color:var(--text);font-family:inherit;font-size:12.5px;padding:6px 9px;outline:none;width:150px}
+.admin-bar input:focus{border-color:var(--accent)}
+
+/* ── 管理員回覆 ── */
+.reply-box{margin-top:9px;padding:9px 12px;background:rgba(167,139,250,0.07);
+  border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:13px;
+  color:var(--text2);line-height:1.7;white-space:pre-wrap}
+.reply-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--accent);
+  background:rgba(167,139,250,0.14);border-radius:4px;padding:1px 7px;margin-right:8px}
 .issue-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
 .issue-body{font-size:13px;color:var(--text2);white-space:pre-wrap;word-break:break-all}
 .issue-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px}
@@ -111,12 +134,12 @@ nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
 
   <div class="page-hd">
     <h1>💬 問題留言板</h1>
-    <p>反映錯誤、提出建議，或回報資料異常。留言存在本瀏覽器，管理員可匯出查看。</p>
+    <p>反映錯誤、提出建議，或回報資料異常。留言送出後所有人都看得到，管理員會回覆與處理。</p>
   </div>
 
-  <div class="note-bar">
-    <strong>📌 說明：</strong>留言儲存於本地瀏覽器（localStorage）。點「📋 複製所有留言」可匯出文字，轉給管理員。
-  </div>
+  <div id="admin-mount"></div>
+
+  <div class="note-bar" id="mode-note"></div>
 
   <!-- 統計列 -->
   <div class="stats-row" id="stats-row"></div>
@@ -170,6 +193,8 @@ nav{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase_config.js"></script>
 <script>
 const STORAGE_KEY = 'fb_issues_v1';
 let filter = 'all';
@@ -181,29 +206,77 @@ const CAT_INFO = {
   other:   { label:'💬 其他',        cls:'badge-other'   },
 };
 
-function loadIssues() {
+// ══════════════════════════════════════════════════════
+//  資料層
+//  設定好 supabase_config.js → 走雲端（大家看得到同一份、管理員能管理）
+//  沒設定 → 自動退回本機 localStorage，跟以前一樣還是能用
+// ══════════════════════════════════════════════════════
+let sb = null;          // Supabase client
+let isAdmin = false;    // 是否已登入管理員
+let cache = [];         // 目前畫面上的留言
+
+if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+const cloud = () => !!sb;
+
+// ── 本機模式（未設定 Supabase 時的後備） ──
+function localLoad() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
 }
-function saveIssues(arr) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+function localSave(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+// ── 讀取 ──
+async function fetchIssues() {
+  if (!cloud()) return localLoad();
+  // 訪客受 RLS 限制只會拿到 hidden = false 的資料，這裡不用自己過濾
+  const { data, error } = await sb.from('feedback')
+    .select('*').order('created_at', { ascending: false }).limit(300);
+  if (error) { console.warn('讀取失敗', error); return []; }
+  return (data || []).map(r => ({ ...r, date: fmtDate(r.created_at) }));
 }
 
-function submitFeedback() {
+function fmtDate(iso) {
+  try {
+    return new Date(iso).toLocaleString('zh-TW',
+      { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  } catch { return iso || ''; }
+}
+
+// ══════════════════════════════════════════════════════
+//  新增留言
+// ══════════════════════════════════════════════════════
+async function submitFeedback() {
   const cat   = document.getElementById('f-cat').value;
   const name  = document.getElementById('f-name').value.trim() || '匿名';
   const title = document.getElementById('f-title').value.trim();
   const body  = document.getElementById('f-body').value.trim();
   const msg   = document.getElementById('submit-msg');
-  if (!title) { msg.textContent = '請填寫標題'; msg.style.color = '#f87171'; return; }
-  const issues = loadIssues();
-  issues.unshift({
-    id: Date.now(),
-    cat, name, title, body,
-    date: new Date().toLocaleString('zh-TW', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
-    done: false,
-  });
-  saveIssues(issues);
+  const fail  = t => { msg.textContent = t; msg.style.color = '#f87171'; };
+
+  if (!title)             return fail('請填寫標題');
+  if (title.length > 100) return fail('標題請控制在 100 字以內');
+  if (body.length > 2000) return fail('內容請控制在 2000 字以內');
+  if (name.length > 20)   return fail('名稱請控制在 20 字以內');
+
+  // 簡易防連發：同一個瀏覽器 20 秒內只能送一次
+  const last = +localStorage.getItem('fb_last_post') || 0;
+  if (Date.now() - last < 20000) return fail('留言太頻繁，請稍候再試');
+
+  msg.textContent = '送出中…'; msg.style.color = 'var(--text3)';
+
+  if (cloud()) {
+    const { error } = await sb.from('feedback').insert({ cat, name, title, body });
+    if (error) return fail('送出失敗：' + (error.message || '請稍後再試'));
+  } else {
+    const arr = localLoad();
+    arr.unshift({ id: Date.now(), cat, name, title, body,
+                  date: fmtDate(new Date().toISOString()), done: false });
+    localSave(arr);
+  }
+
+  localStorage.setItem('fb_last_post', Date.now());
   document.getElementById('f-title').value = '';
   document.getElementById('f-body').value  = '';
   msg.textContent = '✓ 已送出！';
@@ -212,20 +285,119 @@ function submitFeedback() {
   render();
 }
 
-function toggleDone(id) {
-  const issues = loadIssues();
-  const idx = issues.findIndex(i => i.id === id);
-  if (idx >= 0) issues[idx].done = !issues[idx].done;
-  saveIssues(issues);
+// ══════════════════════════════════════════════════════
+//  管理員操作（RLS 只允許已登入者執行，前端被改也繞不過）
+// ══════════════════════════════════════════════════════
+async function toggleDone(id) {
+  const cur = cache.find(i => i.id === id);
+  if (!cur) return;
+  if (cloud()) {
+    const { error } = await sb.from('feedback').update({ done: !cur.done }).eq('id', id);
+    if (error) return alert('操作失敗：' + error.message);
+  } else {
+    const arr = localLoad(); const it = arr.find(i => i.id === id);
+    if (it) it.done = !it.done; localSave(arr);
+  }
   render();
 }
 
-function deleteIssue(id) {
-  const issues = loadIssues().filter(i => i.id !== id);
-  saveIssues(issues);
+async function toggleHidden(id) {
+  const cur = cache.find(i => i.id === id);
+  if (!cur) return;
+  const { error } = await sb.from('feedback').update({ hidden: !cur.hidden }).eq('id', id);
+  if (error) return alert('操作失敗：' + error.message);
   render();
 }
 
+async function replyIssue(id) {
+  const cur = cache.find(i => i.id === id);
+  if (!cur) return;
+  const text = prompt('回覆內容（留空可清除回覆）：', cur.reply || '');
+  if (text === null) return;
+  const val = text.trim();
+  const { error } = await sb.from('feedback')
+    .update({ reply: val || null, replied_at: val ? new Date().toISOString() : null })
+    .eq('id', id);
+  if (error) return alert('回覆失敗：' + error.message);
+  render();
+}
+
+async function deleteIssue(id) {
+  if (!confirm('確定要永久刪除這則留言？\n（若只是不想顯示，建議用「隱藏」）')) return;
+  if (cloud()) {
+    const { error } = await sb.from('feedback').delete().eq('id', id);
+    if (error) return alert('刪除失敗：' + error.message);
+  } else {
+    localSave(localLoad().filter(i => i.id !== id));
+  }
+  render();
+}
+
+async function clearDone() {
+  if (!confirm('確定要刪除所有「已處理」的留言？')) return;
+  if (cloud()) {
+    const { error } = await sb.from('feedback').delete().eq('done', true);
+    if (error) return alert('清除失敗：' + error.message);
+  } else {
+    localSave(localLoad().filter(i => !i.done));
+  }
+  render();
+}
+
+// ══════════════════════════════════════════════════════
+//  管理員登入
+// ══════════════════════════════════════════════════════
+async function adminLogin() {
+  const email = document.getElementById('ad-email').value.trim();
+  const pw    = document.getElementById('ad-pw').value;
+  const err   = document.getElementById('ad-err');
+  if (!email || !pw) { err.textContent = '請輸入帳號與密碼'; return; }
+  err.textContent = '登入中…';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { err.textContent = '登入失敗：帳號或密碼錯誤'; return; }
+  await refreshAdmin();
+  render();
+}
+
+async function adminLogout() {
+  await sb.auth.signOut();
+  await refreshAdmin();
+  render();
+}
+
+async function refreshAdmin() {
+  if (!cloud()) { isAdmin = false; renderAdminBar(); return; }
+  const { data } = await sb.auth.getSession();
+  isAdmin = !!data?.session;
+  renderAdminBar();
+}
+
+function renderAdminBar() {
+  const el = document.getElementById('admin-mount');
+  if (!el) return;
+  if (!cloud()) { el.innerHTML = ''; return; }
+  el.innerHTML = isAdmin
+    ? `<div class="admin-bar">
+         <span class="ad-state"><span class="ad-dot on"></span>管理模式 · <b>PJ</b></span>
+         <span class="ad-sub">可回覆、標記、隱藏與刪除留言</span>
+         <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="adminLogout()">登出</button>
+       </div>`
+    : `<div class="admin-bar">
+         <span class="ad-state"><span class="ad-dot off"></span>訪客模式</span>
+         <span class="ad-sub">可留言；管理功能需登入</span>
+         <span style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+           <input id="ad-email" type="email" placeholder="管理員 Email" autocomplete="username">
+           <input id="ad-pw" type="password" placeholder="密碼" autocomplete="current-password"
+                  onkeydown="if(event.key==='Enter')adminLogin()">
+           <button class="btn btn-primary btn-sm" onclick="adminLogin()">登入</button>
+           <span class="ad-err" id="ad-err"></span>
+         </span>
+       </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  其他
+// ══════════════════════════════════════════════════════
 function setFilter(f, btn) {
   filter = f;
   document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
@@ -234,37 +406,36 @@ function setFilter(f, btn) {
 }
 
 function exportAll() {
-  const issues = loadIssues();
-  if (!issues.length) { alert('目前沒有留言'); return; }
-  const txt = issues.map(i =>
+  if (!cache.length) { alert('目前沒有留言'); return; }
+  const txt = cache.map(i =>
     `[${i.date}] ${CAT_INFO[i.cat]?.label || i.cat} — ${i.done ? '✅已處理' : '⏳待處理'}\n` +
-    `作者：${i.name}\n標題：${i.title}\n${i.body ? '內容：' + i.body : ''}\n${'─'.repeat(40)}`
+    `作者：${i.name}\n標題：${i.title}\n${i.body ? '內容：' + i.body : ''}` +
+    `${i.reply ? '\n管理員回覆：' + i.reply : ''}\n${'─'.repeat(40)}`
   ).join('\n\n');
   navigator.clipboard.writeText(txt).then(() => alert('✓ 已複製到剪貼簿！'));
 }
 
-function clearDone() {
-  if (!confirm('確定要清除所有「已處理」的留言？')) return;
-  saveIssues(loadIssues().filter(i => !i.done));
-  render();
-}
+// ══════════════════════════════════════════════════════
+//  Render
+// ══════════════════════════════════════════════════════
+async function render() {
+  const all = await fetchIssues();
+  cache = all;
 
-function render() {
-  const all = loadIssues();
+  document.getElementById('mode-note').innerHTML = cloud()
+    ? '<strong>📌 說明：</strong>留言會送到雲端資料庫，<strong>所有人都看得到</strong>，管理員會在這裡回覆。請勿填寫個人敏感資訊。'
+    : '<strong>📌 說明：</strong>目前為<strong>本機模式</strong>——留言只存在你自己的瀏覽器，管理員收不到。點「📋 複製所有留言」可匯出文字轉給管理員。';
+
   const open = all.filter(i => !i.done).length;
   const done = all.filter(i => i.done).length;
-
-  // stats
   document.getElementById('stats-row').innerHTML = [
-    { n: all.length,  lbl: '全部留言' },
-    { n: open,        lbl: '待處理',   color: open ? '#fb923c' : '' },
-    { n: done,        lbl: '已處理',   color: '#4ade80' },
+    { n: all.length, lbl: '全部留言' },
+    { n: open, lbl: '待處理', color: open ? '#fb923c' : '' },
+    { n: done, lbl: '已處理', color: '#4ade80' },
   ].map(s => `<div class="stat">
     <div class="stat-n" ${s.color ? `style="color:${s.color}"` : ''}>${s.n}</div>
-    <div class="stat-lbl">${s.lbl}</div>
-  </div>`).join('');
+    <div class="stat-lbl">${s.lbl}</div></div>`).join('');
 
-  // list
   const list = document.getElementById('issue-list');
   let items = all;
   if (filter === 'open') items = all.filter(i => !i.done);
@@ -272,27 +443,32 @@ function render() {
 
   if (!items.length) {
     list.innerHTML = `<div class="empty-state"><div>${filter==='done'?'✅':'📭'}</div>${
-      filter==='done' ? '還沒有已處理的留言' : filter==='open' ? '太棒了，沒有待處理的留言！' : '還沒有任何留言，歡迎第一個留言！'
-    }</div>`;
+      filter==='done' ? '還沒有已處理的留言'
+      : filter==='open' ? '太棒了，沒有待處理的留言！'
+      : '還沒有任何留言，歡迎第一個留言！'}</div>`;
     return;
   }
 
   list.innerHTML = items.map(i => {
     const ci = CAT_INFO[i.cat] || CAT_INFO.other;
-    return `<div class="issue-card${i.done ? ' done' : ''}">
+    return `<div class="issue-card${i.done ? ' done' : ''}${i.hidden ? ' hidden-item' : ''}">
       <div class="issue-meta">
         <span class="badge ${ci.cls}">${ci.label}</span>
-        ${i.done ? '<span class="badge badge-done">✅ 已處理</span>' : ''}
-        <span style="font-size:11px;color:var(--text3);margin-left:auto">${i.date}</span>
+        ${i.done   ? '<span class="badge badge-done">✅ 已處理</span>' : ''}
+        ${i.hidden ? '<span class="badge badge-hidden">🚫 已隱藏</span>' : ''}
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">${esc(i.date)}</span>
       </div>
       <div class="issue-title">${esc(i.title)}</div>
       ${i.body ? `<div class="issue-body" style="margin-top:5px">${esc(i.body)}</div>` : ''}
+      ${i.reply ? `<div class="reply-box"><span class="reply-tag">PJ 回覆</span>${esc(i.reply)}</div>` : ''}
       <div class="issue-footer">
         <span class="issue-from">👤 ${esc(i.name)}</span>
-        <div class="issue-actions">
+        ${(isAdmin || !cloud()) ? `<div class="issue-actions">
+          ${cloud() ? `<button class="btn btn-ghost btn-sm" onclick="replyIssue(${i.id})">💬 回覆</button>` : ''}
           <button class="btn btn-ghost btn-sm" onclick="toggleDone(${i.id})">${i.done ? '↩ 重開' : '✅ 標記已處理'}</button>
+          ${cloud() ? `<button class="btn btn-ghost btn-sm" onclick="toggleHidden(${i.id})">${i.hidden ? '👁 取消隱藏' : '🚫 隱藏'}</button>` : ''}
           <button class="btn btn-danger btn-sm" onclick="deleteIssue(${i.id})">刪除</button>
-        </div>
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -302,7 +478,7 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-render();
+(async () => { await refreshAdmin(); await render(); })();
 </script>
 </body>
 </html>
