@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交易紀錄 · 台股儀表板</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--bg4:#0e1623;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#ffffff;--text2:#d0daea;--text3:#a8bacf;
+  --up:#ef4444;--dn:#22c55e;
+  --blue:#60a5fa;--purple:#a78bfa;--teal:#2dd4bf;--yellow:#fbbf24;--orange:#fb923c;
+  --green:#4ade80;--red:#f87171;
+  --font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);min-height:100%}
+body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:1000px;margin:0 auto}
+
+.page-header{margin-bottom:20px}
+.page-header h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.page-header .sub{font-size:12px;color:var(--text3);margin-top:4px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
+.back-link{font-size:13px;color:var(--text3);text-decoration:none;display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border:1px solid var(--border2);border-radius:6px;transition:color .15s,border-color .15s}
+.back-link:hover{color:var(--purple);border-color:var(--purple)}
+.back-link.active{color:var(--purple);border-color:var(--purple);background:rgba(167,139,250,0.1)}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.card-hd{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.card-hd h2{font-size:15px;font-weight:600}
+.card-hd .sub{font-size:12px;color:var(--text3)}
+.card-bd{padding:18px}
+
+/* ── 總覽 ── */
+.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sum-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.sum-lbl{font-size:11px;color:var(--text3);letter-spacing:.04em;margin-bottom:6px}
+.sum-val{font-size:22px;font-weight:700;font-family:var(--mono);line-height:1.2}
+.sum-sub{font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+
+/* ── 表單 ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:12px}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11.5px;color:var(--text3);letter-spacing:.03em}
+.fld input,.fld select,.fld textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);font-family:var(--font);font-size:13.5px;padding:8px 10px;outline:none;width:100%}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--purple)}
+.fld input[type=number]{font-family:var(--mono)}
+.fld textarea{resize:vertical;min-height:64px;line-height:1.6}
+.fld .hint{font-size:10.5px;color:var(--text3);opacity:.8}
+.fld-wide{grid-column:1/-1}
+
+.btn{padding:9px 20px;border-radius:6px;font-size:13.5px;font-weight:600;font-family:var(--font);
+  cursor:pointer;border:1px solid transparent;transition:all .15s}
+.btn-primary{background:rgba(167,139,250,0.16);border-color:rgba(167,139,250,0.45);color:var(--purple)}
+.btn-primary:hover{background:rgba(167,139,250,0.26)}
+.btn-ghost{background:var(--bg3);border-color:var(--border2);color:var(--text3)}
+.btn-ghost:hover{color:var(--text2);border-color:var(--text3)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.seg{display:flex;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.seg button{flex:1;padding:8px 0;background:var(--bg3);border:none;color:var(--text3);font-family:var(--font);
+  font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.seg button.on-buy{background:rgba(239,68,68,0.18);color:var(--up)}
+.seg button.on-sell{background:rgba(34,197,94,0.18);color:var(--dn)}
+
+/* ── 持股表 ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.04em;padding:7px 8px;
+  border-bottom:1px solid var(--border2);text-align:right;white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-size:12.5px}
+td:first-child{text-align:left;font-family:var(--font)}
+tr:last-child td{border-bottom:none}
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
+.stk-name{font-weight:500;color:var(--text)}
+.stk-code{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.up{color:var(--up)}.dn{color:var(--dn)}.neu{color:var(--text3)}
+
+/* ── 交易列表 ── */
+.tx{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:var(--bg3)}
+.tx-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:4px;flex-shrink:0}
+.tag-buy{background:rgba(239,68,68,0.16);color:var(--up)}
+.tag-sell{background:rgba(34,197,94,0.16);color:var(--dn)}
+.tx-stk{font-weight:600;font-size:14px}
+.tx-code{font-size:11.5px;color:var(--text3);font-family:var(--mono)}
+.tx-date{font-size:11.5px;color:var(--text3);font-family:var(--mono);margin-left:auto}
+.tx-nums{font-size:12.5px;color:var(--text2);font-family:var(--mono);margin-bottom:7px}
+.tx-why{font-size:13px;color:var(--text2);line-height:1.7;background:var(--bg4);border-left:3px solid var(--border2);
+  padding:8px 12px;border-radius:0 6px 6px 0;white-space:pre-wrap}
+.tx-why.empty{color:var(--text3);font-style:italic;opacity:.7}
+.tx-acts{display:flex;gap:8px;margin-top:9px}
+.lnk{font-size:11.5px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:var(--font);padding:0}
+.lnk:hover{color:var(--purple)}
+.lnk.del:hover{color:var(--red)}
+
+.empty{text-align:center;padding:44px 20px;color:var(--text3);font-size:13.5px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border2);
+  cursor:pointer;background:var(--bg3);color:var(--text3);transition:all .15s}
+.chip.active{background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.4);color:var(--purple)}
+
+.note{font-size:11.5px;color:var(--text3);line-height:1.7;background:var(--bg4);border:1px solid var(--border);
+  border-radius:6px;padding:10px 14px;margin-bottom:16px}
+.note strong{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>📒 交易紀錄</h1>
+  <div class="sub">記錄每一筆買賣與當下的理由，事後回頭檢視判斷是否正確</div>
+</div>
+
+<nav>
+  <a href="index.html" class="back-link">🇹🇼 台股</a>
+  <a href="us.html" class="back-link">🇺🇸 美股</a>
+  <a href="health_check.html" class="back-link">📋 健檢</a>
+  <a href="weekly_report.html" class="back-link">📰 週報</a>
+  <a href="anatomy.html" class="back-link">🔬 晶片圖</a>
+  <a href="podcast.html" class="back-link">🎙️ Podcast精華</a>
+  <a href="trades.html" class="back-link active">📒 交易紀錄</a>
+  <a href="feedback.html" class="back-link">💬 留言板</a>
+</nav>
+
+<div class="note">
+  <strong>📌 資料存在哪：</strong>所有紀錄只存在<strong>你目前這台裝置的瀏覽器</strong>裡（localStorage），
+  不會上傳到任何地方，換裝置或清除瀏覽器資料就會消失。
+  請定期用下方的「匯出備份」存成檔案。現價與損益來自每日自動更新的行情資料，僅供參考。
+</div>
+
+<!-- ── 總覽 ── -->
+<div class="card">
+  <div class="card-hd"><h2>💰 總覽</h2><span class="sub" id="sum-note"></span></div>
+  <div class="card-bd">
+    <div class="sum-grid" id="summary"></div>
+  </div>
+</div>
+
+<!-- ── 新增/編輯 ── -->
+<div class="card">
+  <div class="card-hd">
+    <h2 id="form-title">➕ 新增交易</h2>
+    <span class="sub" id="form-hint"></span>
+  </div>
+  <div class="card-bd">
+    <div class="form-grid">
+      <div class="fld">
+        <label>買 / 賣</label>
+        <div class="seg">
+          <button type="button" id="btn-buy"  onclick="setSide('buy')">買進</button>
+          <button type="button" id="btn-sell" onclick="setSide('sell')">賣出</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>股票代號</label>
+        <input id="f-code" placeholder="2330 或 NVDA" oninput="onCodeInput()" autocomplete="off">
+        <span class="hint" id="code-hint">&nbsp;</span>
+      </div>
+      <div class="fld">
+        <label>日期</label>
+        <input id="f-date" type="date">
+      </div>
+      <div class="fld">
+        <label>股數</label>
+        <input id="f-qty" type="number" min="0" step="1" placeholder="1000" oninput="updateCalc()">
+        <span class="hint" id="qty-hint">&nbsp;</span>
+      </div>
+      <div class="fld">
+        <label>成交價</label>
+        <input id="f-price" type="number" min="0" step="0.01" placeholder="1000.00" oninput="updateCalc()">
+      </div>
+      <div class="fld">
+        <label>手續費 + 交易稅</label>
+        <input id="f-fee" type="number" min="0" step="0.01" placeholder="自動試算">
+        <span class="hint" id="fee-hint">留空則自動試算</span>
+      </div>
+      <div class="fld fld-wide">
+        <label>買賣理由（這頁的重點，寫下當下的判斷）</label>
+        <textarea id="f-why" placeholder="例：法說會展望優於預期，AI 伺服器訂單能見度到明年 Q2，股價回測季線不破就進場"></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveTx()" id="save-btn">新增交易</button>
+      <button class="btn btn-ghost btn-sm" onclick="cancelEdit()" id="cancel-btn" style="display:none">取消編輯</button>
+      <span class="sub" id="calc-preview" style="font-family:var(--mono);font-size:12px;color:var(--text3)"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 目前持股 ── -->
+<div class="card">
+  <div class="card-hd"><h2>📊 目前持股</h2><span class="sub">點一列可看該股所有交易與理由</span></div>
+  <div class="card-bd" id="holdings-bd"></div>
+</div>
+
+<!-- ── 交易紀錄 ── -->
+<div class="card">
+  <div class="card-hd">
+    <h2>🧾 全部交易</h2>
+    <span class="sub" id="tx-count"></span>
+    <div style="margin-left:auto" class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇︎ 匯出備份</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('import-file').click()">⬆︎ 匯入</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+  </div>
+  <div class="card-bd">
+    <div class="filters" id="filters"></div>
+    <div id="tx-list"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  資料
+// ══════════════════════════════════════════════════════
+const KEY = 'stock_trades_v1';
+
+// 觀察清單的股票在 data.json 裡沒有 name 欄位（那些是走 Yahoo 抓的），
+// 這裡內建一份，讓最常輸入的代號能自動帶出名稱
+const TW_NAMES = {"2330":"台積電","2303":"聯電","5347":"世界先進","6789":"采鈺","2454":"聯發科","3661":"世芯-KY","3034":"聯詠","2379":"瑞昱","3443":"創意電子","3711":"日月光投控","2449":"京元電","6223":"旺矽","6239":"力成","3374":"精材","2344":"華邦電","2408":"南亞科","6488":"環球晶","6182":"合晶科技","3105":"穩懋","2455":"全新","2404":"漢唐","3583":"辛耘","2383":"台光電","3037":"欣興","2382":"廣達","6669":"緯穎","2356":"英業達","2376":"技嘉","3231":"緯創","2357":"華碩","2324":"仁寶","2308":"台達電","2317":"鴻海","2301":"光寶科","2059":"川湖","3017":"奇鋐","8996":"高力","2345":"智邦","4906":"正文","3481":"群創","2409":"友達","2603":"長榮","2609":"陽明","2618":"長榮航","2610":"華航","2002":"中鋼","6505":"台塑化","1101":"台泥","1301":"台塑","2412":"中華電","4904":"遠傳","2881":"富邦金","2882":"國泰金","2891":"中信金","2885":"元大金","3008":"大立光","3484":"亞光","2327":"國巨","2492":"華新科","2472":"立隆電"};
+
+let trades   = [];      // {id, side, code, name, market, date, qty, price, fee, why}
+let twPrices = {};
+let usPrices = {};
+let editingId = null;
+let side = 'buy';
+let filterMode = 'all';
+let openCode = null;
+
+// ── 市場判斷：純數字＝台股，其餘＝美股 ──
+const isTW = code => /^\d/.test(code);
+const fmt  = (n, d=0) => (n==null||isNaN(n)) ? '—'
+  : n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const cur  = m => m === 'TW' ? 'NT$' : 'US$';
+
+function nameOf(code) {
+  code = code.trim().toUpperCase();
+  if (isTW(code)) return TW_NAMES[code] || twPrices[code]?.name || '';
+  return usPrices[code]?.name || '';
+}
+function priceOf(code) {
+  code = code.trim().toUpperCase();
+  return (isTW(code) ? twPrices[code]?.price : usPrices[code]?.price) ?? null;
+}
+
+// ══════════════════════════════════════════════════════
+//  手續費試算
+//  台股：手續費 0.1425%（買賣各一次，多數券商有折扣，這裡用 6 折）
+//        賣出另加證交稅 0.3%
+//  美股：多數券商 0 元
+// ══════════════════════════════════════════════════════
+function estimateFee(market, sideVal, qty, price) {
+  const amt = qty * price;
+  if (!amt) return 0;
+  if (market !== 'TW') return 0;
+  const commission = Math.max(20, amt * 0.001425 * 0.6);   // 低消 20 元
+  const tax = sideVal === 'sell' ? amt * 0.003 : 0;
+  return Math.round(commission + tax);
+}
+
+// ══════════════════════════════════════════════════════
+//  儲存 / 讀取
+// ══════════════════════════════════════════════════════
+function load() {
+  try { trades = JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  catch { trades = []; }
+}
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(trades));
+}
+
+// ══════════════════════════════════════════════════════
+//  表單
+// ══════════════════════════════════════════════════════
+function setSide(s) {
+  side = s;
+  document.getElementById('btn-buy').className  = s === 'buy'  ? 'on-buy'  : '';
+  document.getElementById('btn-sell').className = s === 'sell' ? 'on-sell' : '';
+  updateCalc();
+}
+
+function onCodeInput() {
+  const code = document.getElementById('f-code').value.trim().toUpperCase();
+  const hint = document.getElementById('code-hint');
+  const qh   = document.getElementById('qty-hint');
+  if (!code) { hint.textContent = ' '; qh.textContent = ' '; updateCalc(); return; }
+  const nm = nameOf(code);
+  const pr = priceOf(code);
+  hint.innerHTML = nm
+    ? `${nm}${pr ? ` · 現價 <span style="font-family:var(--mono)">${fmt(pr,2)}</span>` : ''}`
+    : '<span style="opacity:.7">查無此代號，仍可自行輸入</span>';
+  qh.textContent = isTW(code) ? '1 張 = 1000 股' : ' ';
+  // 價格留空時，自動帶入現價方便輸入
+  const pEl = document.getElementById('f-price');
+  if (!pEl.value && pr) pEl.value = pr;
+  updateCalc();
+}
+
+function updateCalc() {
+  const code  = document.getElementById('f-code').value.trim().toUpperCase();
+  const qty   = +document.getElementById('f-qty').value   || 0;
+  const price = +document.getElementById('f-price').value || 0;
+  const feeEl = document.getElementById('f-fee');
+  const market = isTW(code) ? 'TW' : 'US';
+  const fee = feeEl.value !== '' ? +feeEl.value : estimateFee(market, side, qty, price);
+  document.getElementById('fee-hint').textContent =
+    feeEl.value !== '' ? '已手動指定' : (market === 'TW' ? `自動試算 ${fmt(fee)}（含稅，可覆寫）` : '美股預設 0，可覆寫');
+  const gross = qty * price;
+  if (!gross) { document.getElementById('calc-preview').textContent = ''; return; }
+  const net = side === 'buy' ? gross + fee : gross - fee;
+  document.getElementById('calc-preview').textContent =
+    `${side === 'buy' ? '總支出' : '實收'} ${cur(market)}${fmt(net)}`;
+}
+
+function saveTx() {
+  const code  = document.getElementById('f-code').value.trim().toUpperCase();
+  const date  = document.getElementById('f-date').value;
+  const qty   = +document.getElementById('f-qty').value;
+  const price = +document.getElementById('f-price').value;
+  const feeIn = document.getElementById('f-fee').value;
+  const why   = document.getElementById('f-why').value.trim();
+
+  if (!code)              return alert('請輸入股票代號');
+  if (!date)              return alert('請選擇日期');
+  if (!qty || qty <= 0)   return alert('請輸入正確股數');
+  if (!price || price<=0) return alert('請輸入正確成交價');
+
+  const market = isTW(code) ? 'TW' : 'US';
+  const fee = feeIn !== '' ? +feeIn : estimateFee(market, side, qty, price);
+
+  // 賣出檢查：不能賣超過持有股數（避免打錯造成負持股）
+  if (side === 'sell') {
+    const held = holdingQty(code, editingId);
+    if (qty > held) {
+      if (!confirm(`目前 ${code} 持有 ${fmt(held)} 股，這筆要賣 ${fmt(qty)} 股，超出持股。\n仍要繼續嗎？`)) return;
+    }
+  }
+
+  const rec = { id: editingId || Date.now(), side, code, name: nameOf(code) || code,
+                market, date, qty, price, fee, why };
+  if (editingId) trades = trades.map(t => t.id === editingId ? rec : t);
+  else           trades.push(rec);
+
+  save(); cancelEdit(); renderAll();
+}
+
+function editTx(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+  editingId = id;
+  setSide(t.side);
+  document.getElementById('f-code').value  = t.code;
+  document.getElementById('f-date').value  = t.date;
+  document.getElementById('f-qty').value   = t.qty;
+  document.getElementById('f-price').value = t.price;
+  document.getElementById('f-fee').value   = t.fee;
+  document.getElementById('f-why').value   = t.why || '';
+  document.getElementById('form-title').textContent = '✏️ 編輯交易';
+  document.getElementById('save-btn').textContent   = '儲存修改';
+  document.getElementById('cancel-btn').style.display = '';
+  onCodeInput();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  editingId = null;
+  ['f-code','f-qty','f-price','f-fee','f-why'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-date').value = todayStr();
+  document.getElementById('form-title').textContent = '➕ 新增交易';
+  document.getElementById('save-btn').textContent   = '新增交易';
+  document.getElementById('cancel-btn').style.display = 'none';
+  document.getElementById('code-hint').innerHTML = ' ';
+  document.getElementById('calc-preview').textContent = '';
+  setSide('buy');
+}
+
+function delTx(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm(`確定刪除這筆紀錄？\n${t.date} ${t.side==='buy'?'買':'賣'} ${t.name} ${fmt(t.qty)} 股`)) return;
+  trades = trades.filter(x => x.id !== id);
+  save(); renderAll();
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════════════════════
+//  持股計算（加權平均成本法）
+//  賣出時以「當下的平均成本」認列已實現損益，剩餘股數的均價不變
+// ══════════════════════════════════════════════════════
+function computePositions() {
+  const pos = {};   // code → {qty, cost, realized, market, name, txs[]}
+  [...trades].sort((a,b) => a.date.localeCompare(b.date) || a.id - b.id).forEach(t => {
+    const p = pos[t.code] || (pos[t.code] =
+      { code:t.code, name:t.name, market:t.market, qty:0, cost:0, realized:0, txs:[] });
+    p.name = t.name || p.name;
+    p.txs.push(t);
+    if (t.side === 'buy') {
+      p.qty  += t.qty;
+      p.cost += t.qty * t.price + t.fee;      // 買進手續費計入成本
+    } else {
+      const avg = p.qty > 0 ? p.cost / p.qty : 0;
+      const sellQty = Math.min(t.qty, p.qty);
+      p.realized += (t.price * t.qty - t.fee) - avg * sellQty;   // 賣出費用直接扣損益
+      p.qty  -= t.qty;
+      p.cost -= avg * sellQty;
+      if (p.qty <= 0) { p.qty = 0; p.cost = 0; }
+    }
+  });
+  return pos;
+}
+
+function holdingQty(code, excludeId) {
+  let q = 0;
+  trades.filter(t => t.code === code && t.id !== excludeId)
+        .forEach(t => q += (t.side === 'buy' ? t.qty : -t.qty));
+  return Math.max(0, q);
+}
+
+// ══════════════════════════════════════════════════════
+//  Render
+// ══════════════════════════════════════════════════════
+function renderAll() { renderSummary(); renderHoldings(); renderTx(); }
+
+function renderSummary() {
+  const pos = computePositions();
+  let mv = 0, cost = 0, realized = 0, unknown = 0;
+  Object.values(pos).forEach(p => {
+    realized += p.realized;
+    if (p.qty <= 0) return;
+    const pr = priceOf(p.code);
+    cost += p.cost;
+    if (pr != null) mv += pr * p.qty; else { mv += p.cost; unknown++; }
+  });
+  const unreal = mv - cost;
+  const pct = cost > 0 ? unreal / cost * 100 : 0;
+  const cls = v => v > 0 ? 'up' : v < 0 ? 'dn' : 'neu';
+  const sign = v => v > 0 ? '+' : '';
+
+  // 台股美股混在一起加總沒有意義，只有單一市場時才顯示幣別
+  const markets = new Set(Object.values(pos).filter(p=>p.qty>0).map(p=>p.market));
+  const unit = markets.size === 1 ? cur([...markets][0]) : '';
+  document.getElementById('sum-note').textContent =
+    markets.size > 1 ? '⚠️ 台股與美股金額未換匯，總計僅供參考' : '';
+
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-box"><div class="sum-lbl">持股市值</div>
+      <div class="sum-val">${unit}${fmt(mv)}</div>
+      <div class="sum-sub">成本 ${unit}${fmt(cost)}</div></div>
+    <div class="sum-box"><div class="sum-lbl">未實現損益</div>
+      <div class="sum-val ${cls(unreal)}">${sign(unreal)}${fmt(unreal)}</div>
+      <div class="sum-sub ${cls(unreal)}">${sign(pct)}${pct.toFixed(2)}%</div></div>
+    <div class="sum-box"><div class="sum-lbl">已實現損益</div>
+      <div class="sum-val ${cls(realized)}">${sign(realized)}${fmt(realized)}</div>
+      <div class="sum-sub">賣出已入袋</div></div>
+    <div class="sum-box"><div class="sum-lbl">總損益</div>
+      <div class="sum-val ${cls(unreal+realized)}">${sign(unreal+realized)}${fmt(unreal+realized)}</div>
+      <div class="sum-sub">${trades.length} 筆交易${unknown ? ` · ${unknown} 檔無報價` : ''}</div></div>`;
+}
+
+function renderHoldings() {
+  const pos = Object.values(computePositions()).filter(p => p.qty > 0)
+    .sort((a,b) => (priceOf(b.code)||0)*b.qty - (priceOf(a.code)||0)*a.qty);
+  const bd = document.getElementById('holdings-bd');
+  if (!pos.length) {
+    bd.innerHTML = `<div class="empty">目前沒有持股<br><span style="font-size:12px">新增一筆買進紀錄後會出現在這裡</span></div>`;
+    return;
+  }
+  bd.innerHTML = `<div style="overflow-x:auto"><table>
+    <thead><tr><th>股票</th><th>股數</th><th>均價</th><th>現價</th><th>市值</th><th>未實現</th><th>報酬率</th></tr></thead>
+    <tbody>${pos.map(p => {
+      const avg = p.qty ? p.cost / p.qty : 0;
+      const pr  = priceOf(p.code);
+      const mv  = pr != null ? pr * p.qty : null;
+      const pl  = mv != null ? mv - p.cost : null;
+      const pct = (pl != null && p.cost) ? pl / p.cost * 100 : null;
+      const c   = pl == null ? 'neu' : pl > 0 ? 'up' : pl < 0 ? 'dn' : 'neu';
+      const sg  = v => v > 0 ? '+' : '';
+      const open = openCode === p.code;
+      return `<tr class="clickable" onclick="toggleCode('${p.code}')">
+          <td><span class="stk-name">${esc(p.name)}</span>
+              <span class="stk-code">${p.code} ${open ? '▲' : '▼'}</span></td>
+          <td>${fmt(p.qty)}</td>
+          <td>${fmt(avg,2)}</td>
+          <td>${pr != null ? fmt(pr,2) : '—'}</td>
+          <td>${mv != null ? fmt(mv) : '—'}</td>
+          <td class="${c}">${pl != null ? sg(pl)+fmt(pl) : '—'}</td>
+          <td class="${c}">${pct != null ? sg(pct)+pct.toFixed(2)+'%' : '—'}</td>
+        </tr>
+        ${open ? `<tr><td colspan="7" style="background:var(--bg4);padding:14px">
+          ${p.txs.map(txCard).join('')}
+        </td></tr>` : ''}`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function toggleCode(code) {
+  openCode = openCode === code ? null : code;
+  renderHoldings();
+}
+
+function txCard(t) {
+  const amt = t.qty * t.price;
+  const net = t.side === 'buy' ? amt + t.fee : amt - t.fee;
+  return `<div class="tx">
+    <div class="tx-hd">
+      <span class="tag tag-${t.side}">${t.side === 'buy' ? '買進' : '賣出'}</span>
+      <span class="tx-stk">${esc(t.name)}</span>
+      <span class="tx-code">${t.code}</span>
+      <span class="tx-date">${t.date}</span>
+    </div>
+    <div class="tx-nums">
+      ${fmt(t.qty)} 股 × ${fmt(t.price,2)} = ${cur(t.market)}${fmt(amt)}
+      <span style="color:var(--text3)">・費用 ${fmt(t.fee)}・${t.side==='buy'?'總支出':'實收'} ${cur(t.market)}${fmt(net)}</span>
+    </div>
+    <div class="tx-why ${t.why ? '' : 'empty'}">${t.why ? esc(t.why) : '（未填寫理由）'}</div>
+    <div class="tx-acts">
+      <button class="lnk" onclick="event.stopPropagation();editTx(${t.id})">編輯</button>
+      <button class="lnk del" onclick="event.stopPropagation();delTx(${t.id})">刪除</button>
+    </div>
+  </div>`;
+}
+
+function renderTx() {
+  const codes = [...new Set(trades.map(t => t.code))];
+  document.getElementById('filters').innerHTML =
+    [['all','全部'],['buy','只看買進'],['sell','只看賣出'],['why','有寫理由']]
+      .map(([k,l]) => `<button class="chip ${filterMode===k?'active':''}" onclick="setFilter('${k}')">${l}</button>`).join('');
+
+  let list = [...trades].sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+  if (filterMode === 'buy')  list = list.filter(t => t.side === 'buy');
+  if (filterMode === 'sell') list = list.filter(t => t.side === 'sell');
+  if (filterMode === 'why')  list = list.filter(t => t.why);
+
+  document.getElementById('tx-count').textContent =
+    trades.length ? `共 ${trades.length} 筆・${codes.length} 檔` : '';
+  document.getElementById('tx-list').innerHTML = list.length
+    ? list.map(txCard).join('')
+    : `<div class="empty">${trades.length ? '沒有符合條件的紀錄' : '還沒有任何交易紀錄'}</div>`;
+}
+
+function setFilter(k) { filterMode = k; renderTx(); }
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ══════════════════════════════════════════════════════
+//  匯出 / 匯入
+// ══════════════════════════════════════════════════════
+function exportData() {
+  if (!trades.length) return alert('目前沒有紀錄可匯出');
+  const blob = new Blob([JSON.stringify({ exported_at:new Date().toISOString(), trades }, null, 2)],
+                        { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `trades_${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const incoming = Array.isArray(data) ? data : data.trades;
+      if (!Array.isArray(incoming)) throw new Error('格式不正確');
+      const mode = confirm(`匯入 ${incoming.length} 筆紀錄。\n\n[確定] 合併到現有紀錄\n[取消] 完全取代現有紀錄`);
+      if (mode) {
+        const ids = new Set(trades.map(t => t.id));
+        incoming.forEach(t => { if (!ids.has(t.id)) trades.push(t); });
+      } else {
+        if (!confirm('這會刪除目前所有紀錄，確定嗎？')) return;
+        trades = incoming;
+      }
+      save(); renderAll();
+      alert('匯入完成');
+    } catch (err) {
+      alert('匯入失敗：' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════════════════
+//  行情
+// ══════════════════════════════════════════════════════
+async function loadPrices() {
+  const grab = async (url) => {
+    try { const r = await fetch(url + '?t=' + Date.now()); return r.ok ? (await r.json()).prices || {} : {}; }
+    catch { return {}; }
+  };
+  [twPrices, usPrices] = await Promise.all([grab('data.json'), grab('us_data.json')]);
+  renderAll();
+  onCodeInput();
+}
+
+// ══════════════════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════════════════
+load();
+cancelEdit();
+renderAll();
+loadPrices();
+</script>
+</body>
+</html>
