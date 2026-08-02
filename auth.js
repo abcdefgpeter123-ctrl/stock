@@ -292,14 +292,19 @@ const AuthUI = (() => {
         '確定要設定嗎？')) return;
 
       // 把舊的明碼資料一起收進保險庫
+      const read = (k, fallback) => {
+        try { return JSON.parse(localStorage.getItem(k) || fallback); }
+        catch { return JSON.parse(fallback); }
+      };
       const legacy = {
-        trades:   JSON.parse(localStorage.getItem('stock_trades_v1')   || '[]'),
-        tw_favs:  JSON.parse(localStorage.getItem('tw_stock_favorites') || '[]'),
-        us_favs:  JSON.parse(localStorage.getItem('us_stock_favorites') || '[]'),
+        trades:  read('stock_trades_v1',      '[]'),
+        notes:   read('stock_trade_notes_v1', '{}'),   // 各檔的檢討備註
+        tw_favs: read('tw_stock_favorites',   '[]'),
+        us_favs: read('us_stock_favorites',   '[]'),
       };
       await Auth.setup(pw, legacy);
       // 舊的明碼資料要清掉，否則加密就沒有意義
-      ['stock_trades_v1', 'tw_stock_favorites', 'us_stock_favorites']
+      ['stock_trades_v1', 'stock_trade_notes_v1', 'tw_stock_favorites', 'us_stock_favorites']
         .forEach(k => localStorage.removeItem(k));
       api.refresh(); onChange();
       alert(`已啟用管理模式（${Auth.ADMIN_NAME}）。\n建議立刻用「匯出備份」存一份檔案。`);

@@ -97,6 +97,20 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .pos-tx-why.empty{color:var(--text3);font-style:italic;opacity:.65}
 .pos-acts{display:flex;gap:8px;margin-top:6px}
 
+/* ── 檢討備註 ── */
+.note-box{margin-top:9px;padding:9px 11px;background:rgba(251,191,36,0.06);
+  border:1px solid rgba(251,191,36,0.2);border-radius:6px;cursor:default}
+.note-box.editing{background:rgba(251,191,36,0.09)}
+.note-hd{display:flex;align-items:center;font-size:10.5px;font-weight:600;
+  color:var(--yellow);letter-spacing:.04em;margin-bottom:5px}
+.note-text{font-size:11.5px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
+.note-text.empty{color:var(--text3);font-style:italic;opacity:.65}
+.note-input{width:100%;min-height:74px;resize:vertical;background:var(--bg4);
+  border:1px solid var(--border2);border-radius:5px;color:var(--text);
+  font-family:var(--font);font-size:11.5px;line-height:1.7;padding:7px 9px;outline:none}
+.note-input:focus{border-color:var(--yellow)}
+.note-acts{display:flex;gap:7px;margin-top:7px}
+
 /* ── 持股表 ── */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.04em;padding:7px 8px;
@@ -249,12 +263,13 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   </div>
 </div>
 
-<script src="auth.js"></script>
+<script src="auth.js?v=2"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  資料
 // ══════════════════════════════════════════════════════
 const KEY = 'stock_trades_v1';
+const NOTE_KEY = 'stock_trade_notes_v1';
 
 // 觀察清單的股票在 data.json 裡沒有 name 欄位（那些是走 Yahoo 抓的），
 // 這裡內建一份，讓最常輸入的代號能自動帶出名稱
@@ -267,6 +282,8 @@ let editingId = null;
 let side = 'buy';
 let filterMode = 'all';
 let openCode = null;
+let notes = {};          // code → 該檔的檢討備註（成功/失敗原因）
+let editingNote = null;  // 目前正在編輯備註的股票代號
 
 // ── 市場判斷：純數字＝台股，其餘＝美股 ──
 const isTW = code => /^\d/.test(code);
@@ -311,10 +328,13 @@ async function load() {
     if (!Auth.isAdmin()) { trades = []; return; }    // 訪客看不到明細
     vault  = await Auth.load() || {};
     trades = vault.trades || [];
+    notes  = vault.notes  || {};
     return;
   }
   try { trades = JSON.parse(localStorage.getItem(KEY) || '[]'); }
   catch { trades = []; }
+  try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || '{}'); }
+  catch { notes = {}; }
 }
 
 async function save() {
@@ -322,10 +342,12 @@ async function save() {
     if (!Auth.isAdmin()) return;
     vault = vault || {};
     vault.trades = trades;
+    vault.notes  = notes;
     await Auth.save(vault);
     return;
   }
   localStorage.setItem(KEY, JSON.stringify(trades));
+  localStorage.setItem(NOTE_KEY, JSON.stringify(notes));
 }
 
 // ══════════════════════════════════════════════════════
@@ -636,9 +658,57 @@ function posCard(p) {
 
     <div class="pos-detail">
       ${rows.map(([k,v]) => `<div class="pos-row"><span>${k}</span><span>${v}</span></div>`).join('')}
+      ${noteBlock(p.code)}
       <div class="pos-txs">${p.txs.map(posTx).join('')}</div>
     </div>
   </div>`;
+}
+
+/**
+ * 檢討備註：跟每筆交易的「買賣理由」分開。
+ * 買賣理由記的是當下怎麼想，這裡記的是事後回頭看——成功或失敗的原因。
+ */
+function noteBlock(code) {
+  const val = notes[code] || '';
+  if (editingNote === code) {
+    return `<div class="note-box editing" onclick="event.stopPropagation()">
+      <div class="note-hd">📝 檢討備註</div>
+      <textarea id="note-input-${code}" class="note-input"
+        placeholder="這筆為什麼賺 / 為什麼賠？&#10;例：進場點對但太早停利，少賺一段；下次遇到題材剛發酵不要急著跑">${esc(val)}</textarea>
+      <div class="note-acts">
+        <button class="btn btn-primary btn-sm" onclick="saveNote('${code}')">儲存</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelNote()">取消</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="note-box" onclick="event.stopPropagation()">
+    <div class="note-hd">📝 檢討備註
+      <button class="lnk" style="margin-left:auto" onclick="startNote('${code}')">${val ? '編輯' : '新增'}</button>
+    </div>
+    <div class="note-text ${val ? '' : 'empty'}">${val ? esc(val) : '尚未填寫。點「新增」記下這檔成功或失敗的原因。'}</div>
+  </div>`;
+}
+
+function startNote(code) {
+  editingNote = code;
+  renderHoldings();
+  const el = document.getElementById(`note-input-${code}`);
+  if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+}
+
+function cancelNote() {
+  editingNote = null;
+  renderHoldings();
+}
+
+async function saveNote(code) {
+  const el = document.getElementById(`note-input-${code}`);
+  if (!el) return;
+  const val = el.value.trim();
+  if (val) notes[code] = val; else delete notes[code];
+  editingNote = null;
+  await save();
+  renderHoldings();
 }
 
 /** 展開後的單筆買賣（點擊不要冒泡回卡片，否則會把卡片收起來） */
@@ -717,7 +787,7 @@ function esc(s) {
 // ══════════════════════════════════════════════════════
 function exportData() {
   if (!trades.length) return alert('目前沒有紀錄可匯出');
-  const blob = new Blob([JSON.stringify({ exported_at:new Date().toISOString(), trades }, null, 2)],
+  const blob = new Blob([JSON.stringify({ exported_at:new Date().toISOString(), trades, notes }, null, 2)],
                         { type:'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -735,13 +805,17 @@ function importData(input) {
       const data = JSON.parse(e.target.result);
       const incoming = Array.isArray(data) ? data : data.trades;
       if (!Array.isArray(incoming)) throw new Error('格式不正確');
+      const incomingNotes = (!Array.isArray(data) && data.notes) || {};
       const mode = confirm(`匯入 ${incoming.length} 筆紀錄。\n\n[確定] 合併到現有紀錄\n[取消] 完全取代現有紀錄`);
       if (mode) {
         const ids = new Set(trades.map(t => t.id));
         incoming.forEach(t => { if (!ids.has(t.id)) trades.push(t); });
+        // 備註以現有的為準，只補上目前沒有的，避免覆蓋掉後來寫的檢討
+        Object.entries(incomingNotes).forEach(([k,v]) => { if (!notes[k]) notes[k] = v; });
       } else {
         if (!confirm('這會刪除目前所有紀錄，確定嗎？')) return;
         trades = incoming;
+        notes  = incomingNotes;
       }
       await save(); renderAll();
       alert('匯入完成');
