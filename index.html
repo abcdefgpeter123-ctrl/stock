@@ -2161,7 +2161,8 @@ function renderTwiiChart(period, btn) {
   const allLabels = twiiHistoryData.labels;
   const n = period === '近月' ? 22 : period === '三月' ? 63 : period === '六月' ? 126 : period === '一年' ? 252 : null;
   const closes = n ? allCloses.slice(-n) : allCloses;
-  const labels  = n ? allLabels.slice(-n) : allLabels;
+  // data.json 存完整 YYYY/MM/DD（交易紀錄頁要用來定位），圖表軸上只顯示 MM/DD
+  const labels  = (n ? allLabels.slice(-n) : allLabels).map(d => d.length > 5 ? d.slice(5) : d);
   if (!closes.length) return;
   const drEl = document.getElementById('twii-chart-dr');
   if (drEl && labels.length >= 2) drEl.textContent = labels[0] + ' ~ ' + labels[labels.length-1];

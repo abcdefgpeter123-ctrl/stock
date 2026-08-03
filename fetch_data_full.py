@@ -2262,7 +2262,10 @@ def main():
     twii_closes, twii_dates = fetch_twii_history()
     if twii_closes:
         data["twii_history"] = {
-            "labels": [d[5:] for d in twii_dates],   # 存 "MM/DD" 格式
+            # 存完整 "YYYY/MM/DD"。只存 MM/DD 的話，五年份資料裡同一個
+            # 月日會重複出現五次，交易紀錄頁要用日期定位就無法對應到唯一一天。
+            # 前端顯示時自行截成 MM/DD 即可。
+            "labels": twii_dates,
             "closes": twii_closes,
         }
         print(f"   ✅ 大盤歷史: {len(twii_closes)} 筆 ({twii_dates[0]} ~ {twii_dates[-1]})")

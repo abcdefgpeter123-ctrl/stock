@@ -97,6 +97,19 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .pos-tx-why.empty{color:var(--text3);font-style:italic;opacity:.65}
 .pos-acts{display:flex;gap:8px;margin-top:6px}
 
+/* ── 大盤對照 ── */
+.mkt-tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.mkt-tab{padding:4px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text3);font-family:var(--font);transition:all .15s}
+.mkt-tab.active{background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.45);color:var(--purple)}
+.mkt-legend{display:flex;gap:16px;align-items:center;font-size:11.5px;color:var(--text3);margin-bottom:10px;flex-wrap:wrap}
+.mk{font-size:13px;font-weight:700}
+.mk-buy{color:var(--up)}
+.mk-sell{color:var(--dn)}
+.mkt-range{margin-left:auto;font-family:var(--mono);font-size:11px}
+.mkt-wrap{position:relative;height:260px}
+.mkt-note{font-size:11.5px;color:var(--text3);line-height:1.7;margin-top:10px}
+
 /* ── 檢討備註 ── */
 .note-box{margin-top:9px;padding:9px 11px;background:rgba(251,191,36,0.06);
   border:1px solid rgba(251,191,36,0.2);border-radius:6px;cursor:default}
@@ -240,6 +253,24 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   </div>
 </div>
 
+<!-- ── 大盤對照 ── -->
+<div class="card" id="mkt-card">
+  <div class="card-hd">
+    <h2>📈 大盤對照</h2>
+    <span class="sub">看自己的買賣點落在大盤的哪個位置</span>
+    <div class="mkt-tabs" id="mkt-tabs"></div>
+  </div>
+  <div class="card-bd">
+    <div class="mkt-legend">
+      <span><span class="mk mk-buy">▲</span> 買進</span>
+      <span><span class="mk mk-sell">▼</span> 賣出</span>
+      <span class="mkt-range" id="mkt-range"></span>
+    </div>
+    <div class="mkt-wrap"><canvas id="mkt-canvas"></canvas></div>
+    <div id="mkt-empty"></div>
+  </div>
+</div>
+
 <!-- ── 目前持股 ── -->
 <div class="card">
   <div class="card-hd"><h2>📊 目前持股</h2><span class="sub">點卡片展開，可看該股每一筆買賣與當初的理由</span></div>
@@ -263,6 +294,7 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="auth.js?v=2"></script>
 <script>
 // ══════════════════════════════════════════════════════
@@ -514,8 +546,8 @@ function renderAll() {
   // 新增表單與完整交易列表含金額與理由，訪客一律不顯示
   document.getElementById('form-card').style.display = guest ? 'none' : '';
   document.getElementById('tx-card').style.display   = guest ? 'none' : '';
-  if (guest) { renderGuest(); return; }
-  renderSummary(); renderHoldings(); renderTx();
+  if (guest) { renderGuest(); renderMarket(); return; }
+  renderSummary(); renderHoldings(); renderTx(); renderMarket();
 }
 
 /**
@@ -561,6 +593,124 @@ function renderGuest() {
       </div>`
     : `<div class="empty">🔒 訪客模式<br><span style="font-size:12px">輸入管理密碼後顯示持股與交易紀錄</span></div>`;
 }
+
+// ══════════════════════════════════════════════════════
+//  大盤對照圖
+//  把每筆買賣標在加權指數走勢上，用來回頭檢視自己是追高還是接刀。
+// ══════════════════════════════════════════════════════
+let twiiHistory = null;      // { labels: ["2026/07/31",...], closes: [...] }
+let mktPeriod   = '六月';
+const MKT_PERIODS = { '近月':22, '三月':63, '六月':126, '一年':252, '全部':null };
+
+function renderMarket() {
+  const card = document.getElementById('mkt-card');
+  const wrap = document.querySelector('.mkt-wrap');
+  const empty = document.getElementById('mkt-empty');
+
+  // 訪客模式沒有交易明細可標，整塊藏起來
+  if (isGuest() || !twiiHistory?.closes?.length) {
+    card.style.display = (isGuest() || !twiiHistory) ? 'none' : '';
+    return;
+  }
+  card.style.display = '';
+
+  document.getElementById('mkt-tabs').innerHTML = Object.keys(MKT_PERIODS)
+    .map(p => `<button class="mkt-tab ${p===mktPeriod?'active':''}" onclick="setMktPeriod('${p}')">${p}</button>`).join('');
+
+  const n = MKT_PERIODS[mktPeriod];
+  const labels = n ? twiiHistory.labels.slice(-n) : twiiHistory.labels;
+  const closes = n ? twiiHistory.closes.slice(-n) : twiiHistory.closes;
+  if (labels.length < 2) return;
+
+  document.getElementById('mkt-range').textContent = `${labels[0]} ~ ${labels.at(-1)}`;
+
+  // 交易日期 → 圖上的索引。
+  // 交易日可能是休市日（或資料缺漏），往前找最近一個有行情的交易日。
+  const idxOf = new Map(labels.map((d, i) => [d, i]));
+  const locate = (dateStr) => {
+    const d = dateStr.replace(/-/g, '/');
+    if (idxOf.has(d)) return idxOf.get(d);
+    let best = -1;
+    for (let i = 0; i < labels.length; i++) if (labels[i] <= d) best = i; else break;
+    return best;   // -1 代表比圖表起點還早，不畫
+  };
+
+  const buy  = new Array(labels.length).fill(null);
+  const sell = new Array(labels.length).fill(null);
+  const hits = {};        // index → 該日的交易清單（給 tooltip 用）
+  let outside = 0;
+
+  trades.forEach(t => {
+    if (t.market !== 'TW') return;          // 美股不畫在台股大盤上
+    const i = locate(t.date);
+    if (i < 0) { outside++; return; }
+    (t.side === 'buy' ? buy : sell)[i] = closes[i];
+    (hits[i] || (hits[i] = [])).push(t);
+  });
+
+  const twCount = trades.filter(t => t.market === 'TW').length;
+  const usCount = trades.length - twCount;
+  empty.innerHTML = !twCount
+    ? `<div class="mkt-note">尚無台股交易可對照${usCount ? `（目前 ${usCount} 筆為美股，未畫在台股大盤上）` : ''}。</div>`
+    : (outside || usCount)
+      ? `<div class="mkt-note">${outside ? `有 ${outside} 筆交易早於目前區間，切換到「全部」可看到。` : ''}${usCount ? `　另有 ${usCount} 筆美股交易未顯示（大盤走勢為加權指數）。` : ''}</div>`
+      : '';
+
+  const isUp = closes.at(-1) >= closes[0];
+  const line = isUp ? '#ef4444' : '#22c55e';
+  const fill = isUp ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.07)';
+
+  const canvas = document.getElementById('mkt-canvas');
+  const old = Chart.getChart(canvas);
+  if (old) old.destroy();
+
+  new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels.map(d => d.slice(5)),      // 軸上只顯示 MM/DD
+      datasets: [
+        { label:'加權指數', data:closes, borderColor:line, backgroundColor:fill,
+          borderWidth:1.6, pointRadius:0, fill:true, tension:.25, order:3 },
+        { label:'買進', data:buy, borderColor:'transparent', backgroundColor:'#ef4444',
+          pointStyle:'triangle', pointRadius:7, pointHoverRadius:9, showLine:false, order:1 },
+        { label:'賣出', data:sell, borderColor:'transparent', backgroundColor:'#22c55e',
+          pointStyle:'triangle', pointRadius:7, pointHoverRadius:9, rotation:180,
+          showLine:false, order:1 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'nearest', intersect:true },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor:'rgba(10,20,35,0.96)', borderColor:'rgba(167,139,250,0.3)', borderWidth:1,
+          titleColor:'#a8bacf', bodyColor:'#e8edf5', padding:10, displayColors:false,
+          callbacks:{
+            title: items => labels[items[0].dataIndex],
+            label: item => {
+              const i = item.dataIndex;
+              const lines = [`加權指數 ${closes[i].toLocaleString()}`];
+              (hits[i] || []).forEach(t => {
+                lines.push(`${t.side === 'buy' ? '▲ 買進' : '▼ 賣出'} ${t.name} ${fmt(t.qty)} 股 @ ${fmt(t.price,2)}`);
+                if (t.why) lines.push(`　${t.why.length > 28 ? t.why.slice(0,28)+'…' : t.why}`);
+              });
+              return lines;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ grid:{ display:false }, ticks:{ color:'#64748b', font:{size:10}, maxTicksLimit:8, maxRotation:0 } },
+        y:{ grid:{ color:'rgba(255,255,255,0.04)' },
+            ticks:{ color:'#64748b', font:{size:10},
+                    callback:v => (v/1000).toFixed(0) + 'k' } }
+      }
+    }
+  });
+}
+
+function setMktPeriod(p) { mktPeriod = p; renderMarket(); }
 
 function renderSummary() {
   const pos = computePositions();
@@ -835,7 +985,14 @@ async function loadPrices() {
     try { const r = await fetch(url + '?t=' + Date.now()); return r.ok ? (await r.json()).prices || {} : {}; }
     catch { return {}; }
   };
-  [twPrices, usPrices] = await Promise.all([grab('data.json'), grab('us_data.json')]);
+  const grabTwii = async () => {
+    try {
+      const r = await fetch('data.json?t=' + Date.now());
+      return r.ok ? (await r.json()).twii_history || null : null;
+    } catch { return null; }
+  };
+  const [tw, us, twii] = await Promise.all([grab('data.json'), grab('us_data.json'), grabTwii()]);
+  twPrices = tw; usPrices = us; twiiHistory = twii;
   renderAll();
   onCodeInput();
 }
