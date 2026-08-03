@@ -76,14 +76,14 @@
     "eps": 13.04,
     "quarterly_eps": [
       {
-        "q": "2024Q4",
-        "eps": 2.07,
-        "date": "2024-12-31"
-      },
-      {
         "q": "2025Q1",
         "eps": 1.64,
         "date": "2025-03-31"
+      },
+      {
+        "q": "2025Q2",
+        "eps": 1.7,
+        "date": "2025-06-30"
       },
       {
         "q": "2025Q4",
@@ -488,7 +488,7 @@
     "industry": "電子零組件業",
     "major_clients": "緯穎、廣達、英業達、Dell",
     "generated": "2026/05/22",
-    "pe": 38.6,
+    "pe": 42.4,
     "eps": 60.09,
     "quarterly_eps": [
       {
@@ -1114,7 +1114,7 @@
     "industry": "半導體業",
     "major_clients": "台積電、聯電",
     "generated": "2026/05/31",
-    "pe": 21.3,
+    "pe": 20.7,
     "eps": 53.46,
     "quarterly_eps": [
       {
@@ -1176,7 +1176,7 @@
     "industry": "電子零組件業",
     "major_clients": "Dell、HP、雲端大廠",
     "generated": "2026/05/31",
-    "pe": 31.0,
+    "pe": 34.0,
     "eps": 6.75,
     "quarterly_eps": [
       {
@@ -1259,7 +1259,7 @@
     "industry": "金融業",
     "major_clients": "零售與法人投資人",
     "generated": "2026/05/31",
-    "pe": 24.9,
+    "pe": 24.8,
     "eps": 2.74,
     "quarterly_eps": [
       {
@@ -1464,7 +1464,7 @@
   },
   "2356": {
     "generated": "2026/06/05",
-    "pe": 23.7,
+    "pe": 24.5,
     "eps": 2.61,
     "quarterly_eps": [
       {
@@ -1697,7 +1697,7 @@
   },
   "6505": {
     "generated": "2026/06/05",
-    "pe": 25.0,
+    "pe": 24.3,
     "eps": 2.79,
     "quarterly_eps": [
       {
@@ -2008,7 +2008,7 @@
   },
   "3583": {
     "generated": "2026/07/30",
-    "pe": 45.5,
+    "pe": 46.9,
     "eps": 14.3,
     "quarterly_eps": [
       {
@@ -2116,7 +2116,7 @@
   },
   "6789": {
     "generated": "2026/07/30",
-    "pe": 93.5,
+    "pe": 92.4,
     "eps": 4.66,
     "quarterly_eps": [
       {
