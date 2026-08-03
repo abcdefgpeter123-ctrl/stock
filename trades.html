@@ -98,7 +98,8 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .pos-acts{display:flex;gap:8px;margin-top:6px}
 
 /* ── 大盤對照 ── */
-.mkt-tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.mkt-tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.mkt-seg{display:flex;gap:6px;padding-right:10px;margin-right:4px;border-right:1px solid var(--border2)}
 .mkt-tab{padding:4px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border2);
   background:var(--bg3);color:var(--text3);font-family:var(--font);transition:all .15s}
 .mkt-tab.active{background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.45);color:var(--purple)}
@@ -598,28 +599,40 @@ function renderGuest() {
 //  大盤對照圖
 //  把每筆買賣標在加權指數走勢上，用來回頭檢視自己是追高還是接刀。
 // ══════════════════════════════════════════════════════
-let twiiHistory = null;      // { labels: ["2026/07/31",...], closes: [...] }
+let twiiHistory = null;      // 加權指數 { labels: ["2026/07/31",...], closes: [...] }
+let spxHistory  = null;      // S&P 500，同格式
 let mktPeriod   = '六月';
+let mktMarket   = 'TW';      // 目前看哪個市場的大盤
 const MKT_PERIODS = { '近月':22, '三月':63, '六月':126, '一年':252, '全部':null };
 
 function renderMarket() {
-  const card = document.getElementById('mkt-card');
-  const wrap = document.querySelector('.mkt-wrap');
+  const card  = document.getElementById('mkt-card');
   const empty = document.getElementById('mkt-empty');
 
-  // 訪客模式沒有交易明細可標，整塊藏起來
-  if (isGuest() || !twiiHistory?.closes?.length) {
-    card.style.display = (isGuest() || !twiiHistory) ? 'none' : '';
-    return;
-  }
-  card.style.display = '';
+  // 有哪些市場可看：取決於有沒有指數資料，以及有沒有該市場的交易
+  const avail = [];
+  if (twiiHistory?.closes?.length) avail.push({ id:'TW', label:'台股 加權指數' });
+  if (spxHistory?.closes?.length)  avail.push({ id:'US', label:'美股 S&P 500' });
 
-  document.getElementById('mkt-tabs').innerHTML = Object.keys(MKT_PERIODS)
-    .map(p => `<button class="mkt-tab ${p===mktPeriod?'active':''}" onclick="setMktPeriod('${p}')">${p}</button>`).join('');
+  if (isGuest() || !avail.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  if (!avail.some(m => m.id === mktMarket)) mktMarket = avail[0].id;
+
+  const hist = mktMarket === 'TW' ? twiiHistory : spxHistory;
+  const idxName = mktMarket === 'TW' ? '加權指數' : 'S&P 500';
+
+  // 市場切換（只有兩個市場都有資料時才顯示）＋ 期間切換
+  document.getElementById('mkt-tabs').innerHTML =
+    (avail.length > 1
+      ? `<span class="mkt-seg">${avail.map(m =>
+          `<button class="mkt-tab ${m.id===mktMarket?'active':''}" onclick="setMktMarket('${m.id}')">${m.label}</button>`
+        ).join('')}</span>` : '') +
+    Object.keys(MKT_PERIODS).map(p =>
+      `<button class="mkt-tab ${p===mktPeriod?'active':''}" onclick="setMktPeriod('${p}')">${p}</button>`).join('');
 
   const n = MKT_PERIODS[mktPeriod];
-  const labels = n ? twiiHistory.labels.slice(-n) : twiiHistory.labels;
-  const closes = n ? twiiHistory.closes.slice(-n) : twiiHistory.closes;
+  const labels = n ? hist.labels.slice(-n) : hist.labels;
+  const closes = n ? hist.closes.slice(-n) : hist.closes;
   if (labels.length < 2) return;
 
   document.getElementById('mkt-range').textContent = `${labels[0]} ~ ${labels.at(-1)}`;
@@ -641,19 +654,20 @@ function renderMarket() {
   let outside = 0;
 
   trades.forEach(t => {
-    if (t.market !== 'TW') return;          // 美股不畫在台股大盤上
+    if (t.market !== mktMarket) return;
     const i = locate(t.date);
     if (i < 0) { outside++; return; }
     (t.side === 'buy' ? buy : sell)[i] = closes[i];
     (hits[i] || (hits[i] = [])).push(t);
   });
 
-  const twCount = trades.filter(t => t.market === 'TW').length;
-  const usCount = trades.length - twCount;
-  empty.innerHTML = !twCount
-    ? `<div class="mkt-note">尚無台股交易可對照${usCount ? `（目前 ${usCount} 筆為美股，未畫在台股大盤上）` : ''}。</div>`
-    : (outside || usCount)
-      ? `<div class="mkt-note">${outside ? `有 ${outside} 筆交易早於目前區間，切換到「全部」可看到。` : ''}${usCount ? `　另有 ${usCount} 筆美股交易未顯示（大盤走勢為加權指數）。` : ''}</div>`
+  const mine  = trades.filter(t => t.market === mktMarket).length;
+  const other = trades.length - mine;
+  const otherName = mktMarket === 'TW' ? '美股' : '台股';
+  empty.innerHTML = !mine
+    ? `<div class="mkt-note">尚無${mktMarket==='TW'?'台股':'美股'}交易可對照${other ? `（目前 ${other} 筆為${otherName}，請切換市場查看）` : ''}。</div>`
+    : (outside || other)
+      ? `<div class="mkt-note">${outside ? `有 ${outside} 筆交易早於目前區間，切換到「全部」可看到。` : ''}${other ? `　另有 ${other} 筆${otherName}交易，請切換市場查看。` : ''}</div>`
       : '';
 
   const isUp = closes.at(-1) >= closes[0];
@@ -669,7 +683,7 @@ function renderMarket() {
     data: {
       labels: labels.map(d => d.slice(5)),      // 軸上只顯示 MM/DD
       datasets: [
-        { label:'加權指數', data:closes, borderColor:line, backgroundColor:fill,
+        { label:idxName, data:closes, borderColor:line, backgroundColor:fill,
           borderWidth:1.6, pointRadius:0, fill:true, tension:.25, order:3 },
         { label:'買進', data:buy, borderColor:'transparent', backgroundColor:'#ef4444',
           pointStyle:'triangle', pointRadius:7, pointHoverRadius:9, showLine:false, order:1 },
@@ -690,7 +704,7 @@ function renderMarket() {
             title: items => labels[items[0].dataIndex],
             label: item => {
               const i = item.dataIndex;
-              const lines = [`加權指數 ${closes[i].toLocaleString()}`];
+              const lines = [`${idxName} ${closes[i].toLocaleString()}`];
               (hits[i] || []).forEach(t => {
                 lines.push(`${t.side === 'buy' ? '▲ 買進' : '▼ 賣出'} ${t.name} ${fmt(t.qty)} 股 @ ${fmt(t.price,2)}`);
                 if (t.why) lines.push(`　${t.why.length > 28 ? t.why.slice(0,28)+'…' : t.why}`);
@@ -704,11 +718,13 @@ function renderMarket() {
         x:{ grid:{ display:false }, ticks:{ color:'#64748b', font:{size:10}, maxTicksLimit:8, maxRotation:0 } },
         y:{ grid:{ color:'rgba(255,255,255,0.04)' },
             ticks:{ color:'#64748b', font:{size:10},
-                    callback:v => (v/1000).toFixed(0) + 'k' } }
+                    callback:v => v >= 10000 ? (v/1000).toFixed(0)+'k' : v.toLocaleString() } }
       }
     }
   });
 }
+
+function setMktMarket(m) { mktMarket = m; renderMarket(); }
 
 function setMktPeriod(p) { mktPeriod = p; renderMarket(); }
 
@@ -985,14 +1001,15 @@ async function loadPrices() {
     try { const r = await fetch(url + '?t=' + Date.now()); return r.ok ? (await r.json()).prices || {} : {}; }
     catch { return {}; }
   };
-  const grabTwii = async () => {
-    try {
-      const r = await fetch('data.json?t=' + Date.now());
-      return r.ok ? (await r.json()).twii_history || null : null;
-    } catch { return null; }
+  const grabJson = async (url) => {
+    try { const r = await fetch(url + '?t=' + Date.now()); return r.ok ? await r.json() : null; }
+    catch { return null; }
   };
-  const [tw, us, twii] = await Promise.all([grab('data.json'), grab('us_data.json'), grabTwii()]);
-  twPrices = tw; usPrices = us; twiiHistory = twii;
+  const [tw, us, twJson, usJson] = await Promise.all([
+    grab('data.json'), grab('us_data.json'), grabJson('data.json'), grabJson('us_data.json')]);
+  twPrices = tw; usPrices = us;
+  twiiHistory = twJson?.twii_history || null;
+  spxHistory  = usJson?.market_history?.sp500 || null;
   renderAll();
   onCodeInput();
 }

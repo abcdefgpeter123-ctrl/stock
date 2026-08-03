@@ -1974,11 +1974,54 @@ def fetch_etf_holdings():
 
 # ── 個股三大法人（T86）─────────────────────────────────────
 
+def fetch_foreign_holding():
+    """
+    TWSE MI_QFIIS — 外資及陸資持股統計（僅上市，上櫃無對應公開 API）。
+    回傳 {code: {"shares": 發行股數, "fh": 外資持股比率%}}。
+
+    用途：法人買賣超只看張數看不出影響力——同樣賣 1,000 張，
+    對台積電是雜訊，對小型股可能是 1% 股本。有發行股數才能換算成比例。
+    """
+    headers = {**HEADERS, "Referer": "https://www.twse.com.tw/"}
+    today = datetime.date.today()
+
+    for back in range(7):                      # 假日往前找最近有資料的一天
+        d = today - datetime.timedelta(days=back)
+        url = ("https://www.twse.com.tw/rwd/zh/fund/MI_QFIIS"
+               f"?date={d.strftime('%Y%m%d')}&selectType=ALLBUT0999&response=json")
+        try:
+            r = requests.get(url, headers=headers, timeout=30)
+            resp = r.json()
+            if resp.get("stat") != "OK":
+                continue
+            rows = resp.get("data") or []
+            if not rows:
+                continue
+            out = {}
+            for row in rows:
+                try:
+                    code = str(row[0]).strip()
+                    shares = int(str(row[3]).replace(",", ""))
+                    fh = safe_float(row[7])
+                    if code and shares > 0:
+                        out[code] = {"shares": shares, "fh": round(fh, 2)}
+                except Exception:
+                    continue
+            if out:
+                print(f"   ✅ 外資持股({d.strftime('%Y/%m/%d')}): {len(out)} 檔")
+                return out
+        except Exception as e:
+            print(f"   ⚠️ MI_QFIIS {d}: {e}")
+    print("   ❌ 外資持股抓取失敗")
+    return {}
+
+
 def fetch_inst_stocks(all_prices, target_days=5):
     """
     從 TWSE T86 抓取個股三大法人買賣超（股數）並累加最近 target_days 個交易日。
-    轉換成「億元」：shares * 當前股價 / 1e8（近似值，已夠顯示趨勢）。
-    回傳 {code: {f, t, s}}，f/t/s 單位：億元（保留1位小數）。
+    回傳 {code: {f, t, s}}，f/t/s 單位為「萬股」（1 = 10,000 股 = 10 張）。
+    （早期版本曾換算成億元，後來改回萬股以免 price=0 時整批歸零，
+      此處註解一併更正，避免再被誤讀成金額。）
     """
     from collections import defaultdict
 
@@ -2333,6 +2376,30 @@ def main():
         c for g in THEME_GROUPS.values() for c in list(g["leaders"]) + list(g["members"])
     }
     merged_inst_stocks = {k: v for k, v in merged_inst_stocks.items() if k in _watchlist_codes}
+
+    # 5a-pre-2. 外資持股比率＋發行股數，把買賣超換算成「佔股本幾 %」
+    print("📊 外資持股比率（MI_QFIIS）...")
+    fh_map = fetch_foreign_holding()
+    if not fh_map:
+        fh_map = data.get("foreign_holding", {})      # 抓失敗就沿用前次
+        if fh_map:
+            print(f"   ⚠️ 保留前次資料（{len(fh_map)} 檔）")
+    data["foreign_holding"] = fh_map
+
+    matched = 0
+    for code, v in merged_inst_stocks.items():
+        info = fh_map.get(code)
+        if not info or not info.get("shares"):
+            continue
+        shares = info["shares"]
+        # f/t/s 單位為萬股 → 股數 = v * 1e4
+        v["fp"] = round(v.get("f", 0) * 1e4 / shares * 100, 3)   # 外資買賣超佔股本%
+        v["tp"] = round(v.get("t", 0) * 1e4 / shares * 100, 3)   # 投信買賣超佔股本%
+        v["fh"] = info.get("fh")                                  # 外資持股比率%
+        matched += 1
+    print(f"   📊 {matched}/{len(merged_inst_stocks)} 檔已換算持股比例"
+          f"（上櫃無公開 API，會顯示 —）")
+
     data["inst_stocks"] = merged_inst_stocks
     print(f"   📊 法人資料合併：新 {len(inst_stocks)} 支 + 沿用舊資料，裁剪後保留 {len(merged_inst_stocks)} 支（觀察清單範圍）")
 

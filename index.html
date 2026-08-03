@@ -187,6 +187,11 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 .sec-toggle:hover{border-color:var(--border2);color:var(--text2)}
 
 /* ── 法人條狀圖 ───────────────────────────────────────── */
+.inst-pct{font-family:var(--mono);font-size:9.5px;min-width:42px;text-align:right;opacity:.85}
+.inst-hold{font-size:9.5px;color:var(--text3);margin-top:3px;padding-top:3px;
+  border-top:1px solid rgba(255,255,255,0.05);letter-spacing:.02em}
+.inst-hold b{color:#60a5fa;font-family:var(--mono);font-weight:600}
+.inst-hold.dim{opacity:.5}
 .inst-bar2{display:flex;flex-direction:column;gap:3px;min-width:110px}
 .inst-row2{display:flex;align-items:center;gap:5px;font-size:11px}
 .inst-row2-lbl{color:var(--text3);width:18px;text-align:right;font-family:var(--mono);flex-shrink:0}
@@ -613,14 +618,14 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
             <th style="width:90px" data-col="price">股價 ↕</th>
             <th style="width:80px" data-col="5d">5日漲跌 ↕</th>
             <th style="width:80px" data-col="30d">30日漲跌 ↕</th>
-            <th style="width:120px" data-col="inst5">法人5日 ↕</th>
+            <th style="width:158px" data-col="inst5">法人5日 ↕</th>
             <th style="width:75px" class="sig-th-wrap">訊號 <span class="sig-legend-btn" onclick="event.stopPropagation();toggleSigLegend(this)">ⓘ</span><div class="sig-legend-box">
               <div class="sig-legend-title">訊號說明</div>
               <div><span class="badge b-opp">機會點</span> 龍頭已大漲，此股尚未跟上</div>
               <div><span class="badge b-up">強勢↑</span> 今日漲幅 ≥ +3%</div>
               <div><span class="badge b-dn">弱勢↓</span> 今日跌幅 ≤ −3%</div>
-              <div><span class="badge b-up">買超中</span> 法人近5日合計買超 ≥ 8億</div>
-              <div><span class="badge b-dn">賣超中</span> 法人近5日合計賣超 ≤ −8億</div>
+              <div><span class="badge b-up">買超中</span> 外資+投信近5日買超 ≥ 0.8% 股本</div>
+              <div><span class="badge b-dn">賣超中</span> 外資+投信近5日賣超 ≤ −0.8% 股本</div>
               <div><span class="badge b-up">漲破N</span> 近5日突破N日均線向上</div>
               <div><span class="badge b-rev">跌破N</span> 股價低於N日均線（N=20/30/60）</div>
             </div></th>
@@ -1108,7 +1113,7 @@ function renderFavorites() {
       <th style="width:90px">股價</th>
       <th style="width:80px">5日漲跌</th>
       <th style="width:80px">30日漲跌</th>
-      <th style="width:120px">法人5日</th>
+      <th style="width:158px">法人5日</th>
       <th style="width:75px">訊號</th>
     </tr></thead>
     <tbody>${favStocks.map(s => `
@@ -1123,7 +1128,7 @@ function renderFavorites() {
         <td>${fmtPrice(s.code)}</td>
         <td>${pct(s.p5)}</td>
         <td>${pct(s.p30)}</td>
-        <td>${(()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s);})()}</td>
+        <td>${(()=>{const iv=getInst(s);return instBar(iv.f,iv.t,iv.s,iv);})()}</td>
         <td>${sigBadge(s)}</td>
       </tr>
       ${expandedFav===s.code ? `<tr class="detail-row" data-fav-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}
@@ -2303,36 +2308,56 @@ function switchThemePeriod(period, el){
 // 取個股法人數值：優先 inst_stocks（動態），fallback 靜態 i5f/i5t/i5s
 function getInst(s){
   const d = instStocks[s.code];
-  if(d) return { f: d.f, t: d.t, s: d.s };
+  // fp/tp = 買賣超佔股本%，fh = 外資持股比率%（上櫃無公開 API，會是 undefined）
+  if(d) return { f: d.f, t: d.t, s: d.s, fp: d.fp, tp: d.tp, fh: d.fh };
   return { f: s.i5f||0, t: s.i5t||0, s: s.i5s||0 };
 }
 
-function instBar(f, t, s){
-  // 計算最大絕對值以縮放條寬（最大50%）
+// 法人買賣超的「強度」＝外資+投信佔股本%。
+// 原本用 f+t+s >= 8（萬股）當門檻，等於沒有門檻——實測 77 檔裡有 74 檔觸發，
+// 因為 8 萬股（80 張）對任何股票都是極小的量。改用佔股本比例才有鑑別度。
+const INST_STRONG = 0.8;   // 佔股本 0.8%（約為觀察清單的 P80）
+function instStrength(iv){
+  if(iv.fp == null || iv.tp == null) return null;   // 上櫃無發行股數，無法判斷
+  return iv.fp + iv.tp;
+}
+
+function instBar(f, t, s, iv){
+  // 條寬只反映相對大小；真正看得出「影響多大」的是佔股本%，
+  // 因為同樣 1000 張對台積電是雜訊、對小型股可能就是 1% 股本。
   const maxAbs = Math.max(Math.abs(f), Math.abs(t), Math.abs(s), 1);
-  function barRow(lbl, val) {
-    const pct = Math.min(Math.abs(val) / maxAbs * 48, 48);
+  function barRow(lbl, val, pctOfCap) {
+    const w  = Math.min(Math.abs(val) / maxAbs * 48, 48);
     const cls = val > 0 ? 'pos' : val < 0 ? 'neg' : 'zero';
     const vc  = val > 0 ? 'up' : val < 0 ? 'dn' : 'neu';
+    const pctTxt = pctOfCap == null ? ''
+      : `<span class="inst-pct ${vc}">${pctOfCap > 0 ? '+' : ''}${pctOfCap.toFixed(2)}%</span>`;
     return `<div class="inst-row2">
       <span class="inst-row2-lbl">${lbl}</span>
       <div class="inst-bar2-track">
         <div class="inst-center"></div>
-        <div class="inst-bar2-fill ${cls}" style="width:${pct}%"></div>
+        <div class="inst-bar2-fill ${cls}" style="width:${w}%"></div>
       </div>
       <span class="inst-row2-val ${vc}">${val > 0 ? '+' : ''}${Math.round(val)}<span style="font-size:9px;opacity:.6">萬</span></span>
+      ${pctTxt}
     </div>`;
   }
+  const fh = iv?.fh;
+  const foot = fh != null
+    ? `<div class="inst-hold" title="外資及陸資持股佔發行股數比率（TWSE MI_QFIIS）">外資持股 <b>${fh.toFixed(1)}%</b></div>`
+    : `<div class="inst-hold dim" title="上櫃股票無公開的外資持股 API">外資持股 —</div>`;
   return `<div class="inst-bar2">
-    ${barRow('外',f)}${barRow('投',t)}${barRow('自',s)}
+    ${barRow('外',f,iv?.fp)}${barRow('投',t,iv?.tp)}${barRow('自',s,null)}
+    ${foot}
   </div>`;
 }
 
 function computeSig(s){
   const iv  = getInst(s);
+  const st  = instStrength(iv);
   const net = iv.f + iv.t + iv.s;
   const p30 = s.p30;
-  if(net>=8) return "up";
+  if(st != null && st >= INST_STRONG) return "up";
   if(p30!==null && p30<0 && net<=0) return "weak";
   if(oppCodes.has(s.code)) return "opp";
   const h = histories[s.code];
@@ -2383,8 +2408,9 @@ function sigBadge(s){
   if(oppCodes.has(s.code))           badges.push(`<span class="badge b-opp">機會點</span>`);
   if(changeP!=null && changeP>=3)    badges.push(`<span class="badge b-up">強勢↑</span>`);
   else if(changeP!=null&&changeP<=-3) badges.push(`<span class="badge b-dn">弱勢↓</span>`);
-  if(net>=8)                          badges.push(`<span class="badge b-up">買超中</span>`);
-  if(net<=-8)                         badges.push(`<span class="badge b-dn">賣超中</span>`);
+  const st = instStrength(iv);
+  if(st != null && st >=  INST_STRONG) badges.push(`<span class="badge b-up">買超中</span>`);
+  if(st != null && st <= -INST_STRONG) badges.push(`<span class="badge b-dn">賣超中</span>`);
   if(c && price){
     const upN = _maBreakUp(c, price);
     const dnN = !upN ? _maBreakDown(c, price) : null;
@@ -2501,14 +2527,15 @@ function render(){
   let rows = STOCKS.filter(s => {
     if(activeTheme!=="all" && s.theme!==activeTheme && THEME_PARENT[s.theme]!==activeTheme) return false;
     if(sigFilter!=="all"){
-      const iv2=getInst(s), net2=iv2.f+iv2.t+iv2.s;
+      const iv2=getInst(s);
       const chgP2=priceCache[s.code]?.changeP??null;
       const h2=histories[s.code]; const c2=h2?.closes; const p2=priceCache[s.code]?.price;
       if(sigFilter==="opp"    && !oppCodes.has(s.code)) return false;
       if(sigFilter==="strong" && !(chgP2!=null&&chgP2>=3)) return false;
       if(sigFilter==="weak"   && !(chgP2!=null&&chgP2<=-3)) return false;
-      if(sigFilter==="buy"    && net2<8) return false;
-      if(sigFilter==="sell"   && net2>-8) return false;
+      const st2 = instStrength(iv2);
+      if(sigFilter==="buy"    && !(st2 != null && st2 >=  INST_STRONG)) return false;
+      if(sigFilter==="sell"   && !(st2 != null && st2 <= -INST_STRONG)) return false;
       if(sigFilter==="breakup"&& !(c2&&p2&&_maBreakUp(c2,p2))) return false;
       if(sigFilter==="breakdn"&& !(c2&&p2&&_maBreakDown(c2,p2))) return false;
     }
@@ -2572,7 +2599,7 @@ function render(){
           <td>${fmtPrice(s.code)}</td>
           <td>${s.p5!=null ? pct(s.p5) : '<span class="neu">—</span>'}</td>
           <td>${s.p30!=null ? pct(s.p30) : '<span class="neu">—</span>'}</td>
-          <td>${(()=>{const iv=getInst(s);return (iv.f||iv.t||iv.s) ? instBar(iv.f,iv.t,iv.s) : '<span class="neu" style="font-size:11px">—</span>';})()}</td>
+          <td>${(()=>{const iv=getInst(s);return (iv.f||iv.t||iv.s) ? instBar(iv.f,iv.t,iv.s,iv) : '<span class="neu" style="font-size:11px">—</span>';})()}</td>
           <td>${sigBadge(s)}</td>
         </tr>
         ${expandedStock===s.code ? `<tr class="detail-row" data-detail="${s.code}" data-main-detail="${s.code}"><td colspan="9">${renderDetail(s.code)}</td></tr>` : ""}`;
