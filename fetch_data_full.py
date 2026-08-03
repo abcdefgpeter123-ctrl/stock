@@ -110,14 +110,38 @@ THEME_GROUPS = {
 # ── 工具函式 ──────────────────────────────────────────────
 
 def roc_to_ad_date(twse_date: str, fallback: datetime.date) -> str:
-    """把 TWSE 回傳的民國日期字串（如 '115/05/19'）轉成西元（'2026/05/19'）"""
-    if twse_date and "/" in twse_date:
-        parts = twse_date.split("/")
+    """
+    把 TWSE 回傳的日期字串轉成西元 'YYYY/MM/DD'。
+
+    TWSE 各端點的格式不統一，實際會遇到三種：
+        '115/05/19'  民國、有斜線
+        '1150519'    民國、無斜線
+        '20260519'   西元、無斜線（BFI82U 舊端點就是這種）
+    早期只處理第一種，其餘一律落到 fallback＝「今天」，
+    導致假日或盤中執行時，把上一個交易日的資料標成今天的日期
+    （實例：2026/08/03 盤中跑，抓到 07/31 的法人資料卻標成 08/03）。
+    """
+    s = str(twse_date or "").strip()
+
+    if "/" in s:
+        parts = s.split("/")
         if len(parts) == 3:
             try:
-                return f"{int(parts[0])+1911}/{parts[1]}/{parts[2]}"
+                y = int(parts[0])
+                if y < 1911:                      # 民國
+                    y += 1911
+                return f"{y}/{int(parts[1]):02d}/{int(parts[2]):02d}"
             except ValueError:
                 pass
+    elif s.isdigit():
+        try:
+            if len(s) == 8:                       # 西元 YYYYMMDD
+                return f"{s[:4]}/{s[4:6]}/{s[6:8]}"
+            if len(s) == 7:                       # 民國 YYYMMDD
+                return f"{int(s[:3])+1911}/{s[3:5]}/{s[5:7]}"
+        except ValueError:
+            pass
+
     return fallback.strftime("%Y/%m/%d")
 
 
@@ -1280,6 +1304,48 @@ def fetch_vix():
 
 # ── 三大法人 ──────────────────────────────────────────────
 
+def fetch_market_turnover(target_date=None):
+    """
+    TWSE FMTQIK — 每日市場成交資訊，取「成交金額」。
+
+    用途：法人買賣超只看金額看不出份量——+676 億在成交 8,855 億的日子
+    佔 7.6%，在成交 2,000 億的清淡盤則佔三分之一。有成交值才能換算比重。
+
+    回傳 {"amount": 成交金額, "date": "YYYY/MM/DD"}；找不到回 None。
+    """
+    headers = {**HEADERS, "Referer": "https://www.twse.com.tw/"}
+    base = target_date or datetime.date.today()
+
+    for back in range(8):
+        d = base - datetime.timedelta(days=back)
+        url = ("https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK"
+               f"?date={d.strftime('%Y%m%d')}&response=json")
+        try:
+            resp = requests.get(url, headers=headers, timeout=20).json()
+            if resp.get("stat") != "OK":
+                continue
+            rows = resp.get("data") or []
+            if not rows:
+                continue
+            # FMTQIK 回傳「當月每一天」，取日期最接近且不晚於 d 的那筆
+            want = d.strftime("%Y/%m/%d")
+            best = None
+            for row in rows:
+                try:
+                    ad = roc_to_ad_date(str(row[0]), d)
+                    if ad <= want and (best is None or ad > best[0]):
+                        best = (ad, int(str(row[2]).replace(",", "")))
+                except (ValueError, IndexError):
+                    continue
+            if best:
+                print(f"   ✅ 大盤成交值({best[0]}): {best[1]/1e8:,.0f} 億")
+                return {"amount": best[1], "date": best[0]}
+        except Exception as e:
+            print(f"   ⚠️ FMTQIK {d}: {e}")
+    print("   ❌ 大盤成交值抓取失敗")
+    return None
+
+
 def fetch_institutional():
     """
     試多個 TWSE 端點（開放資料 → 舊端點西元 → 新端點民國），
@@ -2316,6 +2382,20 @@ def main():
     # 2. 三大法人
     inst = fetch_institutional()
     if inst:
+        # 買賣超佔當日成交值的比重——只看金額看不出份量，
+        # 同樣 +676 億在爆量日與清淡日的意義完全不同。
+        turnover = fetch_market_turnover()
+        if turnover and turnover.get("amount"):
+            data["turnover"] = turnover
+            # 兩者必須是同一個交易日，否則比例沒有意義
+            if turnover["date"] == inst.get("date"):
+                amt = turnover["amount"]
+                inst["turnover"] = amt
+                inst["foreignPct"] = round(inst["foreign"] / amt * 100, 2)
+                inst["trustPct"]   = round(inst["trust"]   / amt * 100, 2)
+                inst["dealerPct"]  = round(inst["dealer"]  / amt * 100, 2)
+            else:
+                print(f"   ⚠️ 成交值({turnover['date']}) 與法人({inst.get('date')}) 非同一日，略過比重計算")
         data["institutional"] = inst
         print(f"✅ 法人({inst['date']}): "
               f"外{inst['foreign']/1e8:+.0f}億 "

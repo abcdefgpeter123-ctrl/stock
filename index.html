@@ -2489,15 +2489,25 @@ function setInstMetrics(data){
   };
   const dateEl = document.getElementById("inst-date-lbl");
   if(dateEl && data.date) dateEl.textContent = data.date;
+  // 買賣超佔當日成交值的比重：只看金額看不出份量，
+  // 同樣 +676 億在爆量日與清淡日的意義完全不同。
+  const turnoverTxt = data.turnover
+    ? `　成交值 ${Math.round(data.turnover/1e8).toLocaleString()}億`
+    : "";
+  if (dateEl && data.date) dateEl.textContent = data.date + turnoverTxt;
+
   [
-    ["m-foreign", "m-foreign-chg", data.foreign],
-    ["m-trust",   "m-trust-chg",   data.trust],
-    ["m-dealer",  "m-dealer-chg",  data.dealer]
-  ].forEach(([vid, cid, val]) => {
+    ["m-foreign", "m-foreign-chg", data.foreign, data.foreignPct],
+    ["m-trust",   "m-trust-chg",   data.trust,   data.trustPct],
+    ["m-dealer",  "m-dealer-chg",  data.dealer,  data.dealerPct]
+  ].forEach(([vid, cid, val, pct]) => {
     const el = document.getElementById(vid);
     el.textContent = fmt(val);
     el.style.color = val>=0?"var(--up)":"var(--dn)";
-    document.getElementById(cid).innerHTML = `<span class="${val>=0?'up':'dn'}">${val>=0?'買超':'賣超'}</span>`;
+    const pctTxt = pct == null ? ""
+      : ` <span style="color:var(--text3);font-size:11px">佔成交值 ${pct>=0?'+':''}${pct.toFixed(2)}%</span>`;
+    document.getElementById(cid).innerHTML =
+      `<span class="${val>=0?'up':'dn'}">${val>=0?'買超':'賣超'}</span>${pctTxt}`;
   });
 }
 
