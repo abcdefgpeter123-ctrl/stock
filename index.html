@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="market_status.js?v=1"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -2087,50 +2088,27 @@ function computeMA(allCloses, period) {
 }
 
 // ── 現在市場狀態（牛熊燈號，6 項自動指標，簡化版 STEP1） ──
-const MARKET_STATUS_LEVELS = [
-  { min:5, label:'大牛', emoji:'🐂', desc:'市場資金充沛，聚焦主流族群，可積極布局', color:'#ef4444' },
-  { min:4, label:'小牛', emoji:'🐮', desc:'開始輪動，找補漲股，逢拉回可分批進場', color:'#2dd4bf' },
-  { min:2, label:'橫盤', emoji:'😐', desc:'方向不明，縮小操作範圍，保持耐心觀望', color:'#facc15' },
-  { min:1, label:'小熊', emoji:'🐻', desc:'訊號偏弱，建立觀察名單，準備下一波', color:'#fb923c' },
-  { min:0, label:'大熊', emoji:'🐻‍❄️', desc:'多項指標翻空，幾乎不買，保留現金', color:'#22c55e' },
-];
-
+// 大盤狀態：與「每日健檢」共用 market_status.js 的同一套指標與權重，
+// 避免兩頁對同一天給出不同判斷（先前首頁是等權 6 項、健檢是加權 8 項）。
 function renderMarketStatus() {
   const bar = document.getElementById("market-status-bar");
-  if (!bar || !twiiHistoryData || !twiiHistoryData.closes || twiiHistoryData.closes.length < 120) return;
+  if (!bar || !twiiHistoryData?.closes || twiiHistoryData.closes.length < 70) return;
 
-  const closes = twiiHistoryData.closes;
-  const last   = closes[closes.length - 1];
-  const ma5v   = computeMA(closes, 5).at(-1);
-  const ma20v  = computeMA(closes, 20).at(-1);
-  const ma60v  = computeMA(closes, 60).at(-1);
-  const ma120v = computeMA(closes, 120).at(-1);
-
-  const checks = [
-    { pass: ma5v  != null && last > ma5v },
-    { pass: ma20v != null && last > ma20v },
-    { pass: ma60v != null && last > ma60v },
-    { pass: ma20v != null && ma60v  != null && ma20v > ma60v },
-    { pass: ma60v != null && ma120v != null && ma60v > ma120v },
-  ];
-
-  const tsmcCloses = histories['2330']?.closes;
-  if (tsmcCloses && tsmcCloses.length >= 20) {
-    const tsmcLast = tsmcCloses[tsmcCloses.length - 1];
-    const tsmcMa20 = computeMA(tsmcCloses, 20).at(-1);
-    checks.push({ pass: tsmcMa20 != null && tsmcLast > tsmcMa20 });
-  }
-
-  const score = checks.filter(c => c.pass).length;
-  const max   = checks.length;
-  const level = MARKET_STATUS_LEVELS.find(l => score >= Math.round(l.min * max / 6)) || MARKET_STATUS_LEVELS.at(-1);
+  const { score, max, level } = MarketStatus.evaluate({
+    twiiCloses: twiiHistoryData.closes,
+    histories,
+    prices: priceCache,
+    aiCodes:    STOCKS.filter(s => s.theme === 'AI伺服器' && !s._extra).map(s => s.code),
+    watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
+  });
 
   document.getElementById("market-status-emoji").textContent = level.emoji;
   const labelEl = document.getElementById("market-status-label");
   labelEl.textContent = level.label;
   labelEl.style.color = level.color;
-  document.getElementById("market-status-score").textContent = `${score} / ${max} 項指標翻多`;
-  document.getElementById("market-status-desc").textContent = level.desc + "（僅計技術面自動指標，完整判斷含法人籌碼與基本面請見每日健檢）";
+  document.getElementById("market-status-score").textContent = `${score} / ${max} 分`;
+  document.getElementById("market-status-desc").textContent =
+    level.desc + "（技術面自動指標，與每日健檢同一套計分；完整判斷含法人籌碼與基本面請見每日健檢）";
   bar.style.display = "block";
 }
 

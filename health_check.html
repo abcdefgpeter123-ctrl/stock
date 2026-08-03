@@ -379,6 +379,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
   </div>
 </div>
 
+<script src="market_status.js?v=1"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  Constants & state
@@ -391,36 +392,10 @@ const TODAY = (() => {
 const STORAGE_KEY = `hc_${TODAY.replace(/\//g,'')}`;
 const HISTORY_KEY = 'hc_history';
 
-// 指標定義：auto=true 的從 data.json 自動計算，否則手動
-// 指標權重（總分 10 分）。原本 8 項各 1 分，實測有三個問題：
-//   ① 站上5MA／台積電20MA／AI族群20MA／漲跌家數 這 4 項高度相關，
-//      大盤單日大漲時會同時翻正，等於把一天的漲跌重複計分 4 次
-//      （2026/07/30 是 2/8「小熊」，07/31 單日 +7.98% 後直接變 6/8「小牛」）
-//   ② 20MA>60MA 與 60MA>120MA 反應太慢，在 -15% 的崩跌中連續 22 個交易日
-//      維持 ✅，等於白送 2 分底分，導致「大熊」永遠不可能出現
-//   ③ 真正衡量中期趨勢的「站上20MA／站上60MA」只佔 8 分之 2，被稀釋掉
-// 改法：把排列改成「均線斜率」（會真的隨行情變動），並依重要性配權重。
-// 一年回測：矛盾天數 25→0、判定跳動 477→277 次，且仍 100% 抓到明確多頭。
-const INDICATORS = [
-  { id:'twii_20ma',  label:'加權指數站上 20MA',   w:2,   pts:'+2', auto:true, hint:'中期趨勢核心' },
-  { id:'twii_60ma',  label:'加權指數站上 60MA',   w:2,   pts:'+2', auto:true, hint:'中期趨勢核心' },
-  { id:'ma20_up',    label:'20MA 方向向上',       w:1.5, pts:'+1.5', auto:true, hint:'20MA 高於 5 個交易日前（取代原本的多頭排列，排列反應太慢）' },
-  { id:'ma60_up',    label:'60MA 方向向上',       w:1.5, pts:'+1.5', auto:true, hint:'60MA 高於 10 個交易日前' },
-  { id:'tsmc_20ma',  label:'台積電（2330）站上 20MA', w:1, pts:'+1', auto:true },
-  { id:'ai_20ma',    label:'AI 族群站上 20MA',    w:1,   pts:'+1', auto:true, hint:'AI伺服器題材成分股平均站上20MA' },
-  { id:'twii_5ma',   label:'加權指數站上 5MA',    w:0.5, pts:'+0.5', auto:true, hint:'短期動能，權重低（單日大漲就會翻正）' },
-  { id:'advance',    label:'觀察名單上漲家數 > 下跌家數', w:0.5, pts:'+0.5', auto:true, hint:'短期動能，權重低（只反映當天）' },
-];
-
-const MAX_SCORE = INDICATORS.reduce((a, i) => a + i.w, 0);   // = 10
-
-const MARKET_LEVELS = [
-  { min:8,   label:'大牛', desc:'市場資金充沛，聚焦主流族群', color:'var(--dn)', strat:'bull2' },
-  { min:6,   label:'小牛', desc:'開始輪動，找補漲股', color:'var(--teal)', strat:'bull1' },
-  { min:3.5, label:'橫盤', desc:'縮小範圍，保持耐心', color:'var(--yellow)', strat:'side' },
-  { min:1.5, label:'小熊', desc:'建立觀察名單，準備下一波', color:'var(--orange)', strat:'bear1' },
-  { min:0,   label:'大熊', desc:'幾乎不買，保留現金', color:'var(--red)', strat:'bear2' },
-];
+// 指標與分級定義統一放在 market_status.js（首頁也用同一份，避免兩邊走鐘）
+const INDICATORS    = MarketStatus.INDICATORS;
+const MAX_SCORE     = MarketStatus.MAX_SCORE;
+const MARKET_LEVELS = MarketStatus.LEVELS;
 
 const CHECKS = {
   fundamental: [
@@ -496,56 +471,14 @@ function ma(arr, n) {
 }
 
 function computeAutoIndicators() {
-  const auto = {};
-
-  // TWII MAs
-  if (twiiHistory?.closes?.length >= 70) {
-    const c = twiiHistory.closes;
-    const last = c[c.length-1];
-    auto.twii_5ma  = last > ma(c, 5);
-    auto.twii_20ma = last > ma(c, 20);
-    auto.twii_60ma = last > ma(c, 60);
-    // 均線「方向」而非「排列」：排列（20>60、60>120）在下跌段可以連續數十天
-    // 維持成立，完全不反映當下轉弱；斜率則會在趨勢反轉後數日內就翻負。
-    auto.ma20_up = ma(c, 20) > ma(c.slice(0, -5),  20);
-    auto.ma60_up = ma(c, 60) > ma(c.slice(0, -10), 60);
-  }
-
-  // TSMC 2330 20MA
-  const tsmc = histories['2330'];
-  if (tsmc?.closes?.length >= 20) {
-    const c = tsmc.closes;
-    const last = c[c.length-1];
-    auto.tsmc_20ma = last > ma(c, 20);
-  }
-
-  // AI伺服器題材成分股：平均是否站上 20MA
-  const aiCodes = WATCH_STOCKS.filter(s => s.theme === 'AI伺服器').map(s => s.code);
-  const aiRatios = aiCodes.map(code => {
-    const h = histories[code];
-    if (!h?.closes?.length || h.closes.length < 20) return null;
-    const c = h.closes;
-    const last = c[c.length - 1];
-    const ma20v = ma(c, 20);
-    return ma20v ? last / ma20v : null;
-  }).filter(v => v != null);
-  if (aiRatios.length) {
-    const avgRatio = aiRatios.reduce((a, b) => a + b, 0) / aiRatios.length;
-    auto.ai_20ma = avgRatio > 1;
-  }
-
-  // 觀察名單今日上漲家數 > 下跌家數
-  const upDownCodes = WATCH_STOCKS.map(s => s.code);
-  let upCnt = 0, dnCnt = 0;
-  upDownCodes.forEach(code => {
-    const chg = priceData[code]?.changeP;
-    if (chg == null) return;
-    if (chg > 0) upCnt++;
-    else if (chg < 0) dnCnt++;
+  // 計算邏輯在 market_status.js，首頁用同一份
+  const auto = MarketStatus.computeIndicators({
+    twiiCloses: twiiHistory?.closes,
+    histories,
+    prices: priceData,
+    aiCodes:    WATCH_STOCKS.filter(s => s.theme === 'AI伺服器').map(s => s.code),
+    watchCodes: WATCH_STOCKS.map(s => s.code),
   });
-  if (upCnt + dnCnt > 0) {
-    auto.advance = upCnt > dnCnt;
-  }
 
   state.autoResults = auto;
   renderScoreRows();
@@ -587,14 +520,12 @@ function toggleCheck(id) {
 }
 
 function getScore() {
-  let s = 0;
+  const auto = state.autoResults;
+  const merged = {};
   INDICATORS.forEach(ind => {
-    const auto = state.autoResults;
-    const isAuto = ind.auto && ind.id in auto;
-    const val = isAuto ? auto[ind.id] : (state.checks[ind.id] || false);
-    if (val) s += (ind.w ?? 1);
+    merged[ind.id] = (ind.id in auto) ? auto[ind.id] : (state.checks[ind.id] || false);
   });
-  return Math.round(s * 10) / 10;      // 權重有 .5，避免浮點誤差
+  return MarketStatus.score(merged);
 }
 
 function updateScore() {
