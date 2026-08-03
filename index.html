@@ -535,7 +535,9 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <button class="pill active" data-theme="all">全部題材</button>
     <button class="pill" data-theme="半導體">半導體</button>
     <button class="pill" data-theme="ABF載板">ABF載板</button>
-    <button class="pill" data-theme="AI伺服器">AI伺服器</button>
+    <button class="pill" data-theme="AI伺服器代工">AI伺服器代工</button>
+    <button class="pill" data-theme="伺服器電源">伺服器電源</button>
+    <button class="pill" data-theme="伺服器機構件">伺服器機構件</button>
     <button class="pill" data-theme="液冷散熱">液冷散熱</button>
     <button class="pill" data-theme="網通">網通</button>
     <button class="pill" data-theme="面板">面板</button>
@@ -684,17 +686,17 @@ const STOCKS=[
   {code:"2383",name:"台光電",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3037",name:"欣興",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── AI伺服器 ──
-  {code:"2382",name:"廣達",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6669",name:"緯穎",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2356",name:"英業達",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2376",name:"技嘉",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3231",name:"緯創",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2357",name:"華碩",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2324",name:"仁寶",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2308",name:"台達電",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2317",name:"鴻海",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2301",name:"光寶科",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2059",name:"川湖",theme:"AI伺服器",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2382",name:"廣達",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6669",name:"緯穎",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2356",name:"英業達",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2376",name:"技嘉",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3231",name:"緯創",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2357",name:"華碩",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2324",name:"仁寶",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2308",name:"台達電",theme:"伺服器電源",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2317",name:"鴻海",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2301",name:"光寶科",theme:"伺服器電源",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2059",name:"川湖",theme:"伺服器機構件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 液冷散熱 ──
   {code:"3017",name:"奇鋐",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"8996",name:"高力",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
@@ -740,7 +742,9 @@ const THEME_DESCS = {
   "化合物半導體":"GaAs/GaN 功率元件，應用於 5G PA 與電力轉換，穩懋為台灣最大砷化鎵代工",
   "半導體設備":  "半導體廠房機電工程，台積電、三星擴廠帶動設備與氣體系統需求",
   "ABF載板":     "台光電(2383)：生產ABF載板所需的銅箔基板(CCL)，屬上游材料廠，受惠於載板需求但波動相對小。欣興(3037)：直接生產ABF載板，屬下游製造廠，受AI伺服器拉動明顯，漲跌幅通常大於上游",
-  "AI伺服器":    "AI 訓練/推理伺服器整機組裝，受惠 NVIDIA GPU 出貨量成長，廣達、緯穎為 CSP 主力代工廠",
+  "AI伺服器代工": "AI 訓練/推理伺服器整機組裝與板卡，受惠 NVIDIA GPU 出貨量成長，廣達、緯穎為 CSP 主力代工廠。這 8 檔日內走勢高度同步（相關性 0.6–0.76），差別在貝他大小而非方向",
+  "伺服器電源":   "AI 機櫃功耗從 10kW 拉到 100kW+，電源與電力管理成為瓶頸。台達電、光寶科與代工廠的相關性僅 0.32–0.51，是獨立的供應鏈環節",
+  "伺服器機構件": "伺服器滑軌、機殼等精密機構件。川湖為滑軌龍頭，與其他 AI 伺服器股相關性最低（0.34–0.54），走勢自成一格",
   "液冷散熱":    "AI 算力密集造成散熱瓶頸，液冷滲透率快速提升，奇鋐為冷板式液冷龍頭",
   "網通":        "AI 資料中心高速乙太網路交換器需求爆發，智邦為台灣最大網通設備廠",
   "面板":        "LCD/OLED 面板製造，受惠電視與 IT 需求回溫，群創為台灣第二大面板廠",
@@ -764,7 +768,9 @@ const THEME_PE = {
   "化合物半導體":"15–25x",
   "半導體設備":  "15–28x",
   "ABF載板":     "10–20x",
-  "AI伺服器":    "12–22x",
+  "AI伺服器代工": "12–22x",
+  "伺服器電源":   "18–30x",
+  "伺服器機構件": "20–35x",
   "液冷散熱":    "15–30x",
   "網通":        "12–22x",
   "面板":        "6–14x",
@@ -2098,7 +2104,7 @@ function renderMarketStatus() {
     twiiCloses: twiiHistoryData.closes,
     histories,
     prices: priceCache,
-    aiCodes:    STOCKS.filter(s => s.theme === 'AI伺服器' && !s._extra).map(s => s.code),
+    aiCodes:    STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
     watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
   });
 

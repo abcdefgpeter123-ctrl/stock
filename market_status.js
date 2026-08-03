@@ -28,7 +28,7 @@ const MarketStatus = (() => {
     { id:'ma20_up',   label:'20MA 方向向上',          w:1.5, pts:'+1.5', hint:'20MA 高於 5 個交易日前（取代原本的多頭排列，排列反應太慢）' },
     { id:'ma60_up',   label:'60MA 方向向上',          w:1.5, pts:'+1.5', hint:'60MA 高於 10 個交易日前' },
     { id:'tsmc_20ma', label:'台積電（2330）站上 20MA', w:1,   pts:'+1' },
-    { id:'ai_20ma',   label:'AI 族群站上 20MA',       w:1,   pts:'+1',   hint:'AI伺服器題材成分股平均站上20MA' },
+    { id:'ai_20ma',   label:'AI 族群站上 20MA',       w:1,   pts:'+1',   hint:'AI伺服器代工成分股平均站上20MA（廣達、緯創、緯穎等 8 檔）' },
     { id:'twii_5ma',  label:'加權指數站上 5MA',       w:0.5, pts:'+0.5', hint:'短期動能，權重低（單日大漲就會翻正）' },
     { id:'advance',   label:'觀察名單上漲家數 > 下跌家數', w:0.5, pts:'+0.5', hint:'短期動能，權重低（只反映當天）' },
   ];
@@ -60,7 +60,7 @@ const MarketStatus = (() => {
    * @param {number[]} twiiCloses  加權指數收盤序列
    * @param {object}   histories   code → { closes }
    * @param {object}   prices      code → { changeP }
-   * @param {string[]} aiCodes     AI伺服器題材的股票代號
+   * @param {string[]} aiCodes     AI伺服器代工題材的股票代號
    * @param {string[]} watchCodes  觀察清單全部代號（算漲跌家數用）
    */
   function computeIndicators({ twiiCloses, histories = {}, prices = {},
