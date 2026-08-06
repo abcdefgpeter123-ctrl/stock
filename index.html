@@ -2096,17 +2096,21 @@ function computeMA(allCloses, period) {
 // ── 現在市場狀態（牛熊燈號，6 項自動指標，簡化版 STEP1） ──
 // 大盤狀態：與「每日健檢」共用 market_status.js 的同一套指標與權重，
 // 避免兩頁對同一天給出不同判斷（先前首頁是等權 6 項、健檢是加權 8 項）。
+let marketStatusEval = null;   // 供大盤日評引用，避免重算
+
 function renderMarketStatus() {
   const bar = document.getElementById("market-status-bar");
   if (!bar || !twiiHistoryData?.closes || twiiHistoryData.closes.length < 70) return;
 
-  const { score, rawScore, max, level } = MarketStatus.evaluate({
+  const ev = MarketStatus.evaluate({
     twiiCloses: twiiHistoryData.closes,
     histories,
     prices: priceCache,
     aiCodes:    STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
     watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
   });
+  marketStatusEval = ev;
+  const { score, rawScore, max, level } = ev;
 
   document.getElementById("market-status-emoji").textContent = level.emoji;
   const labelEl = document.getElementById("market-status-label");
@@ -2116,7 +2120,53 @@ function renderMarketStatus() {
     `${score} / ${max} 分` + (rawScore !== score ? `（3日均，今日 ${rawScore}）` : "（3日均）");
   document.getElementById("market-status-desc").textContent =
     level.desc + "（技術面自動指標，與每日健檢同一套計分；完整判斷含法人籌碼與基本面請見每日健檢）";
+  // 預設顯示；若當天有大盤日評，會由 renderMarketSummaryText() 把這張卡收起來
+  // （狀態已併入日評，同一畫面不重複兩次）。日評沒生成時這張就是後備顯示。
   bar.style.display = "block";
+}
+
+/**
+ * 大盤日評：依句號分段 + 帶入市場狀態。
+ * 原本整段擠成一大塊很難讀，這裡在每個句號後斷行；
+ * 開頭附上市場狀態，讓「今天發生什麼」與「現在該怎麼做」放在一起看。
+ */
+function renderMarketSummaryText(text) {
+  const el = document.getElementById("market-summary-text");
+  if (!el) return;
+
+  const esc = t => String(t ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // 句號斷句，保留句號本身；分號後不斷（同一句的並列關係）
+  const paras = String(text).split("。")
+    .map(t => t.trim()).filter(Boolean)
+    .map(t => t + "。");
+
+  const ev = marketStatusEval;
+  const smooth = ev && ev.rawScore !== ev.score
+    ? `（3日均，今日 ${ev.rawScore}）` : "（3日均）";
+  const status = ev ? `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+                padding-bottom:9px;margin-bottom:11px;
+                border-bottom:1px solid rgba(96,165,250,0.18)">
+      <span style="font-size:17px;line-height:1">${ev.level.emoji}</span>
+      <span style="font-size:15px;font-weight:700;color:${ev.level.color}">${ev.level.label}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--text3)">
+        ${ev.score} / ${ev.max} 分${smooth}</span>
+      <span style="color:var(--text3);font-size:12px">·</span>
+      <span style="font-size:12px;color:var(--text3)">${esc(ev.level.desc)}</span>
+      <a href="health_check.html" style="margin-left:auto;font-size:11px;color:var(--blue);
+         text-decoration:none;white-space:nowrap">完整每日健檢 →</a>
+    </div>` : "";
+
+  el.innerHTML = status +
+    paras.map(t => `<p style="margin:0 0 7px">${esc(t)}</p>`).join("");
+
+  // 狀態已經在日評裡了，收起獨立那張避免重複
+  if (ev) {
+    const bar = document.getElementById("market-status-bar");
+    if (bar) bar.style.display = "none";
+  }
 }
 
 // ── 均線切換 ──────────────────────────────────────────────
@@ -3054,7 +3104,7 @@ async function loadData(){
     if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); }
     // 大盤走勢分析一句話
     if(data.market_summary){
-      document.getElementById("market-summary-text").textContent = data.market_summary;
+      renderMarketSummaryText(data.market_summary);
       document.getElementById("market-summary-bar").style.display = "block";
       const dateEl = document.getElementById("market-summary-date");
       if (dateEl && data.twii?.date) dateEl.textContent = data.twii.date;
