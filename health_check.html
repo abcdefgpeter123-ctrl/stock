@@ -60,6 +60,30 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 .score-label{font-size:20px;font-weight:700}
 .score-desc{font-size:13px;color:var(--text3);margin-top:4px}
 
+/* ── 近一週逐日指標 ── */
+.trend-wrap{margin-top:16px;border:1px solid var(--border);border-radius:var(--r);
+  background:var(--bg4);padding:14px 16px}
+.trend-hd{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:10px;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.trend-sub{font-size:11px;color:var(--text3);font-weight:400}
+.trend-scroll{overflow-x:auto}
+.trend-tbl{border-collapse:collapse;font-size:11.5px;width:100%;min-width:420px}
+.trend-tbl th,.trend-tbl td{padding:5px 6px;text-align:center;white-space:nowrap}
+.trend-tbl th:first-child,.trend-tbl td:first-child{text-align:left;padding-left:0;
+  min-width:150px;color:var(--text2);font-weight:400}
+.trend-tbl thead th{color:var(--text3);font-weight:500;font-family:var(--mono);
+  border-bottom:1px solid var(--border2);font-size:10.5px;line-height:1.5}
+.trend-tbl tbody tr:not(:last-child) td{border-bottom:1px solid rgba(255,255,255,0.04)}
+.trend-cell{font-size:11px}
+.trend-y{color:var(--dn)}
+.trend-n{color:var(--up);opacity:.55}
+.trend-tbl tr.trend-score td{border-top:1px solid var(--border2);padding-top:8px;
+  font-family:var(--mono);font-weight:600;font-size:12px}
+.trend-tbl tr.trend-score td:first-child{font-family:var(--font);font-weight:600;color:var(--text2)}
+.trend-lvl{font-size:10px;display:block;font-weight:400;color:var(--text3);margin-top:1px}
+.trend-chg{font-size:9.5px;display:block;font-weight:400;margin-top:1px}
+.trend-streak{font-size:10px;color:var(--text3);margin-left:6px}
+
 /* ── STEP 2: Strategy ── */
 .market-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .mkt-tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;background:var(--bg3);color:var(--text3)}
@@ -202,6 +226,15 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
         <div class="score-label" id="market-label">—</div>
         <div class="score-desc" id="market-desc">—</div>
       </div>
+    </div>
+
+    <!-- 近一週逐日指標：看轉變有沒有持續 -->
+    <div class="trend-wrap" id="trend-wrap" style="display:none">
+      <div class="trend-hd">
+        📅 近一週逐日變化
+        <span class="trend-sub">連續成立才算轉變，單日成立多半是雜訊</span>
+      </div>
+      <div class="trend-scroll"><table class="trend-tbl" id="trend-tbl"></table></div>
     </div>
   </div>
 </div>
@@ -483,8 +516,63 @@ function computeAutoIndicators() {
 
   state.autoResults = ev.results;
   state.autoEval    = ev;      // 內含平滑後的分數
+  renderTrend();
   renderScoreRows();
   updateScore();
+}
+
+// ══════════════════════════════════════════════════════
+//  近一週逐日指標
+//  只看今天的勾勾分不出「剛翻正」與「站穩多日」，
+//  這張表把最近 5 個交易日攤開，才看得出轉變是不是持續。
+// ══════════════════════════════════════════════════════
+function renderTrend() {
+  const wrap = document.getElementById('trend-wrap');
+  if (!wrap || !twiiHistory?.closes?.length) return;
+
+  const series = MarketStatus.evaluateSeries({
+    twiiCloses: twiiHistory.closes,
+    twiiLabels: twiiHistory.labels,
+    histories,
+    prices: priceData,
+    aiCodes:    WATCH_STOCKS.filter(s => s.theme === 'AI伺服器代工').map(s => s.code),
+    watchCodes: WATCH_STOCKS.map(s => s.code),
+  }, 5);
+  if (series.length < 2) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const md = d => (d || '').slice(5);          // YYYY/MM/DD → MM/DD
+  const head = series.map(d => {
+    const c = d.chgP;
+    const cls = c == null ? '' : c > 0 ? 'up' : c < 0 ? 'dn' : '';
+    return `<th>${md(d.date)}
+      <span class="trend-chg ${cls}">${c == null ? '' : (c > 0 ? '+' : '') + c.toFixed(1) + '%'}</span></th>`;
+  }).join('');
+
+  const body = MarketStatus.INDICATORS.map(ind => {
+    const cells = series.map(d => {
+      const v = d.results[ind.id];
+      return v == null
+        ? '<td class="trend-cell" style="opacity:.3">·</td>'
+        : `<td class="trend-cell ${v ? 'trend-y' : 'trend-n'}">${v ? '✓' : '✕'}</td>`;
+    }).join('');
+    // 從最新往回數連續成立幾天，讓「剛翻正」與「站穩」一眼可辨
+    let streak = 0;
+    for (let i = series.length - 1; i >= 0; i--) {
+      if (series[i].results[ind.id]) streak++; else break;
+    }
+    const tag = streak >= 2 ? `<span class="trend-streak">連${streak}日</span>` : '';
+    return `<tr><td>${ind.label}${tag}</td>${cells}</tr>`;
+  }).join('');
+
+  const scoreRow = series.map(d =>
+    `<td>${d.score}<span class="trend-lvl">${d.level.label}</span></td>`).join('');
+
+  document.getElementById('trend-tbl').innerHTML = `
+    <thead><tr><th>指標</th>${head}</tr></thead>
+    <tbody>${body}
+      <tr class="trend-score"><td>當日分數</td>${scoreRow}</tr>
+    </tbody>`;
 }
 
 // ══════════════════════════════════════════════════════

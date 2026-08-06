@@ -165,6 +165,34 @@ const MarketStatus = (() => {
              max: MAX_SCORE, level: levelOf(avg) };
   }
 
+  /**
+   * 回推最近 days 個交易日的指標與分數，用來看「轉變有沒有持續」——
+   * 單日成立和連續多日成立的意義完全不同，只看今天的勾勾判斷不出來。
+   *
+   * 回傳由舊到新的陣列：[{ date, chgP, results, score, level }]
+   * input 需額外帶 twiiLabels（與 twiiCloses 等長的日期字串）才有日期可標。
+   */
+  function evaluateSeries(input, days = 5) {
+    const labels = input.twiiLabels || [];
+    const closes = input.twiiCloses || [];
+    const out = [];
+
+    for (let k = days - 1; k >= 0; k--) {
+      const shifted = k === 0 ? input : shift(input, k);
+      const results = computeIndicators(shifted);
+      if (Object.keys(results).length < 5) continue;   // 資料不足就不列
+
+      const i = closes.length - 1 - k;
+      const s = score(results);
+      out.push({
+        date:  labels[i] || '',
+        chgP:  (i > 0 && closes[i - 1]) ? (closes[i] / closes[i - 1] - 1) * 100 : null,
+        results, score: s, level: levelOf(s),
+      });
+    }
+    return out;
+  }
+
   return { INDICATORS, MAX_SCORE, LEVELS, SMOOTH_DAYS, ma,
-           computeIndicators, score, levelOf, evaluate };
+           computeIndicators, score, levelOf, evaluate, evaluateSeries };
 })();
