@@ -96,7 +96,14 @@ const MarketStatus = (() => {
 
     let up = 0, dn = 0;
     watchCodes.forEach(code => {
-      const chg = prices[code]?.changeP;
+      let chg = prices[code]?.changeP;
+      if (chg == null) {
+        // 回推前幾天的分數時沒有當日報價，改用收盤序列的前後差。
+        // 少了這段的話，往前推算的日子會固定缺這一項（0.5 分），
+        // 3 日平均就被系統性低估。
+        const c = histories[code]?.closes;
+        if (c && c.length >= 2) chg = c[c.length - 1] - c[c.length - 2];
+      }
       if (chg == null) return;
       if (chg > 0) up++; else if (chg < 0) dn++;
     });
