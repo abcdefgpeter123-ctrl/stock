@@ -196,6 +196,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
       <div>
         <span class="score-num" id="total-score">0</span>
         <span class="score-denom" id="score-denom"> / 10</span>
+        <div id="score-raw" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px"></div>
       </div>
       <div>
         <div class="score-label" id="market-label">—</div>
@@ -472,7 +473,7 @@ function ma(arr, n) {
 
 function computeAutoIndicators() {
   // 計算邏輯在 market_status.js，首頁用同一份
-  const auto = MarketStatus.computeIndicators({
+  const ev = MarketStatus.evaluate({
     twiiCloses: twiiHistory?.closes,
     histories,
     prices: priceData,
@@ -480,7 +481,8 @@ function computeAutoIndicators() {
     watchCodes: WATCH_STOCKS.map(s => s.code),
   });
 
-  state.autoResults = auto;
+  state.autoResults = ev.results;
+  state.autoEval    = ev;      // 內含平滑後的分數
   renderScoreRows();
   updateScore();
 }
@@ -522,8 +524,13 @@ function toggleCheck(id) {
   saveState();
 }
 
+// 判定分數用 3 日平均（見 market_status.js 說明）；
+// 若有手動勾選覆蓋自動結果，則退回當日分數，否則平滑值會與勾選狀態對不上。
 function getScore() {
   const auto = state.autoResults;
+  const overridden = INDICATORS.some(ind => !(ind.id in auto) && state.checks[ind.id]);
+  if (!overridden && state.autoEval) return state.autoEval.score;
+
   const merged = {};
   INDICATORS.forEach(ind => {
     merged[ind.id] = (ind.id in auto) ? auto[ind.id] : (state.checks[ind.id] || false);
@@ -540,6 +547,12 @@ function updateScore() {
   document.getElementById('market-label').style.color = level.color;
   document.getElementById('market-desc').textContent = level.desc;
   document.getElementById('s1-badge').textContent = `${score} / ${MAX_SCORE}`;
+  const rawEl = document.getElementById('score-raw');
+  if (rawEl && state.autoEval) {
+    rawEl.textContent = state.autoEval.rawScore === score
+      ? `${MarketStatus.SMOOTH_DAYS} 日平均`
+      : `${MarketStatus.SMOOTH_DAYS} 日平均（今日 ${state.autoEval.rawScore}）`;
+  }
 
   // Update STEP 2
   document.getElementById('s2-badge').textContent = level.label;

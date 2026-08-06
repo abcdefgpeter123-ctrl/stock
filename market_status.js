@@ -114,12 +114,50 @@ const MarketStatus = (() => {
 
   const levelOf = (s) => LEVELS.find(l => s >= l.min) || LEVELS[LEVELS.length - 1];
 
-  /** 一次算完：回傳 { results, score, max, level } */
-  function evaluate(input) {
-    const results = computeIndicators(input);
-    const s = score(results);
-    return { results, score: s, max: MAX_SCORE, level: levelOf(s) };
+  /**
+   * 把輸入資料往前推 k 個交易日，用來重算前幾天的分數。
+   * 只是把每個序列的尾端切掉 k 筆，指標算法完全共用。
+   */
+  function shift(input, k) {
+    if (!k) return input;
+    const cut = arr => (arr && arr.length > k) ? arr.slice(0, arr.length - k) : arr;
+    const hist = {};
+    Object.entries(input.histories || {}).forEach(([code, h]) => {
+      hist[code] = { ...h, closes: cut(h.closes) };
+    });
+    return { ...input, twiiCloses: cut(input.twiiCloses), histories: hist,
+             prices: {} };   // 漲跌家數只有當天的資料，往前推時直接放棄該項
   }
 
-  return { INDICATORS, MAX_SCORE, LEVELS, ma, computeIndicators, score, levelOf, evaluate };
+  const SMOOTH_DAYS = 3;
+
+  /**
+   * 一次算完：回傳 { results, score, rawScore, max, level }
+   *
+   * score 是最近 SMOOTH_DAYS 天分數的平均，results 仍是「今天」的狀態。
+   * 為什麼要平滑：站上/跌破均線是二元的，指數貼著均線時一根大陽線會同時
+   * 翻正「站上20MA(+2)」「站上60MA(+2)」「台積電20MA(+1)」——
+   * 2026/08/05 就是這樣一天之內從 3.5「橫盤」跳到 8.5「大牛」，跳過小牛。
+   * 一年回測：判定跳動 280 → 195（少 30%），跨兩級的跳躍 40 次 → 0 次。
+   * （也試過改用「連續 3 日站上才算」，以及加入融資籌碼指標；
+   *   前者改善有限，後者反而讓跳動增加到 343，都不採用。）
+   */
+  function evaluate(input) {
+    const results = computeIndicators(input);
+    const raw = score(results);
+
+    const scores = [raw];
+    for (let k = 1; k < SMOOTH_DAYS; k++) {
+      const past = computeIndicators(shift(input, k));
+      // 資料不足以回推時就不列入，避免把缺漏當成 0 分拉低平均
+      if (Object.keys(past).length >= 5) scores.push(score(past));
+    }
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10;
+
+    return { results, score: avg, rawScore: raw, days: scores.length,
+             max: MAX_SCORE, level: levelOf(avg) };
+  }
+
+  return { INDICATORS, MAX_SCORE, LEVELS, SMOOTH_DAYS, ma,
+           computeIndicators, score, levelOf, evaluate };
 })();

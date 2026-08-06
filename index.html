@@ -2100,7 +2100,7 @@ function renderMarketStatus() {
   const bar = document.getElementById("market-status-bar");
   if (!bar || !twiiHistoryData?.closes || twiiHistoryData.closes.length < 70) return;
 
-  const { score, max, level } = MarketStatus.evaluate({
+  const { score, rawScore, max, level } = MarketStatus.evaluate({
     twiiCloses: twiiHistoryData.closes,
     histories,
     prices: priceCache,
@@ -2112,7 +2112,8 @@ function renderMarketStatus() {
   const labelEl = document.getElementById("market-status-label");
   labelEl.textContent = level.label;
   labelEl.style.color = level.color;
-  document.getElementById("market-status-score").textContent = `${score} / ${max} 分`;
+  document.getElementById("market-status-score").textContent =
+    `${score} / ${max} 分` + (rawScore !== score ? `（3日均，今日 ${rawScore}）` : "（3日均）");
   document.getElementById("market-status-desc").textContent =
     level.desc + "（技術面自動指標，與每日健檢同一套計分；完整判斷含法人籌碼與基本面請見每日健檢）";
   bar.style.display = "block";
