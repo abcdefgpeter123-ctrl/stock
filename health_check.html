@@ -492,7 +492,10 @@ function renderScoreRows() {
   const container = document.getElementById('score-rows');
   container.innerHTML = INDICATORS.map(ind => {
     const auto = state.autoResults;
-    const isAuto = ind.auto && ind.id in auto;
+    // 判斷依據是「這項有沒有被自動算出來」，而不是靠指標定義上的 auto 旗標——
+    // 指標定義搬到 market_status.js 時沒有帶上 auto:true，
+    // 導致 ind.auto 全是 undefined，八項全被當成手動勾選。
+    const isAuto = ind.id in auto;
     const val = isAuto ? auto[ind.id] : (state.checks[ind.id] || false);
     const checkClass = isAuto
       ? (val ? 'score-check auto-yes' : 'score-check auto-no')
