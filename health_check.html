@@ -87,11 +87,14 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 /* ── STEP 2: Strategy ── */
 .market-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .mkt-tab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--border2);cursor:pointer;transition:all .15s;background:var(--bg3);color:var(--text3)}
-.mkt-tab.active-bull2,.mkt-tab:hover{border-color:var(--dn);color:var(--dn)}
-.mkt-tab.active-bull1{border-color:var(--teal);color:var(--teal)}
-.mkt-tab.active-side{border-color:var(--yellow);color:var(--yellow)}
-.mkt-tab.active-bear1{border-color:var(--orange);color:var(--orange)}
-.mkt-tab.active-bear2{border-color:var(--red);color:var(--red)}
+/* 與 market_status.js 的 LEVELS 配色一致：暖色＝多、冷色＝空。
+   原本這裡把大牛設成 --dn(綠)、大熊設成 --red(紅)，方向與等級標籤完全相反。 */
+.mkt-tab:hover{border-color:var(--text3);color:var(--text2)}
+.mkt-tab.active-bull2{border-color:#ef4444;color:#ef4444}
+.mkt-tab.active-bull1{border-color:#f87171;color:#f87171}
+.mkt-tab.active-side {border-color:#fbbf24;color:#fbbf24}
+.mkt-tab.active-bear1{border-color:#4ade80;color:#4ade80}
+.mkt-tab.active-bear2{border-color:#22c55e;color:#22c55e}
 
 .strategy-block{display:none}
 .strategy-block.active{display:block}

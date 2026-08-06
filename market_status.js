@@ -35,17 +35,20 @@ const MarketStatus = (() => {
 
   const MAX_SCORE = INDICATORS.reduce((a, i) => a + i.w, 0);   // = 10
 
+  // 配色依台股慣例：暖色＝多方、冷色＝空方，中間用琥珀當中性。
+  // 由多到空是一條連續的色溫漸層（深紅→淺紅→琥珀→淺綠→深綠），
+  // 光看顏色就能判斷方向，不必先讀懂「小牛／小熊」哪個是多。
   const LEVELS = [
     { min:8,   label:'大牛', emoji:'🐂', desc:'市場資金充沛，聚焦主流族群',
-      color:'#ef4444', strat:'bull2' },
+      color:'#ef4444', strat:'bull2' },   // 深紅
     { min:6,   label:'小牛', emoji:'🙂', desc:'開始輪動，找補漲股',
-      color:'#2dd4bf', strat:'bull1' },
+      color:'#f87171', strat:'bull1' },   // 淺紅（原為青色，與多方語意相反）
     { min:3.5, label:'橫盤', emoji:'😐', desc:'縮小範圍，保持耐心觀望',
-      color:'#fbbf24', strat:'side'  },
+      color:'#fbbf24', strat:'side'  },   // 琥珀（中性）
     { min:1.5, label:'小熊', emoji:'🙁', desc:'建立觀察名單，準備下一波',
-      color:'#fb923c', strat:'bear1' },
+      color:'#4ade80', strat:'bear1' },   // 淺綠（原為橘色，比橫盤還暖，方向會看反）
     { min:0,   label:'大熊', emoji:'🐻', desc:'多項指標翻空，幾乎不買，保留現金',
-      color:'#22c55e', strat:'bear2' },
+      color:'#22c55e', strat:'bear2' },   // 深綠
   ];
 
   const ma = (arr, n) => {
