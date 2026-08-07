@@ -245,6 +245,21 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   border:1px solid rgba(96,165,250,0.3);border-radius:4px;padding:1px 7px;flex-shrink:0}
 .tp-dim-desc{font-size:11px;color:var(--text3);line-height:1.5}
 .tp-revenue-note{font-size:10.5px;color:var(--text3);margin-top:4px;opacity:.75}
+
+/* ── 三種估價法 ── */
+.val-wrap{display:flex;flex-direction:column;gap:9px;flex:1}
+.val-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.val-name{font-size:11px;color:var(--text3);min-width:64px}
+.val-bar{position:relative;flex:1;min-width:150px;height:16px;border-radius:3px;
+  background:linear-gradient(90deg,rgba(74,222,128,.22) 0%,rgba(74,222,128,.22) 33%,
+    rgba(251,191,36,.22) 33%,rgba(251,191,36,.22) 66%,rgba(248,113,113,.22) 66%)}
+.val-tick{position:absolute;top:-3px;width:2px;height:22px;background:var(--text);
+  border-radius:1px;box-shadow:0 0 0 2px var(--bg2)}
+.val-nums{display:flex;justify-content:space-between;font-size:10px;
+  font-family:var(--mono);color:var(--text3);margin-top:2px}
+.val-rank{font-size:11px;font-family:var(--mono);min-width:56px;text-align:right}
+.val-note{font-size:10.5px;color:var(--text3);opacity:.8;line-height:1.6;margin-top:2px}
+.val-warn{color:var(--yellow);opacity:.9}
 .tp-fund-val{font-family:var(--mono);font-size:16px;font-weight:600}
 .tp-fund-avg{font-size:11px;color:#a8bacf;margin-left:8px}
 .tp-risk-item{font-size:12px;color:#e8edf5;padding-left:14px;position:relative;line-height:1.5;margin-bottom:2px}
@@ -1334,6 +1349,7 @@ let instStocks = {};    // 個股三大法人5日累計（data.json inst_stocks�
 let moversData      = {};   // 今日異動個股（±5%）說明
 let peRiverData     = {};   // PE 河流圖資料 {code: {dates, closes, ttm}}
 let analystTargets  = {};   // 分析師共識目標價 {code: {mean,high,low,count,rec,...}}
+let valuationData   = {};   // 三種估價法 {code: {price, pb, pe, yld}}
 let manualTargets   = [];   // 手動輸入券商目標 [{date,code,name,broker,rating,old,new}]
 let targetSortMode  = "upside";
 let expandedStock = null;
@@ -1619,6 +1635,43 @@ function renderDetail(code) {
             ${recLabel?`<span style="font-size:10px;color:${recColor};margin-left:6px">${recLabel}</span>`:""}
             ${mRow?`<div style="margin-top:4px">${mRow}</div>`:""}
           </span>
+        </div>`;
+      })()}
+      ${(()=>{
+        const v = valuationData[code];
+        if (!v) return "";
+        const px = (priceCache[code]||{}).price || v.price;
+        const METHODS = [["pb","股價淨值比"],["pe","本益比"],["yld","現金股利"]];
+        const rows = METHODS.filter(([k]) => v[k]).map(([k,label]) => {
+          const m = v[k];
+          // 把現價換算成 0–100 的相對位置：便宜價以下 0、昂貴價以上 100
+          const lo = m.cheap, hi = m.rich;
+          const posPct = hi > lo ? Math.max(0, Math.min(100, (px - lo) / (hi - lo) * 100)) : 50;
+          const rk = m.rank;
+          const rkColor = rk == null ? "var(--text3)" : rk >= 80 ? "#f87171" : rk >= 50 ? "#fbbf24" : "#4ade80";
+          return `<div>
+            <div class="val-row">
+              <span class="val-name">${label}</span>
+              <span class="val-bar"><span class="val-tick" style="left:calc(${posPct}% - 1px)"></span></span>
+              <span class="val-rank" style="color:${rkColor}">第${rk}百分位</span>
+            </div>
+            <div class="val-nums" style="padding-left:73px;padding-right:62px">
+              <span>便宜 ${m.cheap}</span><span>合理 ${m.fair}</span><span>昂貴 ${m.rich}</span>
+            </div>
+            ${m.wide ? `<div class="val-note val-warn" style="padding-left:73px">⚠️ 區間過寬（歷史配息波動大，可能含一次性股利），參考性低</div>` : ""}
+          </div>`;
+        }).join("");
+        if (!rows) return "";
+        return `<div class="tp-fund-block" style="align-items:flex-start;border-left:3px solid rgba(74,222,128,0.4);padding-left:8px">
+          <span class="tp-fund-lbl">估價</span>
+          <div class="val-wrap">
+            ${rows}
+            <div class="val-note">
+              以近 ${(v.days/250).toFixed(1)} 年的歷史估值分布計算：便宜=P20、合理=P50、昂貴=P80。
+              百分位為現價在歷史區間的位置，越高代表相對自己過去越貴。
+              <b>這是相對估值，不是目標價</b>——成長股重估或產業循環都會讓歷史區間失去參考性。
+            </div>
+          </div>
         </div>`;
       })()}
       ${(()=>{ const mv = moversData[code]; return mv ? `<div class="tp-fund-block" style="border-left:3px solid ${mv.changeP>=0?'var(--up)':'var(--dn)'};padding-left:8px"><span class="tp-fund-lbl">今日異動</span><span class="tp-fund-text" style="color:${mv.changeP>=0?'var(--up)':'var(--dn)'}">${mv.reason}</span></div>` : ""; })()}
@@ -3130,6 +3183,7 @@ async function loadData(){
     }
     if(data.movers)           moversData     = data.movers;
     if(data.pe_river)         peRiverData    = data.pe_river;
+    if(data.valuation){ valuationData = data.valuation; }
     if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); }
     // 大盤走勢分析一句話
     if(data.market_summary){

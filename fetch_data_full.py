@@ -329,6 +329,155 @@ def _get_yf_crumb():
     return None, None
 
 
+def fetch_valuation(codes, histories):
+    """
+    三種估價法（台股常見做法）：股價淨值比、本益比、現金股利。
+
+    作法是把「歷史上這檔股票被給過什麼估值」量化，而不是套用固定倍數：
+      1. 從年報取各年度每股淨值(BPS)與每股盈餘(EPS)，今年用最新 TTM 補上
+         （只用年報的話，最近一年的重估期間會整段被排除）
+      2. 用 5 年日收盤逐日算出當時的 PB / PE / 殖利率
+      3. 取 P20 / P50 / P80，乘上最新的 BPS/EPS/股利 得到便宜／合理／昂貴價
+
+    同時記錄「目前落在歷史第幾百分位」——這比三段標籤有資訊量：
+    大盤五年漲 2.5 倍，多數股票的三段標籤都會顯示偏貴，但百分位能分出
+    「剛進入昂貴區」與「創歷史最貴」。
+
+    回傳 {code: {price, pb:{...}, pe:{...}, yld:{...}}}，
+    資料不足或不適用（EPS 為負、無配息）的方法直接省略，不硬給數字。
+    """
+    import math
+    result = {}
+    today = datetime.date.today()
+    cur_year = str(today.year)
+    print(f"   💰 估價計算 {len(codes)} 支...")
+
+    def pct(sorted_arr, p):
+        if not sorted_arr:
+            return None
+        return sorted_arr[min(int(len(sorted_arr) * p), len(sorted_arr) - 1)]
+
+    def rank_of(sorted_arr, v):
+        """v 落在陣列的第幾百分位"""
+        if not sorted_arr:
+            return None
+        lo = sum(1 for x in sorted_arr if x < v)
+        return round(lo / len(sorted_arr) * 100)
+
+    for i, code in enumerate(codes):
+        h = histories.get(code)
+        labels = (h or {}).get("labels") or []
+        closes = (h or {}).get("closes") or []
+        if len(closes) < 250:
+            continue
+
+        for suffix in [".TW", ".TWO"]:
+            try:
+                t = yf.Ticker(f"{code}{suffix}")
+                info = t.info
+                shares = info.get("sharesOutstanding")
+                if not info or not shares:
+                    continue
+
+                # 年度 BPS / EPS
+                bps_y, eps_y = {}, {}
+                try:
+                    bs = t.balance_sheet
+                    if "Stockholders Equity" in bs.index:
+                        for col, v in bs.loc["Stockholders Equity"].items():
+                            if v == v:
+                                bps_y[str(col.date())[:4]] = v / shares
+                except Exception:
+                    pass
+                try:
+                    inc = t.income_stmt
+                    rows = [r for r in inc.index if str(r) == "Net Income"]
+                    if rows:
+                        for col, v in inc.loc[rows[0]].items():
+                            if v == v:
+                                eps_y[str(col.date())[:4]] = v / shares
+                except Exception:
+                    pass
+
+                cur_bps = info.get("bookValue")
+                cur_eps = info.get("trailingEps")
+                if cur_bps: bps_y.setdefault(cur_year, cur_bps)
+                if cur_eps: eps_y.setdefault(cur_year, cur_eps)
+
+                # 年度現金股利
+                div_y = {}
+                cur_div = 0.0
+                try:
+                    for ts, v in t.dividends.items():
+                        y = str(ts.date())[:4]
+                        div_y[y] = div_y.get(y, 0.0) + float(v)
+                        if (today - ts.date()).days <= 365:
+                            cur_div += float(v)
+                except Exception:
+                    pass
+
+                pb_hist, pe_hist, yld_hist = [], [], []
+                for dstr, px in zip(labels, closes):
+                    y = dstr[:4]
+                    if bps_y.get(y, 0) > 0: pb_hist.append(px / bps_y[y])
+                    if eps_y.get(y, 0) > 0: pe_hist.append(px / eps_y[y])
+                    if div_y.get(y, 0) > 0 and px > 0: yld_hist.append(div_y[y] / px * 100)
+
+                px_now = closes[-1]
+                entry = {"price": px_now, "days": len(closes)}
+
+                if pb_hist and cur_bps and cur_bps > 0:
+                    a = sorted(pb_hist)
+                    entry["pb"] = {
+                        "cheap": round(pct(a, .2) * cur_bps, 1),
+                        "fair":  round(pct(a, .5) * cur_bps, 1),
+                        "rich":  round(pct(a, .8) * cur_bps, 1),
+                        "cur":   round(px_now / cur_bps, 2),
+                        "rank":  rank_of(a, px_now / cur_bps),
+                        "n": len(a),
+                    }
+                if pe_hist and cur_eps and cur_eps > 0:
+                    a = sorted(pe_hist)
+                    entry["pe"] = {
+                        "cheap": round(pct(a, .2) * cur_eps, 1),
+                        "fair":  round(pct(a, .5) * cur_eps, 1),
+                        "rich":  round(pct(a, .8) * cur_eps, 1),
+                        "cur":   round(px_now / cur_eps, 2),
+                        "rank":  rank_of(a, px_now / cur_eps),
+                        "n": len(a),
+                    }
+                if yld_hist and cur_div > 0:
+                    a = sorted(yld_hist)
+                    cur_y = cur_div / px_now * 100
+                    # 殖利率越高越便宜，所以便宜價對應高殖利率
+                    entry["yld"] = {
+                        "cheap": round(cur_div / pct(a, .8) * 100, 1),
+                        "fair":  round(cur_div / pct(a, .5) * 100, 1),
+                        "rich":  round(cur_div / pct(a, .2) * 100, 1),
+                        "cur":   round(cur_y, 2),
+                        "div":   round(cur_div, 2),
+                        # 殖利率高＝便宜，百分位要反過來才與其他兩項同向
+                        "rank":  100 - (rank_of(a, cur_y) or 0),
+                        "n": len(a),
+                        # 一次性高股利會把區間拉得很誇張（例：長榮 5.5~32.8%），
+                        # 極差超過 4 倍就標記為參考性低
+                        "wide":  bool(pct(a, .8) and pct(a, .2) and pct(a, .8) / pct(a, .2) > 4),
+                    }
+
+                if len(entry) > 2:
+                    result[code] = entry
+                break
+            except Exception:
+                continue
+
+        if i % 20 == 19:
+            print(f"   進度 {i+1}/{len(codes)}...")
+        time.sleep(0.3)
+
+    print(f"   ✅ 估價完成 {len(result)} 支")
+    return result
+
+
 def fetch_analyst_targets(codes):
     """
     從 Yahoo Finance 批次抓分析師共識目標價 + 近 180 天券商評等異動。
@@ -2648,6 +2797,16 @@ def main():
     n_cov = sum(1 for v in merged.values() if v.get("mean"))
     print(f"   📊 目標價合計 {len(merged)} 檔，其中 {n_cov} 檔有分析師覆蓋")
     data["analyst_targets"] = merged
+
+    # 5g-2. 三種估價法（PB / PE / 現金股利）
+    print("💰 估價計算中...")
+    val_codes = sorted(set(FALLBACK_CODES) | {c for g in THEME_GROUPS.values()
+                                              for c in list(g["leaders"]) + list(g["members"])})
+    valuation = fetch_valuation(val_codes, histories)
+    if valuation:
+        data["valuation"] = valuation
+    else:
+        print(f"   ⚠️ 估價抓取失敗，保留前次資料（{len(data.get('valuation') or {})} 支）")
 
     # 5g. PE 河流圖資料（監控個股 2 年股價 + TTM EPS）
     print("📈 建立 PE 河流圖資料...")
