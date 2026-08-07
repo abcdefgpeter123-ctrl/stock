@@ -70,6 +70,14 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 
 /* ── 持股卡片（沿用大盤題材回顧的版型）── */
 .pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.pos-sec{margin-bottom:20px}
+.pos-sec:last-child{margin-bottom:0}
+.pos-sec-hd{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px;
+  padding-bottom:7px;border-bottom:1px solid var(--border)}
+.pos-sec-hd h3{font-size:13.5px;font-weight:600;color:var(--text2)}
+.pos-sec-hd .cnt{font-size:11.5px;color:var(--text3);font-family:var(--mono)}
+.pos-sec-hd .pl{font-size:12px;font-family:var(--mono);font-weight:600;margin-left:auto}
+.pos-sec-empty{font-size:12px;color:var(--text3);padding:10px 0;opacity:.7}
 .pos-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
   padding:12px 14px;cursor:pointer;transition:border-color .15s}
 .pos-card:hover{border-color:var(--border2)}
@@ -274,7 +282,7 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
 
 <!-- ── 目前持股 ── -->
 <div class="card">
-  <div class="card-hd"><h2>📊 目前持股</h2><span class="sub">點卡片展開，可看該股每一筆買賣與當初的理由</span></div>
+  <div class="card-hd"><h2>📊 持股與交易</h2><span class="sub">點卡片展開，可看該股每一筆買賣與當初的理由</span></div>
   <div class="card-bd" id="holdings-bd"></div>
 </div>
 
@@ -574,9 +582,13 @@ function renderGuest() {
     <div class="sum-box"><div class="sum-lbl">交易筆數</div>
       <div class="sum-val">${g.txCount ?? 0}</div><div class="sum-sub">${(g.positions||[]).length} 檔持股</div></div>`;
 
+  // 訪客摘要只含持有中的部位（已出清的沒有意義也不外洩），
+  // 標題一併對齊管理模式的「現有持股」
   const pos = g.positions || [];
   document.getElementById('holdings-bd').innerHTML = pos.length
-    ? `<div class="pos-grid">${pos.map(p => {
+    ? `<div class="pos-sec"><div class="pos-sec-hd">
+         <h3>現有持股</h3><span class="cnt">${pos.length} 檔</span>
+       </div><div class="pos-grid">${pos.map(p => {
         const c = cls(p.pct);
         const edge = p.pct == null || p.pct === 0 ? '' : (p.pct > 0 ? ' win' : ' lose');
         const arrow = p.pct == null ? '' : p.pct > 0 ? '↑' : p.pct < 0 ? '↓' : '→';
@@ -588,7 +600,7 @@ function renderGuest() {
           <div class="pos-sub">現價 ${pr != null ? fmt(pr,2) : '—'}</div>
           <div class="pos-pl">${mask}</div>
         </div>`;
-      }).join('')}</div>
+      }).join('')}</div></div>
       <div style="margin-top:12px;font-size:11.5px;color:var(--text3)">
         🔒 訪客模式僅顯示報酬率，股數與金額已加密。輸入管理密碼後可查看完整明細與買賣理由。
       </div>`
@@ -772,13 +784,49 @@ function renderHoldings() {
     return;
   }
 
-  // 持有中的排前面（依市值），已出清的排後面（依最後交易日）
+  // 現有持股與已出清分開放。兩者關心的事情不同——
+  // 持有中看未實現損益與該不該續抱，已出清是回顧當初判斷對不對，
+  // 混在同一個清單裡會互相干擾。
   const held   = all.filter(p => p.qty > 0)
     .sort((a,b) => (priceOf(b.code)||0)*b.qty - (priceOf(a.code)||0)*a.qty);
   const closed = all.filter(p => p.qty <= 0)
     .sort((a,b) => (b.txs.at(-1)?.date || '').localeCompare(a.txs.at(-1)?.date || ''));
 
-  bd.innerHTML = `<div class="pos-grid">${[...held, ...closed].map(posCard).join('')}</div>`;
+  const sg = v => v > 0 ? '+' : '';
+  const cls = v => v > 0 ? 'up' : v < 0 ? 'dn' : 'neu';
+
+  // 未實現損益（只算持有中、且有報價的）
+  let unreal = 0, mkt = null, unknown = 0;
+  held.forEach(p => {
+    const pr = priceOf(p.code);
+    if (pr == null) { unknown++; return; }
+    unreal += pr * p.qty - p.cost;
+    mkt = mkt || p.market;
+  });
+  // 已實現損益（含仍持有部位的已賣出部分）
+  const realized = all.reduce((a, p) => a + (p.realized || 0), 0);
+
+  const section = (title, list, hint, plLabel, plVal, emptyMsg) => `
+    <div class="pos-sec">
+      <div class="pos-sec-hd">
+        <h3>${title}</h3>
+        <span class="cnt">${list.length} 檔${hint ? ' · ' + hint : ''}</span>
+        ${plVal == null ? '' :
+          `<span class="pl ${cls(plVal)}">${plLabel} ${sg(plVal)}${fmt(plVal)}</span>`}
+      </div>
+      ${list.length
+        ? `<div class="pos-grid">${list.map(posCard).join('')}</div>`
+        : `<div class="pos-sec-empty">${emptyMsg}</div>`}
+    </div>`;
+
+  bd.innerHTML =
+    section('現有持股', held,
+            unknown ? `${unknown} 檔無報價` : '',
+            '未實現', held.length ? unreal : null,
+            '目前沒有持股，新增一筆買進紀錄後會出現在這裡') +
+    section('已出清', closed, '',
+            '已實現', all.some(p => p.realized) ? realized : null,
+            '還沒有完成買賣的個股');
 }
 
 /**
