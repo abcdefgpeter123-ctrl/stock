@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="market_status.js?v=2"></script>
+<script src="market_status.js?v=3"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -49,6 +49,10 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
 .trend-lvl{font-size:10px;display:block;font-weight:400;color:var(--text3);margin-top:1px}
 .trend-chg{font-size:9.5px;display:block;font-weight:400;margin-top:1px}
 .trend-streak{font-size:10px;color:var(--text3);margin-left:6px}
+.trend-tbl tr.trend-raw td{border-top:1px solid var(--border2);padding-top:8px;
+  font-family:var(--mono);font-size:11.5px;color:var(--text3)}
+.trend-tbl tr.trend-raw td:first-child{font-family:var(--font);color:var(--text3)}
+.trend-tbl tr.trend-score td{border-top:none;padding-top:3px}
 .inst5{display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:5px}
 .inst5-bar{flex:1;min-width:3px;border-radius:1px;opacity:.75}
 .inst5-sum{font-size:10.5px;font-family:var(--mono);color:var(--text3);margin-top:3px}
@@ -2343,12 +2347,16 @@ function renderTrend() {
     return `<tr><td>${ind.label}${tag}</td>${cells}</tr>`;
   }).join('');
 
-  const scoreRow = series.map(d =>
-    `<td>${d.score}<span class="trend-lvl">${d.level.label}</span></td>`).join('');
+  // 兩列並排：當日原始分（那天發生什麼）與 3 日均（系統實際判定）。
+  // 只列原始分會出現 橫盤→大牛 的跳級，與畫面上的分數對不起來。
+  const rawRow = series.map(d => `<td>${d.score}</td>`).join('');
+  const avgRow = series.map(d =>
+    `<td style="color:${d.avgLevel.color}">${d.avgScore}
+       <span class="trend-lvl">${d.avgLevel.label}</span></td>`).join('');
 
   document.getElementById('trend-tbl').innerHTML = `
     <thead><tr><th>指標</th>${head}</tr></thead>
-    <tbody>${body}<tr class="trend-score"><td>當日分數</td>${scoreRow}</tr></tbody>`;
+    <tbody>${body}<tr class="trend-raw"><td>當日分數</td>${rawRow}</tr><tr class="trend-score"><td>判定（3日均）</td>${avgRow}</tr></tbody>`;
 }
 
 // ── 均線切換 ──────────────────────────────────────────────

@@ -83,6 +83,10 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 .trend-lvl{font-size:10px;display:block;font-weight:400;color:var(--text3);margin-top:1px}
 .trend-chg{font-size:9.5px;display:block;font-weight:400;margin-top:1px}
 .trend-streak{font-size:10px;color:var(--text3);margin-left:6px}
+.trend-tbl tr.trend-raw td{border-top:1px solid var(--border2);padding-top:8px;
+  font-family:var(--mono);font-size:11.5px;color:var(--text3)}
+.trend-tbl tr.trend-raw td:first-child{font-family:var(--font);color:var(--text3)}
+.trend-tbl tr.trend-score td{border-top:none;padding-top:3px}
 
 /* ── STEP 2: Strategy ── */
 .market-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
@@ -416,7 +420,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
   </div>
 </div>
 
-<script src="market_status.js?v=2"></script>
+<script src="market_status.js?v=3"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  Constants & state
@@ -570,13 +574,18 @@ function renderTrend() {
     return `<tr><td>${ind.label}${tag}</td>${cells}</tr>`;
   }).join('');
 
-  const scoreRow = series.map(d =>
-    `<td>${d.score}<span class="trend-lvl">${d.level.label}</span></td>`).join('');
+  // 兩列並排：當日原始分（那天發生什麼）與 3 日均（系統實際判定）。
+  // 只列原始分會出現 橫盤→大牛 的跳級，與畫面上的分數對不起來。
+  const rawRow = series.map(d => `<td>${d.score}</td>`).join('');
+  const avgRow = series.map(d =>
+    `<td style="color:${d.avgLevel.color}">${d.avgScore}
+       <span class="trend-lvl">${d.avgLevel.label}</span></td>`).join('');
 
   document.getElementById('trend-tbl').innerHTML = `
     <thead><tr><th>指標</th>${head}</tr></thead>
     <tbody>${body}
-      <tr class="trend-score"><td>當日分數</td>${scoreRow}</tr>
+      <tr class="trend-raw"><td>當日分數</td>${rawRow}</tr>
+      <tr class="trend-score"><td>判定（3日均）</td>${avgRow}</tr>
     </tbody>`;
 }
 

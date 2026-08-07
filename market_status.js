@@ -209,10 +209,25 @@ const MarketStatus = (() => {
 
       const i = closes.length - 1 - k;
       const s = score(results);
+
+      // 同時算出「那一天的 3 日均」，也就是系統當天實際的判定。
+      // 只列當日原始分的話，表格會出現 橫盤→大牛 這種跳級，
+      // 與畫面上顯示的平滑分數對不起來，看起來像平滑沒生效。
+      const win = [];
+      for (let j = 0; j < SMOOTH_DAYS; j++) {
+        const r = (k + j === 0) ? results : computeIndicators(shift(input, k + j));
+        if (Object.keys(r).length >= 5) win.push(score(r));
+      }
+      const avg = win.length
+        ? Math.round(win.reduce((a, b) => a + b, 0) / win.length * 10) / 10
+        : s;
+
       out.push({
         date:  labels[i] || '',
         chgP:  (i > 0 && closes[i - 1]) ? (closes[i] / closes[i - 1] - 1) * 100 : null,
-        results, score: s, level: levelOf(s),
+        results,
+        score: s,          level: levelOf(s),      // 當日原始
+        avgScore: avg,     avgLevel: levelOf(avg), // 3 日平均＝實際判定
       });
     }
     return out;
