@@ -339,10 +339,13 @@ def fetch_analyst_targets(codes):
     cutoff = (datetime.date.today() - datetime.timedelta(days=180)).isoformat()
     print(f"   📊 抓取 {len(codes)} 支分析師目標價...")
     for i, code in enumerate(codes):
+        reached = False      # 有沒有成功查到這檔（用來區分「沒人追蹤」與「抓取失敗」）
         for suffix in [".TW", ".TWO"]:
             try:
                 t = yf.Ticker(f"{code}{suffix}")
                 info = t.info
+                if info:
+                    reached = True
                 mean = info.get("targetMeanPrice")
                 high = info.get("targetHighPrice")
                 low  = info.get("targetLowPrice")
@@ -383,10 +386,22 @@ def fetch_analyst_targets(codes):
                     break
             except Exception:
                 continue
+
+        # 查得到這檔、但沒有目標價 → 是「無分析師覆蓋」，不是抓取失敗。
+        # 兩者在前端的意義完全不同：前者是這檔冷門到沒人寫報告，
+        # 後者是資料該有卻沒抓到。不做區分的話畫面上都是一片空白。
+        if code not in result:
+            # reached=True  → Yahoo 有回應但沒有目標價，是真的沒人追蹤
+            # reached=False → 這次根本沒查到，狀態未知，交給呼叫端沿用舊值
+            result[code] = {
+                "covered": False if reached else None,
+                "checked": datetime.date.today().strftime("%Y/%m/%d"),
+            }
         if i % 20 == 19:
             print(f"   進度 {i+1}/{len(codes)}...")
         time.sleep(0.3)
-    print(f"   ✅ 取得 {len(result)} 支目標價")
+    n_cov = sum(1 for v in result.values() if v.get("mean"))
+    print(f"   ✅ 取得 {n_cov} 支目標價，{len(result)-n_cov} 支無分析師覆蓋")
     return result
 
 
@@ -2604,7 +2619,16 @@ def main():
     new_targets  = fetch_analyst_targets(target_codes)
     # 計算每支股票目標價變化（與前次比較）
     today_str = datetime.date.today().strftime("%Y/%m/%d")
+    merged = dict(prev_targets)          # 先保留舊資料，再逐筆覆蓋
     for code, t in new_targets.items():
+        # covered=None 代表這次查詢失敗（非「沒人追蹤」），沿用前次結果，
+        # 否則單次網路異常就會把整批目標價清成空白。
+        if t.get("covered") is None and not t.get("mean"):
+            continue
+        merged[code] = t
+        if not t.get("mean"):
+            continue                     # 無分析師覆蓋，不需要算變化與歷史
+
         prev = prev_targets.get(code, {})
         prev_mean = prev.get("mean")
         if prev_mean and t["mean"] != prev_mean and prev.get("updated") != today_str:
@@ -2620,7 +2644,10 @@ def main():
                 history.append({"date": today_str, "mean": t["mean"]})
             history = history[-30:]  # 只保留30天
         t["history"] = history
-    data["analyst_targets"] = new_targets
+
+    n_cov = sum(1 for v in merged.values() if v.get("mean"))
+    print(f"   📊 目標價合計 {len(merged)} 檔，其中 {n_cov} 檔有分析師覆蓋")
+    data["analyst_targets"] = merged
 
     # 5g. PE 河流圖資料（監控個股 2 年股價 + TTM EPS）
     print("📈 建立 PE 河流圖資料...")

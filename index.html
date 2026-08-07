@@ -453,6 +453,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <button class="tp-period" id="tsort-rec" onclick="setTargetSort('rec',this)">評等強弱</button>
       <button onclick="openAddTargetModal()" style="margin-left:auto;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.35);border-radius:6px;padding:5px 12px;color:#a78bfa;font-size:12px;cursor:pointer">＋ 手動輸入券商目標</button>
     </div>
+    <div id="targets-coverage-note" style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6"></div>
     <div id="analyst-targets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
 
     <!-- 手動輸入記錄 -->
@@ -1588,7 +1589,20 @@ function renderDetail(code) {
       ${(()=>{
         const at = analystTargets[code];
         const pr = (priceCache[code]||{}).price || 0;
-        if (!at || !at.mean) return "";
+        // 「沒人追蹤」與「資料沒抓到」原本都是一片空白，看起來像壞掉。
+        // covered === false 代表查得到這檔、但確實沒有分析師出報告——
+        // 這對冷門小型股是常態，明講比留白清楚。
+        if (!at || !at.mean) {
+          if (at && at.covered === false) {
+            return `<div class="tp-fund-block" style="border-left:3px solid rgba(148,163,184,0.35);padding-left:8px">
+              <span class="tp-fund-lbl">法人目標</span>
+              <span style="flex:1;font-size:11.5px;color:var(--text3)">
+                無分析師覆蓋<span style="opacity:.7">　冷門股常見，非資料缺漏</span>
+              </span>
+            </div>`;
+          }
+          return "";
+        }
         const upside = pr ? ((at.mean - pr) / pr * 100) : null;
         const upsideStr = upside != null ? `${upside>=0?"+":""}${upside.toFixed(1)}%` : "";
         const upsideColor = upside==null?"var(--text3)":upside>=10?"#4ade80":upside>=0?"#facc15":"#f87171";
@@ -2794,12 +2808,26 @@ function renderAnalystTargets() {
     cards.sort((a, b) => (a.at.rec_mean || 3) - (b.at.rec_mean || 3));
   }
 
-  // 只顯示有共識目標的
+  // 只顯示有共識目標的；沒被分析師追蹤的另外統計，
+  // 讓人知道那幾檔是本來就沒人寫報告，不是漏抓
+  const uncovered = [...allCodes].filter(c => {
+    const at = analystTargets[c];
+    return at && at.covered === false && !at.mean;
+  });
   cards = cards.filter(c => c.mean > 0);
 
   if (!cards.length) {
     grid.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:16px">Actions 跑完後自動填入（需等今日排程）</div>`;
     return;
+  }
+
+  const noteEl = document.getElementById("targets-coverage-note");
+  if (noteEl) {
+    noteEl.innerHTML = uncovered.length
+      ? `共 ${cards.length} 檔有分析師覆蓋；另有 ${uncovered.length} 檔無人追蹤（`
+        + uncovered.slice(0, 8).map(c => `${nameCache[c] || c}`).join("、")
+        + `${uncovered.length > 8 ? "…" : ""}），屬冷門股常態，非資料缺漏。`
+      : `共 ${cards.length} 檔有分析師覆蓋。`;
   }
 
   grid.innerHTML = cards.map(({ code, name, at, price, mean, upside, manuals }) => {
