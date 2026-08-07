@@ -591,6 +591,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="pills" id="theme-pills">
     <button class="pill active" data-theme="all">全部題材</button>
     <button class="pill" data-theme="半導體">半導體</button>
+    <button class="pill" data-theme="光通訊">光通訊</button>
     <button class="pill" data-theme="ABF載板">ABF載板</button>
     <button class="pill" data-theme="AI伺服器代工">AI伺服器代工</button>
     <button class="pill" data-theme="伺服器電源">伺服器電源</button>
@@ -736,6 +737,9 @@ const STOCKS=[
   // ── 化合物半導體 ──
   {code:"3105",name:"穩懋",theme:"化合物半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2455",name:"全新",theme:"化合物半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
+
+  {code:"3081",name:"聯亞",theme:"光通訊",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6442",name:"光聖",theme:"光通訊",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 半導體設備 ──
   {code:"2404",name:"漢唐",theme:"半導體設備",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3583",name:"辛耘",theme:"半導體設備",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
@@ -802,6 +806,7 @@ const THEME_DESCS = {
   "AI伺服器代工": "AI 訓練/推理伺服器整機組裝與板卡，受惠 NVIDIA GPU 出貨量成長，廣達、緯穎為 CSP 主力代工廠。這 8 檔日內走勢高度同步（相關性 0.6–0.76），差別在貝他大小而非方向",
   "伺服器電源":   "AI 機櫃功耗從 10kW 拉到 100kW+，電源與電力管理成為瓶頸。台達電、光寶科與代工廠的相關性僅 0.32–0.51，是獨立的供應鏈環節",
   "伺服器機構件": "伺服器滑軌、機殼等精密機構件。川湖為滑軌龍頭，與其他 AI 伺服器股相關性最低（0.34–0.54），走勢自成一格",
+  "光通訊":     "AI 資料中心內部頻寬需求爆發，800G/1.6T 光模組放量。聯亞(3081)做上游 InP/GaAs 磊晶與雷射晶粒，光聖(6442)做光纖連接與主動光纜，位於供應鏈兩端",
   "液冷散熱":    "AI 算力密集造成散熱瓶頸，液冷滲透率快速提升，奇鋐為冷板式液冷龍頭",
   "網通":        "AI 資料中心高速乙太網路交換器需求爆發，智邦為台灣最大網通設備廠",
   "面板":        "LCD/OLED 面板製造，受惠電視與 IT 需求回溫，群創為台灣第二大面板廠",
@@ -828,6 +833,7 @@ const THEME_PE = {
   "AI伺服器代工": "12–22x",
   "伺服器電源":   "18–30x",
   "伺服器機構件": "20–35x",
+  "光通訊":     "25–60x",
   "液冷散熱":    "15–30x",
   "網通":        "12–22x",
   "面板":        "6–14x",
