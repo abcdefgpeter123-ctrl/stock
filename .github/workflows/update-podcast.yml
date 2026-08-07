@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
@@ -56,6 +56,17 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Auto-update podcast summary $(date +'%Y-%m-%d %H:%M')"
-            git pull --no-rebase --no-edit
-            git push
+            # 這個 job 要跑好幾分鐘，期間若有人推送（或另一支 workflow 先完成），
+            # 遠端就會領先而讓 push 被拒。重試三次，每次先合併最新的遠端狀態。
+            # -X ours 只在「同一段內容衝突」時生效，衝突的必然是本次重新產生的
+            # 資料檔，保留本次結果才正確；沒被這支 workflow 動到的檔案不受影響。
+            for i in 1 2 3; do
+              if git push; then
+                echo "推送成功"
+                break
+              fi
+              echo "推送被拒（遠端已更新），合併後重試 $i/3"
+              git pull --no-rebase --no-edit -X ours || exit 1
+              sleep 3
+            done
           fi
