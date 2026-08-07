@@ -65,6 +65,32 @@ FALLBACK_CODES = [
 
 # ── 題材分組（用於機會點自動偵測）──────────────────────────
 # 以被動/主動型 ETF 持股為監控範圍
+# 觀察清單的中文名稱。
+# 這些個股的報價走 Yahoo Finance（TWSE 全市場資料只是補齊其餘個股），
+# 而 Yahoo 的 chart API 不回傳中文名，導致 prices[code]["name"] 是空的——
+# 大盤日評裡的個股就只剩代號，看不出是哪一檔。這份對照補上名稱。
+WATCH_NAMES = {
+    "1101":"台泥", "1301":"台塑", "2002":"中鋼", "2059":"川湖",
+    "2301":"光寶科", "2303":"聯電", "2308":"台達電", "2317":"鴻海",
+    "2324":"仁寶", "2327":"國巨", "2330":"台積電", "2344":"華邦電",
+    "2345":"智邦", "2356":"英業達", "2357":"華碩", "2376":"技嘉",
+    "2379":"瑞昱", "2382":"廣達", "2383":"台光電", "2404":"漢唐",
+    "2408":"南亞科", "2409":"友達", "2412":"中華電", "2449":"京元電",
+    "2454":"聯發科", "2455":"全新", "2472":"立隆電", "2492":"華新科",
+    "2603":"長榮", "2609":"陽明", "2610":"華航", "2618":"長榮航",
+    "2881":"富邦金", "2882":"國泰金", "2885":"元大金", "2891":"中信金",
+    "3008":"大立光", "3017":"奇鋐", "3034":"聯詠", "3037":"欣興",
+    "3105":"穩懋", "3231":"緯創", "3374":"精材", "3443":"創意",
+    "3481":"群創", "3484":"亞光", "3583":"辛耘", "3661":"世芯-KY",
+    "3711":"日月光投控", "4904":"遠傳", "4906":"正文", "5347":"世界先進",
+    "6182":"合晶科技", "6223":"旺矽", "6239":"力成", "6488":"環球晶",
+    "6505":"台塑化", "6669":"緯穎", "6789":"采鈺", "8996":"高力",
+    "AAPL":"蘋果", "AMD":"超微", "AMZN":"Amazon", "AVGO":"博通",
+    "GOOGL":"Alphabet", "META":"Meta", "MSFT":"微軟", "NFLX":"Netflix",
+    "NVDA":"NVIDIA", "ORCL":"Oracle", "TSLA":"特斯拉",
+}
+
+
 # leaders: 該題材先行啟動的龍頭股（用來判斷題材是否熱絡）
 # members: 同題材但尚未跟上的成員股（機會點候選）
 THEME_GROUPS = {
@@ -1256,13 +1282,16 @@ def generate_daily_commentary(twii, inst, all_prices, histories, api_key=None):
     for code in THEME_MAP:
         p = all_prices.get(code, {})
         c = p.get("changeP")
-        name = p.get("name", code)
         if c is None:
             continue
+        # 名稱優先，代號放後面——只寫代號認不出是哪一檔，
+        # 只寫名稱又不方便對照觀察清單。
+        nm = p.get("name") or WATCH_NAMES.get(code) or ""
+        label = f"{nm}({code})" if nm else code
         if c >= 5:
-            movers_up.append(f"{name}（{c:+.1f}%）")
+            movers_up.append(f"{label} {c:+.1f}%")
         elif c <= -5:
-            movers_dn.append(f"{name}（{c:+.1f}%）")
+            movers_dn.append(f"{label} {c:+.1f}%")
 
     # ── 組裝句子
     s1 = f"今日加權指數{trend_word} {chgP:+.2f}%，收 {price:,.0f} 點（{chg:+.0f}），{inst_lead}，{inst_tone}。"
@@ -1380,7 +1409,9 @@ def generate_weekly_summary(all_prices, histories, inst, twii):
         hist = histories.get(code, {})
         closes = hist.get("closes", [])
         w = pct(closes, 5)
-        name = p.get("name", code)
+        # 同日評：名稱優先、代號在後（Yahoo 抓的個股沒有 name，用內建對照補）
+        nm = p.get("name") or WATCH_NAMES.get(code) or ""
+        name = f"{nm}({code})" if nm else code
         if w is not None:
             weekly.append((code, name, w))
 
@@ -1963,6 +1994,7 @@ def fetch_yahoo(code):
             low_p  = round(lows[-1],   2) if lows   else round(meta.get("regularMarketDayLow", 0) or 0, 2)
             vol    = int(vols[-1])         if vols   else meta.get("regularMarketVolume", 0)
             return {
+                "name":    WATCH_NAMES.get(code, ""),   # Yahoo 不給中文名，用內建對照補
                 "price":   round(price, 2),
                 "change":  round(price - prev, 2),
                 "changeP": round((price - prev) / prev * 100, 2),
