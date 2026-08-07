@@ -1462,7 +1462,7 @@
     "industry": "金融業",
     "major_clients": "一般消費者、企業",
     "generated": "2026/05/22",
-    "pe": 15.1,
+    "pe": 15.2,
     "eps": 8.37,
     "quarterly_eps": [
       {
@@ -2026,7 +2026,7 @@
     "industry": "電子零組件業",
     "major_clients": "Dell、HP、雲端大廠",
     "generated": "2026/05/31",
-    "pe": 36.9,
+    "pe": 36.6,
     "eps": 6.74,
     "quarterly_eps": [
       {
@@ -2128,7 +2128,7 @@
       },
       {
         "y": "2025",
-        "eps": 103.23
+        "eps": 100.7
       }
     ]
   },
