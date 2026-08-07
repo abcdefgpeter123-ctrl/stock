@@ -518,6 +518,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <button class="tp-period" id="tsort-rec" onclick="setTargetSort('rec',this)">評等強弱</button>
       <button onclick="openAddTargetModal()" style="margin-left:auto;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.35);border-radius:6px;padding:5px 12px;color:#a78bfa;font-size:12px;cursor:pointer">＋ 手動輸入券商目標</button>
     </div>
+    <div id="local-targets-note" style="display:none;font-size:11px;color:#a78bfa;margin-bottom:6px"></div>
     <div id="targets-coverage-note" style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6"></div>
     <div id="analyst-targets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
 
@@ -1413,6 +1414,7 @@ let peRiverData     = {};   // PE 河流圖資料 {code: {dates, closes, ttm}}
 let analystTargets  = {};   // 分析師共識目標價 {code: {mean,high,low,count,rec,...}}
 let valuationData   = {};   // 三種估價法 {code: {price, pb, pe, yld}}
 let instHistory     = [];   // 三大法人逐日買賣超（data.json institutional_history）
+let localTargets    = {};   // 本機券商目標（targets_local.json，不在 repo 內，載不到就沒有）
 let manualTargets   = [];   // 手動輸入券商目標 [{date,code,name,broker,rating,old,new}]
 let targetSortMode  = "upside";
 let expandedStock = null;
@@ -3032,6 +3034,26 @@ const REC_COLOR = {
 
 const MANUAL_KEY = "manual_broker_targets";
 
+/**
+ * 本機專用的券商目標價（fetch_targets_local.py 產生）。
+ * 這份檔案刻意不進 git：來源網站的服務條款禁止散布，而本 repo 是 public。
+ * 因此線上版一定 404，靜靜略過即可——不是錯誤。
+ */
+async function loadLocalTargets() {
+  try {
+    const res = await fetch("targets_local.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return;
+    const j = await res.json();
+    localTargets = j.targets || {};
+    const note = document.getElementById("local-targets-note");
+    if (note && Object.keys(localTargets).length) {
+      note.style.display = "";
+      note.textContent = `🔒 本機券商目標：${Object.keys(localTargets).length} 檔（更新 ${j.generated_at || "—"}）· 僅這台電腦看得到`;
+    }
+    renderAnalystTargets();
+  } catch (e) { /* 沒有檔案是正常狀態 */ }
+}
+
 function loadManualTargets() {
   try { manualTargets = JSON.parse(localStorage.getItem(MANUAL_KEY) || "[]"); }
   catch(e) { manualTargets = []; }
@@ -3142,7 +3164,20 @@ function renderAnalystTargets() {
               <span style="color:${r.action==='upgrade'?'#4ade80':r.action==='downgrade'?'#f87171':'var(--text3)'}">${r.to || r.from || ''}</span>
             </div>`).join("")}
         </div>`
-      : `<div style="margin-top:6px;font-size:10px;color:var(--text3)">個別券商資料：Yahoo Finance 台股不提供，建議查 MoneydJ / CMoney</div>`;
+      : (localTargets[code] || []).length
+        ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.04em">🔒 近期券商目標（本機）</div>
+            ${[...localTargets[code]].reverse().slice(0, 3).map(t => {
+              const up = t.old != null && t.new != null ? t.new - t.old : null;
+              const col = up == null ? "var(--text2)" : up > 0 ? "#4ade80" : up < 0 ? "#f87171" : "var(--text2)";
+              return `<div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0">
+                <span style="color:var(--text3);font-family:var(--mono)">${t.date.slice(5)}</span>
+                <span style="color:${col};font-family:var(--mono)">${t.old != null ? t.old + "→" : ""}${t.new ?? "—"}</span>
+                <span style="color:var(--text3);margin-left:auto">${t.rec_to || t.dir || t.broker || ""}</span>
+              </div>`;
+            }).join("")}
+          </div>`
+        : `<div style="margin-top:6px;font-size:10px;color:var(--text3)">個別券商資料：Yahoo Finance 台股不提供，建議查 MoneydJ / CMoney</div>`;
     const manualsHtml = manuals.length
       ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">${
           manuals.slice(-3).reverse().map(m => `
@@ -3412,6 +3447,7 @@ async function loadData(){
     if(data.pe_river)         peRiverData    = data.pe_river;
     if(data.valuation){ valuationData = data.valuation; }
     if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); }
+    loadLocalTargets();   // 本機檔案，線上版沒有就自動略過
     // 大盤走勢分析一句話
     if(data.market_summary){
       renderMarketSummaryText(data.market_summary);
