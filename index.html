@@ -1518,6 +1518,7 @@ function renderDetail(code) {
   const peAvg  = si.pe_avg ?? null;
   const peGap = (pe != null && peAvg != null) ? pe - peAvg : null;
   const quarterlyEps = ci.quarterly_eps || [];
+  const annualEps    = ci.annual_eps    || [];
   // 主動型ETF 持倉
   const activeETFWeights = ETFS.filter(e => e.type === "國內主動式").map(etf => {
     const h = etf.holdings.find(h => h.code === code);
@@ -1687,6 +1688,32 @@ function renderDetail(code) {
           <span class="tp-fund-avg">元</span>
           ${epsEst ? '<span class="tp-stat-est" style="margin-left:4px">估算</span>' : ""}
         </span>` : ""}
+      </div>` : ""}
+      ${annualEps.length ? `<div class="tp-fund-block" style="align-items:flex-start">
+        <span class="tp-fund-lbl">年度 EPS</span>
+        <div style="flex:1">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            ${(()=>{
+              const mx = Math.max(...annualEps.map(a => Math.abs(a.eps)), 1);
+              return annualEps.map((a, i) => {
+                const prev = i > 0 ? annualEps[i-1].eps : null;
+                const yoy = (prev && prev !== 0) ? (a.eps - prev) / Math.abs(prev) * 100 : null;
+                const c = a.eps >= 0 ? "var(--up)" : "var(--dn)";
+                const h = Math.max(4, Math.abs(a.eps) / mx * 34);   // 迷你長條，看得出趨勢
+                return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:52px">
+                  <span style="font-family:var(--mono);font-size:12px;font-weight:600;color:${c}">${a.eps.toFixed(2)}</span>
+                  <span style="width:26px;height:${h}px;background:${c};opacity:.35;border-radius:2px"></span>
+                  <span style="font-size:9px;color:var(--text3);letter-spacing:.04em">${a.y}</span>
+                  ${yoy != null ? `<span style="font-size:9px;font-family:var(--mono);color:${yoy>=0?'var(--up)':'var(--dn)'}">${yoy>=0?'+':''}${yoy.toFixed(0)}%</span>` : '<span style="font-size:9px">&nbsp;</span>'}
+                </div>`;
+              }).join("");
+            })()}
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:5px;opacity:.8">
+            年度數字下方為年增率。免費資料源（Yahoo 年報）目前最多提供 4 個完整年度，
+            此欄位每日累積更新，年數會隨時間增加。
+          </div>
+        </div>
       </div>` : ""}
       ${quarterlyEps.length ? `<div class="tp-fund-block" style="align-items:flex-start">
         <span class="tp-fund-lbl">季 EPS</span>

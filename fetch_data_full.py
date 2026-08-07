@@ -622,11 +622,23 @@ def fetch_quarterly_eps(code, n_quarters=8):
                 if df is None or df.empty:
                     continue
                 eps_row = next((r for r in df.index if "Diluted EPS" in str(r)), None)
-                if eps_row is None:
+                # Yahoo 的 Diluted EPS 常有整季 NaN（台積電 2025Q3、2024Q4 都是），
+                # 這時用「稅後淨利 ÷ 流通股數」補算，否則季度會出現空洞。
+                ni_row = next((r for r in df.index if str(r) == "Net Income"), None)
+                shares = None
+                try:
+                    shares = t.info.get("sharesOutstanding")
+                except Exception:
+                    pass
+                if eps_row is None and not (ni_row is not None and shares):
                     continue
                 out = []
                 for col in list(df.columns):  # 全部欄位都看，再過濾
-                    val = df.loc[eps_row, col]
+                    val = df.loc[eps_row, col] if eps_row is not None else None
+                    if val is None or (isinstance(val, float) and math.isnan(val)):
+                        if ni_row is not None and shares:
+                            ni = df.loc[ni_row, col]
+                            val = (ni / shares) if (ni == ni and ni is not None) else None
                     if val is not None and not (isinstance(val, float) and math.isnan(val)):
                         if hasattr(col, "strftime"):
                             date_str = col.strftime("%Y-%m-%d")
@@ -679,6 +691,62 @@ def fetch_quarterly_eps(code, n_quarters=8):
         except Exception:
             continue
     return []
+
+
+def fetch_annual_eps(code, n_years=6):
+    """
+    近 n_years 年的年度 EPS。Yahoo 年報實際只給 4 個有效年度
+    （2021 那欄多半是 NaN），免費來源也找不到更長的台股 EPS 歷史
+    （MOPS 舊 ajax 端點已失效，TWSE openapi 的 EPS 表只有最新一季快照）。
+    因此改用「每次抓到就併入既有資料」的方式累積：跑越久年數越完整，
+    也不會因為某天 Yahoo 少給一年就把已有的歷史洗掉。
+
+    回傳 [{"y":"2025","eps":66.25}, ...]，舊→新。
+    """
+    import math
+    if not _YF_AVAILABLE:
+        return []
+    for suffix in [".TW", ".TWO"]:
+        try:
+            t = yf.Ticker(f"{code}{suffix}")
+            df = t.income_stmt
+            if df is None or df.empty:
+                continue
+            eps_row = next((r for r in df.index if "Diluted EPS" in str(r)), None)
+            ni_row  = next((r for r in df.index if str(r) == "Net Income"), None)
+            shares  = None
+            try:
+                shares = t.info.get("sharesOutstanding")
+            except Exception:
+                pass
+            out = []
+            for col in df.columns:
+                val = df.loc[eps_row, col] if eps_row is not None else None
+                if val is None or (isinstance(val, float) and math.isnan(val)):
+                    if ni_row is not None and shares:
+                        ni = df.loc[ni_row, col]
+                        val = (ni / shares) if (ni == ni and ni is not None) else None
+                if val is None or (isinstance(val, float) and math.isnan(val)):
+                    continue
+                year = col.strftime("%Y") if hasattr(col, "strftime") else str(col)[:4]
+                out.append({"y": year, "eps": round(float(val), 2)})
+            if out:
+                return sorted(out, key=lambda x: x["y"])[-n_years:]
+        except Exception:
+            continue
+    return []
+
+
+def merge_eps_history(old_list, new_list, key, n_keep):
+    """
+    以 key（年或季）為準合併新舊 EPS，新值覆蓋同期舊值，其餘保留。
+    Yahoo 的視窗會滑動，直接覆蓋會讓早期資料一去不回。
+    """
+    merged = {x[key]: x for x in (old_list or []) if x.get(key)}
+    for x in (new_list or []):
+        if x.get(key):
+            merged[x[key]] = x
+    return sorted(merged.values(), key=lambda x: x[key])[-n_keep:]
 
 
 def build_pe_river(code, quarterly_eps):
@@ -763,10 +831,19 @@ def update_company_info(all_prices, company_info, api_key=None, max_new=50):
         if pe_data:
             entry = company_info.setdefault(code, {"generated": today_str})
             entry.update(pe_data)
+        # 季／年 EPS 一律用合併寫入：Yahoo 的視窗會往前滑動，
+        # 直接覆蓋的話早期季度會一天天消失，年數也永遠停在 4 年。
         qeps = fetch_quarterly_eps(code, n_quarters=12)
         if qeps:
             entry = company_info.setdefault(code, {"generated": today_str})
-            entry["quarterly_eps"] = qeps
+            entry["quarterly_eps"] = merge_eps_history(
+                entry.get("quarterly_eps"), qeps, "q", 24)
+
+        aeps = fetch_annual_eps(code)
+        if aeps:
+            entry = company_info.setdefault(code, {"generated": today_str})
+            entry["annual_eps"] = merge_eps_history(
+                entry.get("annual_eps"), aeps, "y", 10)
         time.sleep(0.3)
 
     return company_info
