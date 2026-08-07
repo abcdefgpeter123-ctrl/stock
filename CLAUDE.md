@@ -217,6 +217,30 @@ if (data.etf_holdings) {
 
 ---
 
+## 本機專用：券商目標價（不進版控）
+
+Yahoo Finance 只給 mean/median/high/low，**沒有個別券商目標價與日期**，
+所以 H/L 落差常常上百 %（含好幾季前沒更新的舊目標）。
+`fetch_targets_local.py` 從鉅亨網外資評等表補上帶日期的個別目標價。
+
+```bash
+python3 fetch_targets_local.py
+# 或在 Finder 點兩下「更新券商目標價.command」
+```
+
+- 輸出 `targets_local.json`，**已列入 .gitignore**
+- `index.html` 的 `loadLocalTargets()` 會嘗試載入，404 就靜靜略過（線上版必然如此，不是錯誤）
+- 每次執行會與舊檔合併（日期＋券商＋新目標價 去重），累積歷史
+- 每檔保留最近 8 筆，卡片顯示 3 筆
+
+⚠️ **絕對不要放進 GitHub Actions 或 run_and_push.sh。**
+來源網站服務條款禁止未經書面授權的「重製、公開傳播、散布」，
+本 repo 是 public 且以 GitHub Pages 對外提供，把資料 commit 進去就是條款明文禁止的行為。
+原始資料源是 FactSet，鉅亨自身也只是被授權方，無法轉授權。
+robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散布」是可接受的用法。
+
+---
+
 ## 其他工具
 
 **xbar 選單列 plugin**：`~/Documents/Claude/Projects/股票投資/taiwan-stocks.15m.py`
