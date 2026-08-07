@@ -1611,15 +1611,17 @@ def fetch_institutional():
         ad  = d.strftime("%Y%m%d")                            # 20260519
         roc = f"{d.year-1911}{d.month:02d}{d.day:02d}"       # 1150519
 
+        # 順序有講究：舊端點 /fund/BFI82U 不管 date 傳什麼都回「最新一天」，
+        # 放前面的話往前找歷史會永遠拿到同一天。rwd 端點才會照 dayDate 回應。
         endpoints = [
-            # 1. TWSE 開放資料（設計給境外，最穩）
-            f"https://openapi.twse.com.tw/v1/fund/BFI82U?date={ad}",
-            # 2. TWSE 舊端點 — 西元
-            f"https://www.twse.com.tw/fund/BFI82U?response=json&date={ad}&selectType=day",
-            # 3. TWSE 新端點 — 民國
-            f"https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&dayDate={roc}&type=day",
-            # 4. TWSE 新端點 — 西元（舊腳本用法，做保底）
+            # 1. TWSE 新端點 — 西元（會正確依日期回應）
             f"https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&dayDate={ad}&type=day",
+            # 2. TWSE 新端點 — 民國
+            f"https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&dayDate={roc}&type=day",
+            # 3. TWSE 開放資料（境外友善，但無法指定日期）
+            f"https://openapi.twse.com.tw/v1/fund/BFI82U?date={ad}",
+            # 4. 舊端點保底（只會回最新一天，僅在前面全失敗時使用）
+            f"https://www.twse.com.tw/fund/BFI82U?response=json&date={ad}&selectType=day",
         ]
 
         for url in endpoints:
@@ -2637,6 +2639,16 @@ def main():
     # 2. 三大法人
     inst = fetch_institutional()
     if inst:
+        # 三大法人近 N 日走勢：單日金額看不出是連續買超還是曇花一現。
+        # 以日期為 key 累積，重跑同一天會覆蓋而非重複累加。
+        ih = {x["date"]: x for x in (data.get("institutional_history") or []) if x.get("date")}
+        ih[inst["date"]] = {
+            "date":    inst["date"],
+            "foreign": inst["foreign"],
+            "trust":   inst["trust"],
+            "dealer":  inst["dealer"],
+        }
+        data["institutional_history"] = sorted(ih.values(), key=lambda x: x["date"])[-60:]
         # 買賣超佔當日成交值的比重——只看金額看不出份量，
         # 同樣 +676 億在爆量日與清淡日的意義完全不同。
         turnover = fetch_market_turnover()

@@ -25,6 +25,10 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:13px;color:var(--text2)}
 .err-bar{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);padding:10px 16px;font-size:13px;color:var(--dn);margin-bottom:16px;display:none}
+.inst5{display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:5px}
+.inst5-bar{flex:1;min-width:3px;border-radius:1px;opacity:.75}
+.inst5-sum{font-size:10.5px;font-family:var(--mono);color:var(--text3);margin-top:3px}
+.inst5-sum b{font-weight:600}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:24px}
 .metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
 .metric .lbl{font-size:14px;color:#cbd5e1;margin-bottom:6px;letter-spacing:.03em;font-weight:500}
@@ -331,11 +335,18 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 
   <div class="err-bar" id="err-bar"></div>
 
+  <!-- 每日大盤日評 -->
+  <div id="market-summary-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-left:3px solid var(--blue);border-radius:8px">
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:6px">📝 <span id="market-summary-date">今日</span>大盤日評</div>
+    <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
+  </div>
+
+
   <div class="metrics">
     <div class="metric"><div class="lbl">加權指數</div><div class="val" id="m-twii">—</div><div class="chg" id="m-twii-chg">—</div></div>
-    <div class="metric"><div class="lbl">外資 <span id="inst-date-lbl" style="color:var(--text3)">—</span></div><div class="val" id="m-foreign">—</div><div class="chg" id="m-foreign-chg">—</div></div>
-    <div class="metric"><div class="lbl">投信</div><div class="val" id="m-trust">—</div><div class="chg" id="m-trust-chg">—</div></div>
-    <div class="metric"><div class="lbl">自營商</div><div class="val" id="m-dealer">—</div><div class="chg" id="m-dealer-chg">—</div></div>
+    <div class="metric"><div class="lbl">外資 <span id="inst-date-lbl" style="color:var(--text3)">—</span></div><div class="val" id="m-foreign">—</div><div class="chg" id="m-foreign-chg">—</div><div class="inst5" id="m-foreign-spark"></div><div class="inst5-sum" id="m-foreign-5d"></div></div>
+    <div class="metric"><div class="lbl">投信</div><div class="val" id="m-trust">—</div><div class="chg" id="m-trust-chg">—</div><div class="inst5" id="m-trust-spark"></div><div class="inst5-sum" id="m-trust-5d"></div></div>
+    <div class="metric"><div class="lbl">自營商</div><div class="val" id="m-dealer">—</div><div class="chg" id="m-dealer-chg">—</div><div class="inst5" id="m-dealer-spark"></div><div class="inst5-sum" id="m-dealer-5d"></div></div>
     <div class="metric vix-tooltip">
       <div class="lbl">融資餘額 ⓘ</div>
       <div class="val" id="m-margin">—</div>
@@ -389,12 +400,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </div>
     <canvas id="twii-price-canvas" height="130" style="width:100%!important;display:block"></canvas>
     <canvas id="twii-vol-canvas"   height="38"  style="width:100%!important;display:block;border-top:1px solid rgba(255,255,255,0.04)"></canvas>
-  </div>
-
-  <!-- 每日大盤日評 -->
-  <div id="market-summary-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-left:3px solid var(--blue);border-radius:8px">
-    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:6px">📝 <span id="market-summary-date">今日</span>大盤日評</div>
-    <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
   </div>
 
   <!-- 現在市場狀態（牛熊燈號） -->
@@ -1350,6 +1355,7 @@ let moversData      = {};   // 今日異動個股（±5%）說明
 let peRiverData     = {};   // PE 河流圖資料 {code: {dates, closes, ttm}}
 let analystTargets  = {};   // 分析師共識目標價 {code: {mean,high,low,count,rec,...}}
 let valuationData   = {};   // 三種估價法 {code: {price, pb, pe, yld}}
+let instHistory     = [];   // 三大法人逐日買賣超（data.json institutional_history）
 let manualTargets   = [];   // 手動輸入券商目標 [{date,code,name,broker,rating,old,new}]
 let targetSortMode  = "upside";
 let expandedStock = null;
@@ -2551,6 +2557,37 @@ function sigBadge(s){
   return badges.join(" ");
 }
 
+/**
+ * 三大法人近 5 日：迷你柱狀圖 + 合計。
+ * 單日金額看不出是「連續買超」還是「今天剛好買一下」——
+ * 例如外資今日僅 +20 億看似平淡，但近 5 日合計 +1350 億是明顯的資金流入。
+ */
+function renderInst5(hist) {
+  if (!hist || hist.length < 2) return;
+  const last5 = hist.slice(-5);
+  const fmtY = v => (v >= 0 ? "+" : "") + Math.round(v / 1e8).toLocaleString();
+
+  [["m-foreign","foreign"], ["m-trust","trust"], ["m-dealer","dealer"]].forEach(([id, key]) => {
+    const vals = last5.map(d => d[key] || 0);
+    const maxAbs = Math.max(...vals.map(Math.abs), 1);
+    const spark = document.getElementById(id + "-spark");
+    const sum   = document.getElementById(id + "-5d");
+    if (spark) {
+      spark.innerHTML = vals.map((v, i) => {
+        const h = Math.max(2, Math.abs(v) / maxAbs * 16);
+        const c = v >= 0 ? "var(--up)" : "var(--dn)";
+        const d = (last5[i].date || "").slice(5);
+        return `<span class="inst5-bar" title="${d} ${fmtY(v)}億"
+                 style="height:${h}px;background:${c}"></span>`;
+      }).join("");
+    }
+    if (sum) {
+      const t = vals.reduce((a, b) => a + b, 0);
+      sum.innerHTML = `近5日 <b class="${t >= 0 ? 'up' : 'dn'}">${fmtY(t)}億</b>`;
+    }
+  });
+}
+
 function updateMetrics(){
   if(twiiData.price){
     document.getElementById("m-twii").textContent = twiiData.price.toLocaleString("zh-TW", {minimumFractionDigits:2});
@@ -2647,6 +2684,9 @@ function setInstMetrics(data){
     ? `　成交值 ${Math.round(data.turnover/1e8).toLocaleString()}億`
     : "";
   if (dateEl && data.date) dateEl.textContent = data.date + turnoverTxt;
+
+  // 近 5 日走勢：單日金額看不出是連續買超還是曇花一現
+  renderInst5(instHistory);
 
   [
     ["m-foreign", "m-foreign-chg", data.foreign, data.foreignPct],
@@ -3148,6 +3188,8 @@ async function loadData(){
       twiiData = data.twii;
       updateMetrics();
     }
+    // 近5日柱狀要用到，必須早於 setInstMetrics 賦值
+    if(data.institutional_history){ instHistory = data.institutional_history; }
     if(data.institutional){
       setInstMetrics(data.institutional);
     }
