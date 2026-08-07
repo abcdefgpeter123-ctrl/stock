@@ -227,6 +227,8 @@ def fetch_analyst_targets(codes):
             t = yf.Ticker(code)
             info = t.info
             mean = info.get("targetMeanPrice")
+            # 平均易被離群值拉走，中位數才代表多數分析師的共識
+            median = info.get("targetMedianPrice")
             high = info.get("targetHighPrice")
             low  = info.get("targetLowPrice")
             cnt  = info.get("numberOfAnalystOpinions")
@@ -234,7 +236,8 @@ def fetch_analyst_targets(codes):
             rec_m = info.get("recommendationMean")
             if mean and not (isinstance(mean, float) and math.isnan(mean)):
                 entry = {
-                    "mean":  round(float(mean), 2),
+                    "mean":   round(float(mean), 2),
+                    "median": round(float(median), 2) if median else None,
                     "high":  round(float(high), 2) if high else None,
                     "low":   round(float(low),  2) if low  else None,
                     "count": int(cnt) if cnt else 0,

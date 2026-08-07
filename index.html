@@ -1028,7 +1028,7 @@ function renderTargetUpsideOpps() {
     if (!at.mean) return;
     const p = priceCache[code];
     if (!p || !p.price) return;
-    const upside = (at.mean - p.price) / p.price * 100;
+    const upside = ((at.median || at.mean) - p.price) / p.price * 100;   // 中位數優先
     if (upside <= 0) return;                            // 上漲空間需為正
 
     const name = nameCache[code] || code;
@@ -1079,7 +1079,7 @@ function computeOppSets() {
     if (!at.mean) return;
     const p = priceCache[code];
     if (!p || !p.price) return;
-    const upside = (at.mean - p.price) / p.price * 100;
+    const upside = ((at.median || at.mean) - p.price) / p.price * 100;   // 中位數優先
     if (upside <= 0) return;
     B.set(code, { code, name: nameCache[code] || code, upside });
   });
@@ -1662,19 +1662,27 @@ function renderDetail(code) {
           }
           return "";
         }
-        const upside = pr ? ((at.mean - pr) / pr * 100) : null;
+        // 以中位數為準：平均容易被離群值拉走
+        //（實測聯電高低價差 6.7 倍、智邦中位數比平均高 12.6%）
+        const tgt = at.median || at.mean;
+        const upside = pr ? ((tgt - pr) / pr * 100) : null;
         const upsideStr = upside != null ? `${upside>=0?"+":""}${upside.toFixed(1)}%` : "";
         const upsideColor = upside==null?"var(--text3)":upside>=10?"#4ade80":upside>=0?"#facc15":"#f87171";
         const recLabel = REC_LABEL[at.rec] || at.rec || "";
         const recColor = REC_COLOR[at.rec] || "var(--text3)";
         const changeTag = at.mean_change ? `<span style="color:${at.mean_change>0?"#4ade80":"#f87171"};margin-left:4px">${at.mean_change>0?"+":""}${at.mean_change}</span>` : "";
+        // 高低差距越大代表分析師越沒共識，目標價參考性越低
+        const spread = (at.high && at.low) ? at.high / at.low : null;
+        const spreadTag = spread && spread >= 3
+          ? `<span style="font-size:10px;color:var(--yellow);margin-left:6px"
+                   title="最高 ${at.high} / 最低 ${at.low}，分析師分歧大">⚠️ 分歧大</span>` : "";
         const manuals4code = manualTargets.filter(t=>t.code===code).slice(-2).reverse();
         const mRow = manuals4code.map(m=>`<span style="font-size:10px;color:var(--text3)">${m.date.slice(5)} ${m.broker} ${m.old_target}→${m.new_target}</span>`).join("　");
         return `<div class="tp-fund-block" style="border-left:3px solid rgba(96,165,250,0.5);padding-left:8px">
           <span class="tp-fund-lbl">法人目標</span>
           <span style="flex:1">
             <span style="font-family:var(--mono);font-weight:600;color:${upsideColor}">${upsideStr}</span>
-            <span style="font-size:11px;color:var(--text3);margin-left:6px">均價 ${at.mean.toFixed(0)}${changeTag}　${at.count?at.count+"位分析師":""}</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:6px">中位 ${tgt.toFixed(0)}${changeTag}　${at.count?at.count+"位分析師":""}${at.high&&at.low?`　區間 ${at.low.toFixed(0)}–${at.high.toFixed(0)}`:""}</span>${spreadTag}
             ${recLabel?`<span style="font-size:10px;color:${recColor};margin-left:6px">${recLabel}</span>`:""}
             ${mRow?`<div style="margin-top:4px">${mRow}</div>`:""}
           </span>
@@ -3000,7 +3008,7 @@ function renderAnalystTargets() {
     const at   = analystTargets[code] || {};
     const price = (priceCache[code] || {}).price || 0;
     const name  = (priceCache[code] || {}).name || nameCache[code] || code;
-    const mean  = at.mean || 0;
+    const mean  = at.median || at.mean || 0;   // 中位數優先
     const upside = mean && price ? ((mean - price) / price * 100) : null;
     const manuals = manualTargets.filter(t => t.code === code);
     cards.push({ code, name, at, price, mean, upside, manuals });

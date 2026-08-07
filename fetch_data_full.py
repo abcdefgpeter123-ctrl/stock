@@ -522,6 +522,10 @@ def fetch_analyst_targets(codes):
                 if info:
                     reached = True
                 mean = info.get("targetMeanPrice")
+                # 平均易被離群值拉走——實測聯電的高低價差達 6.7 倍
+                # （低 38.3 / 高 258），智邦的中位數比平均高 12.6%。
+                # 中位數才代表「多數分析師的共識」，以此為主。
+                median = info.get("targetMedianPrice")
                 high = info.get("targetHighPrice")
                 low  = info.get("targetLowPrice")
                 cnt  = info.get("numberOfAnalystOpinions")
@@ -529,7 +533,8 @@ def fetch_analyst_targets(codes):
                 rec_m= info.get("recommendationMean")
                 if mean and not (isinstance(mean, float) and math.isnan(mean)):
                     entry = {
-                        "mean":  round(float(mean), 1),
+                        "mean":   round(float(mean), 1),
+                        "median": round(float(median), 1) if median else None,
                         "high":  round(float(high), 1) if high else None,
                         "low":   round(float(low),  1) if low  else None,
                         "count": int(cnt) if cnt else 0,
