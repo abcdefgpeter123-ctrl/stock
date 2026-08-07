@@ -27,7 +27,7 @@ const MarketStatus = (() => {
   const MARKETS = {
     TW: { index:'加權指數', bellwether:'台積電（2330）', bellwetherCode:'2330',
           group:'AI 族群',
-          groupHint:'AI伺服器代工成分股平均站上20MA（廣達、緯創、緯穎等 8 檔）' },
+          groupHint:'AI伺服器 ODM ＋ 兼營廠平均站上20MA（廣達、緯創、緯穎等 8 檔）' },
     US: { index:'S&P 500', bellwether:'輝達（NVDA）', bellwetherCode:'NVDA',
           group:'AI 半導體族群',
           groupHint:'AI半導體成分股平均站上20MA（輝達、博通、超微、美光、Arista）' },

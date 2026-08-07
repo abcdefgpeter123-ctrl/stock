@@ -387,7 +387,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 
 
   <div class="metrics">
-    <div class="metric"><div class="lbl">加權指數</div><div class="val" id="m-twii">—</div><div class="chg" id="m-twii-chg">—</div></div>
+    <div class="metric"><div class="lbl">加權指數</div><div class="val" id="m-twii">—</div><div class="chg" id="m-twii-chg">—</div><div class="inst5" id="m-twii-spark"></div><div class="inst5-sum" id="m-twii-5d"></div></div>
     <div class="metric"><div class="lbl">外資 <span id="inst-date-lbl" style="color:var(--text3)">—</span></div><div class="val" id="m-foreign">—</div><div class="chg" id="m-foreign-chg">—</div><div class="inst5" id="m-foreign-spark"></div><div class="inst5-sum" id="m-foreign-5d"></div></div>
     <div class="metric"><div class="lbl">投信</div><div class="val" id="m-trust">—</div><div class="chg" id="m-trust-chg">—</div><div class="inst5" id="m-trust-spark"></div><div class="inst5-sum" id="m-trust-5d"></div></div>
     <div class="metric"><div class="lbl">自營商</div><div class="val" id="m-dealer">—</div><div class="chg" id="m-dealer-chg">—</div><div class="inst5" id="m-dealer-spark"></div><div class="inst5-sum" id="m-dealer-5d"></div></div>
@@ -395,6 +395,8 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <div class="lbl">融資餘額 ⓘ</div>
       <div class="val" id="m-margin">—</div>
       <div class="chg" id="m-margin-chg">—</div>
+      <div class="inst5" id="m-margin-spark"></div>
+      <div class="inst5-sum" id="m-margin-5d"></div>
       <div class="vix-tip">
         <div class="vix-tip-title">融資有沒有洗乾淨？</div>
         融資餘額是全市場「借錢買股票」的總量。判斷方式：把「融資降幅」除以「指數跌幅」算出比值，比值越高代表籌碼出清越徹底。<br><br>
@@ -423,7 +425,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
         <span style="color:var(--text3)">資料來源：Yahoo Finance（USDTWD=X）</span>
       </div>
     </div>
-    <div class="metric"><div class="lbl">資料來源</div><div class="val" id="m-source" style="font-size:14px">data.json</div><div class="chg neu">每日更新</div></div>
   </div>
 
 
@@ -601,7 +602,9 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <button class="pill" data-theme="半導體">半導體</button>
     <button class="pill" data-theme="光通訊">光通訊</button>
     <button class="pill" data-theme="ABF載板">ABF載板</button>
-    <button class="pill" data-theme="AI伺服器代工">AI伺服器代工</button>
+    <button class="pill" data-theme="AI伺服器">AI伺服器</button>
+    <button class="pill" data-theme="AI伺服器ODM">└ AI伺服器ODM</button>
+    <button class="pill" data-theme="伺服器兼營廠">└ 伺服器兼營廠</button>
     <button class="pill" data-theme="伺服器電源">伺服器電源</button>
     <button class="pill" data-theme="伺服器機構件">伺服器機構件</button>
     <button class="pill" data-theme="液冷散熱">液冷散熱</button>
@@ -755,15 +758,15 @@ const STOCKS=[
   {code:"2383",name:"台光電",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"3037",name:"欣興",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── AI伺服器 ──
-  {code:"2382",name:"廣達",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6669",name:"緯穎",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2356",name:"英業達",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2376",name:"技嘉",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3231",name:"緯創",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2357",name:"華碩",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2324",name:"仁寶",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2382",name:"廣達",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"6669",name:"緯穎",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2356",name:"英業達",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2376",name:"技嘉",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"3231",name:"緯創",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2357",name:"華碩",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2324",name:"仁寶",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2308",name:"台達電",theme:"伺服器電源",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2317",name:"鴻海",theme:"AI伺服器代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
+  {code:"2317",name:"鴻海",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2301",name:"光寶科",theme:"伺服器電源",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   {code:"2059",name:"川湖",theme:"伺服器機構件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
   // ── 液冷散熱 ──
@@ -811,7 +814,9 @@ const THEME_DESCS = {
   "化合物半導體":"GaAs/GaN 功率元件，應用於 5G PA 與電力轉換，穩懋為台灣最大砷化鎵代工",
   "半導體設備":  "半導體廠房機電工程，台積電、三星擴廠帶動設備與氣體系統需求",
   "ABF載板":     "台光電(2383)：生產ABF載板所需的銅箔基板(CCL)，屬上游材料廠，受惠於載板需求但波動相對小。欣興(3037)：直接生產ABF載板，屬下游製造廠，受AI伺服器拉動明顯，漲跌幅通常大於上游",
-  "AI伺服器代工": "AI 訓練/推理伺服器整機組裝與板卡，受惠 NVIDIA GPU 出貨量成長，廣達、緯穎為 CSP 主力代工廠。這 8 檔日內走勢高度同步（相關性 0.6–0.76），差別在貝他大小而非方向",
+  "AI伺服器ODM":  "以 CSP（雲端服務商）白牌 AI 伺服器訂單為主體的 ODM 大廠：廣達、緯穎、緯創、鴻海。營收動能直接綁 NVIDIA GPU 出貨節奏，是題材的第一線"
+,
+  "伺服器兼營廠": "本業在 PC／主機板／消費電子，伺服器是第二成長曲線：英業達、技嘉、華碩、仁寶。四檔組內相關 0.67，與 ODM 組僅 0.60，通常比 ODM 慢一步反應",
   "伺服器電源":   "AI 機櫃功耗從 10kW 拉到 100kW+，電源與電力管理成為瓶頸。台達電、光寶科與代工廠的相關性僅 0.32–0.51，是獨立的供應鏈環節",
   "伺服器機構件": "伺服器滑軌、機殼等精密機構件。川湖為滑軌龍頭，與其他 AI 伺服器股相關性最低（0.34–0.54），走勢自成一格",
   "光通訊":     "AI 資料中心內部頻寬需求爆發，800G/1.6T 光模組放量。聯亞(3081)做上游 InP/GaAs 磊晶與雷射晶粒，光聖(6442)做光纖連接與主動光纜，位於供應鏈兩端",
@@ -838,7 +843,8 @@ const THEME_PE = {
   "化合物半導體":"15–25x",
   "半導體設備":  "15–28x",
   "ABF載板":     "10–20x",
-  "AI伺服器代工": "12–22x",
+  "AI伺服器ODM":  "12–22x",
+  "伺服器兼營廠": "10–18x",
   "伺服器電源":   "18–30x",
   "伺服器機構件": "20–35x",
   "光通訊":     "25–60x",
@@ -860,6 +866,7 @@ const THEME_PE = {
 const THEME_PARENT = {
   "晶圓代工": "半導體", "IC設計": "半導體", "半導體封測": "半導體",
   "記憶體": "半導體", "矽晶圓": "半導體", "化合物半導體": "半導體", "半導體設備": "半導體",
+  "AI伺服器ODM": "AI伺服器", "伺服器兼營廠": "AI伺服器",
 };
 
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
@@ -2265,7 +2272,7 @@ function renderMarketStatus() {
     idxCloses: twiiHistoryData.closes,
     histories,
     prices: priceCache,
-    groupCodes: STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
+    groupCodes: STOCKS.filter(s => ['AI伺服器ODM','伺服器兼營廠'].includes(s.theme) && !s._extra).map(s => s.code),
     watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
   });
   marketStatusEval = ev;
@@ -2341,7 +2348,7 @@ function renderTrend() {
     idxLabels: twiiHistoryData.labels,
     histories,
     prices: priceCache,
-    groupCodes: STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
+    groupCodes: STOCKS.filter(s => ['AI伺服器ODM','伺服器兼營廠'].includes(s.theme) && !s._extra).map(s => s.code),
     watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
   }, 5);
   if (series.length < 2) { wrap.style.display = 'none'; return; }
@@ -2700,6 +2707,35 @@ function renderInst5(hist) {
   });
 }
 
+/**
+ * 通用「近5日增減」迷你柱狀圖。加權指數與融資餘額給的是「餘額／點數」，
+ * 直接畫水位看不出方向，所以先轉成日增減再畫，才跟三大法人同一種讀法。
+ * vals 為 6 個以上的水位值，dates 對齊，回傳畫最後 5 天的變化量。
+ */
+function renderDeltaSpark(id, levels, dates, fmtOne, fmtSum, upIsRed = true) {
+  const spark = document.getElementById(id + "-spark");
+  const sum   = document.getElementById(id + "-5d");
+  if (!spark || !levels || levels.length < 2) return;
+  const n = Math.min(5, levels.length - 1);
+  const deltas = [], ds = [];
+  for (let i = levels.length - n; i < levels.length; i++) {
+    deltas.push(levels[i] - levels[i - 1]);
+    ds.push((dates?.[i] || "").slice(5));
+  }
+  const maxAbs = Math.max(...deltas.map(Math.abs), 1e-9);
+  spark.innerHTML = deltas.map((v, i) => {
+    const h = Math.max(2, Math.abs(v) / maxAbs * 16);
+    const pos = upIsRed ? v >= 0 : v < 0;
+    return `<span class="inst5-bar" title="${ds[i]} ${fmtOne(v)}"
+             style="height:${h}px;background:${pos ? 'var(--up)' : 'var(--dn)'}"></span>`;
+  }).join("");
+  if (sum) {
+    const t = deltas.reduce((a, b) => a + b, 0);
+    const pos = upIsRed ? t >= 0 : t < 0;
+    sum.innerHTML = `近${n}日 <b class="${pos ? 'up' : 'dn'}">${fmtSum(t)}</b>`;
+  }
+}
+
 function updateMetrics(){
   if(twiiData.price){
     document.getElementById("m-twii").textContent = twiiData.price.toLocaleString("zh-TW", {minimumFractionDigits:2});
@@ -2720,6 +2756,17 @@ function updateMargin(margin, twiiChgP){
   el.textContent = wan.toFixed(1) + "萬張";
   const sign = margin.change_pct >= 0 ? "+" : "";
   chgEl.innerHTML = `<span class="${margin.change_pct>=0?'up':'dn'}">${sign}${margin.change_pct.toFixed(2)}%</span>`;
+
+  // 近 5 日增減：融資是「借錢買股票」的水位，看單日增減才知道籌碼在進還是在退。
+  // history 含非交易日的重複值，先用加權指數的交易日清單過濾。
+  if (Array.isArray(margin.history) && margin.history.length > 1) {
+    const tradeDays = new Set(twiiHistoryData?.labels || []);
+    const hist = tradeDays.size
+      ? margin.history.filter(h => tradeDays.has(h.date))
+      : margin.history;
+    const fmt = v => (v >= 0 ? "+" : "") + (v / 10000).toFixed(1) + "萬張";
+    renderDeltaSpark("m-margin", hist.map(h => h.balance), hist.map(h => h.date), fmt, fmt);
+  }
 
   // 洗盤判斷：融資降幅 ÷ 指數跌幅 = 比值，比值越高代表籌碼出清越徹底
   // 0–25% 幾乎沒洗／25–50% 開始洗／50–75% 洗得不錯／75%+ 極端恐慌式出清
@@ -2790,12 +2837,6 @@ function setInstMetrics(data){
   };
   const dateEl = document.getElementById("inst-date-lbl");
   if(dateEl && data.date) dateEl.textContent = data.date;
-  // 買賣超佔當日成交值的比重：只看金額看不出份量，
-  // 同樣 +676 億在爆量日與清淡日的意義完全不同。
-  const turnoverTxt = data.turnover
-    ? `　成交值 ${Math.round(data.turnover/1e8).toLocaleString()}億`
-    : "";
-  if (dateEl && data.date) dateEl.textContent = data.date + turnoverTxt;
 
   // 近 5 日走勢：單日金額看不出是連續買超還是曇花一現
   renderInst5(instHistory);
@@ -3305,6 +3346,8 @@ async function loadData(){
     if(data.institutional){
       setInstMetrics(data.institutional);
     }
+    // 先接上大盤歷史，updateMargin 需要交易日清單來過濾融資 history 的重複值
+    if(data.twii_history) twiiHistoryData = data.twii_history;
     if(data.margin) updateMargin(data.margin, data.twii?.chgP);
     if(data.usdtwd) updateUsdTwd(data.usdtwd);
     if(data.prices){
@@ -3358,6 +3401,9 @@ async function loadData(){
     // 大盤走勢線圖
     if(data.twii_history){
       twiiHistoryData = data.twii_history;
+      renderDeltaSpark("m-twii", data.twii_history.closes, data.twii_history.labels,
+        v => (v >= 0 ? "+" : "") + v.toFixed(0) + "點",
+        v => (v >= 0 ? "+" : "") + v.toFixed(0) + "點");
       document.getElementById('twii-chart-wrap').style.display = 'block';
       setTimeout(() => renderTwiiChart(_twiiPeriod), 80);
       renderMarketStatus();
