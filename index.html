@@ -53,7 +53,8 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
   border:1px solid transparent;font-weight:600}
 .trend-streak.s-new{color:var(--text3);border-color:var(--border2)}
 .trend-streak.s-mid{color:var(--yellow);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
-.trend-streak.s-firm{color:var(--dn);border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1)}
+/* 站穩用藍色而非綠色：台股綠＝跌，綠底容易被誤讀成負面 */
+.trend-streak.s-firm{color:var(--blue);border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.12)}
 .trend-tbl tr.trend-raw td{border-top:1px solid var(--border2);padding-top:8px;
   font-family:var(--mono);font-size:11.5px;color:var(--text3)}
 .trend-tbl tr.trend-raw td:first-child{font-family:var(--font);color:var(--text3)}
@@ -378,7 +379,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div class="trend-wrap" id="trend-wrap" style="display:none">
       <div class="trend-hd">📅 近一週逐日變化
         <span class="trend-sub">連續成立才算轉變，單日成立多半是雜訊</span>
-        <span class="trend-sub"><span class="trend-streak s-new">連2日</span> 剛翻正 · <span class="trend-streak s-mid">連3日</span> 成形 · <span class="trend-streak s-firm">連5日</span> 站穩</span>
+        <span class="trend-sub"><span class="trend-streak s-new">連2日</span> 剛翻正 · <span class="trend-streak s-mid">連3日</span> 成形 · <span class="trend-streak s-firm">連5日 👍</span> 站穩</span>
       </div>
       <div class="trend-scroll"><table class="trend-tbl" id="trend-tbl"></table></div>
     </div>
@@ -2365,7 +2366,7 @@ function renderTrend() {
       if (series[i].results[ind.id]) streak++; else break;
     }
     const sc  = streak >= series.length ? 's-firm' : streak >= 3 ? 's-mid' : 's-new';
-    const tag = streak >= 2 ? `<span class="trend-streak ${sc}">連${streak}日</span>` : '';
+    const tag = streak >= 2 ? `<span class="trend-streak ${sc}">連${streak}日${sc === 's-firm' ? ' 👍' : ''}</span>` : '';
     return `<tr><td>${ind.label}${tag}</td>${cells}</tr>`;
   }).join('');
 
