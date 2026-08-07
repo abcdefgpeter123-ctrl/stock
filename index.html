@@ -25,6 +25,30 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:13px;color:var(--text2)}
 .err-bar{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);padding:10px 16px;font-size:13px;color:var(--dn);margin-bottom:16px;display:none}
+/* ── 近一週逐日指標 ── */
+.trend-wrap{margin-top:13px;padding-top:11px;border-top:1px solid rgba(96,165,250,0.18)}
+.trend-hd{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:9px;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.trend-sub{font-size:11px;color:var(--text3);font-weight:400}
+.trend-scroll{overflow-x:auto}
+.trend-tbl{border-collapse:collapse;font-size:11.5px;width:100%;min-width:430px}
+.trend-tbl th,.trend-tbl td{padding:5px 6px;text-align:center;white-space:nowrap}
+.trend-tbl th:first-child,.trend-tbl td:first-child{text-align:left;padding-left:0;
+  min-width:160px;color:var(--text2);font-weight:400}
+.trend-tbl thead th{color:var(--text3);font-weight:500;font-family:var(--mono);
+  border-bottom:1px solid var(--border2);font-size:10.5px;line-height:1.5}
+.trend-tbl tbody tr:not(:last-child) td{border-bottom:1px solid rgba(255,255,255,0.04)}
+.trend-cell{font-size:11px}
+/* ✓/✕ 是「指標成立與否」，用通用的綠對紅，
+   與等級的暖色＝多／冷色＝空是不同語意，不要混用 */
+.trend-y{color:#22c55e}
+.trend-n{color:#ef4444;opacity:.55}
+.trend-tbl tr.trend-score td{border-top:1px solid var(--border2);padding-top:8px;
+  font-family:var(--mono);font-weight:600;font-size:12px}
+.trend-tbl tr.trend-score td:first-child{font-family:var(--font);font-weight:600;color:var(--text2)}
+.trend-lvl{font-size:10px;display:block;font-weight:400;color:var(--text3);margin-top:1px}
+.trend-chg{font-size:9.5px;display:block;font-weight:400;margin-top:1px}
+.trend-streak{font-size:10px;color:var(--text3);margin-left:6px}
 .inst5{display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:5px}
 .inst5-bar{flex:1;min-width:3px;border-radius:1px;opacity:.75}
 .inst5-sum{font-size:10.5px;font-family:var(--mono);color:var(--text3);margin-top:3px}
@@ -339,6 +363,14 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div id="market-summary-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-left:3px solid var(--blue);border-radius:8px">
     <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:6px">📝 <span id="market-summary-date">今日</span>大盤日評</div>
     <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
+
+    <!-- 近一週逐日指標：看轉變有沒有持續（與美股頁、每日健檢同一份呈現） -->
+    <div class="trend-wrap" id="trend-wrap" style="display:none">
+      <div class="trend-hd">📅 近一週逐日變化
+        <span class="trend-sub">連續成立才算轉變，單日成立多半是雜訊</span>
+      </div>
+      <div class="trend-scroll"><table class="trend-tbl" id="trend-tbl"></table></div>
+    </div>
   </div>
 
 
@@ -2268,6 +2300,55 @@ function renderMarketSummaryText(text) {
     const bar = document.getElementById("market-status-bar");
     if (bar) bar.style.display = "none";
   }
+  renderTrend();   // 逐日表接在日評下方一起呈現
+}
+
+// 近一週逐日指標：只看今天的勾勾分不出「剛翻正」與「站穩多日」。
+// 與美股頁、每日健檢共用 MarketStatus.evaluateSeries()，三頁呈現一致。
+function renderTrend() {
+  const wrap = document.getElementById('trend-wrap');
+  if (!wrap || !twiiHistoryData?.closes?.length) return;
+
+  const series = MarketStatus.evaluateSeries({
+    market: 'TW',
+    idxCloses: twiiHistoryData.closes,
+    idxLabels: twiiHistoryData.labels,
+    histories,
+    prices: priceCache,
+    groupCodes: STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
+    watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
+  }, 5);
+  if (series.length < 2) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const md = d => (d || '').slice(5);
+  const head = series.map(d => {
+    const c = d.chgP;
+    const cls = c == null ? '' : c > 0 ? 'up' : c < 0 ? 'dn' : '';
+    return `<th>${md(d.date)}<span class="trend-chg ${cls}">${
+      c == null ? '' : (c > 0 ? '+' : '') + c.toFixed(1) + '%'}</span></th>`;
+  }).join('');
+
+  const body = MarketStatus.indicatorsFor('TW').map(ind => {
+    const cells = series.map(d => {
+      const v = d.results[ind.id];
+      return v == null ? '<td class="trend-cell" style="opacity:.3">·</td>'
+        : `<td class="trend-cell ${v ? 'trend-y' : 'trend-n'}">${v ? '✓' : '✕'}</td>`;
+    }).join('');
+    let streak = 0;
+    for (let i = series.length - 1; i >= 0; i--) {
+      if (series[i].results[ind.id]) streak++; else break;
+    }
+    const tag = streak >= 2 ? `<span class="trend-streak">連${streak}日</span>` : '';
+    return `<tr><td>${ind.label}${tag}</td>${cells}</tr>`;
+  }).join('');
+
+  const scoreRow = series.map(d =>
+    `<td>${d.score}<span class="trend-lvl">${d.level.label}</span></td>`).join('');
+
+  document.getElementById('trend-tbl').innerHTML = `
+    <thead><tr><th>指標</th>${head}</tr></thead>
+    <tbody>${body}<tr class="trend-score"><td>當日分數</td>${scoreRow}</tr></tbody>`;
 }
 
 // ── 均線切換 ──────────────────────────────────────────────
