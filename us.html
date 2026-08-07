@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="market_status.js?v=2"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -716,53 +717,38 @@ function _maOf(closes, n) {
   return slice.reduce((a, b) => a + b, 0) / n;
 }
 
-// ── 現在市場狀態（牛熊燈號，6 項自動指標） ──────────────────
-const MARKET_STATUS_LEVELS = [
-  { min:5, label:'大牛', emoji:'🐂', desc:'市場資金充沛，聚焦主流族群，可積極布局', color:'var(--up)' },
-  { min:4, label:'小牛', emoji:'🐮', desc:'開始輪動，找補漲股，逢拉回可分批進場', color:'#2dd4bf' },
-  { min:2, label:'橫盤', emoji:'😐', desc:'方向不明，縮小操作範圍，保持耐心觀望', color:'#facc15' },
-  { min:1, label:'小熊', emoji:'🐻', desc:'訊號偏弱，建立觀察名單，準備下一波', color:'#fb923c' },
-  { min:0, label:'大熊', emoji:'🐻‍❄️', desc:'多項指標翻空，幾乎不買，保留現金', color:'var(--dn)' },
-];
+// ── 現在市場狀態 ─────────────────────────────────────────
+// 與台股共用 market_status.js 的同一套指標、權重與 3 日平滑，
+// 只是把大盤換成 S&P 500、龍頭換成輝達、族群換成 AI 半導體。
+// （原本這裡是自寫的等權 6 項 + 均線排列，與台股標準不同步，
+//   而且有同樣的「單日大漲跳級」問題。）
+let marketStatusEval = null;
 
 function renderMarketStatus() {
   const bar = document.getElementById("market-status-bar");
   if (!bar) return;
-  const sp = marketHistoryData.sp500;
-  if (!sp || !sp.closes || sp.closes.length < 120) return;
+  const sp = marketHistoryData?.sp500;
+  if (!sp?.closes || sp.closes.length < 70) return;
 
-  const closes = sp.closes;
-  const last   = closes[closes.length - 1];
-  const ma5v   = _maOf(closes, 5);
-  const ma20v  = _maOf(closes, 20);
-  const ma60v  = _maOf(closes, 60);
-  const ma120v = _maOf(closes, 120);
-
-  const checks = [
-    { pass: ma5v  != null && last > ma5v },
-    { pass: ma20v != null && last > ma20v },
-    { pass: ma60v != null && last > ma60v },
-    { pass: ma20v != null && ma60v  != null && ma20v > ma60v },
-    { pass: ma60v != null && ma120v != null && ma60v > ma120v },
-  ];
-
-  const nvdaCloses = histories['NVDA']?.closes;
-  if (nvdaCloses && nvdaCloses.length >= 20) {
-    const nvdaLast = nvdaCloses[nvdaCloses.length - 1];
-    const nvdaMa20 = _maOf(nvdaCloses, 20);
-    checks.push({ pass: nvdaMa20 != null && nvdaLast > nvdaMa20 });
-  }
-
-  const score = checks.filter(c => c.pass).length;
-  const max   = checks.length;
-  const level = MARKET_STATUS_LEVELS.find(l => score >= Math.round(l.min * max / 6)) || MARKET_STATUS_LEVELS.at(-1);
+  const ev = MarketStatus.evaluate({
+    market: 'US',
+    idxCloses: sp.closes,
+    histories,
+    prices: priceCache,
+    groupCodes: STOCKS.filter(s => s.theme === 'AI半導體').map(s => s.code),
+    watchCodes: STOCKS.map(s => s.code),
+  });
+  marketStatusEval = ev;
+  const { score, rawScore, max, level } = ev;
 
   document.getElementById("market-status-emoji").textContent = level.emoji;
   const labelEl = document.getElementById("market-status-label");
   labelEl.textContent = level.label;
   labelEl.style.color = level.color;
-  document.getElementById("market-status-score").textContent = `${score} / ${max} 項指標翻多`;
-  document.getElementById("market-status-desc").textContent = level.desc + "（以 S&P500 均線排列＋輝達(NVDA)站上20MA 判斷，僅供參考）";
+  document.getElementById("market-status-score").textContent =
+    `${score} / ${max} 分` + (rawScore !== score ? `（3日均，今日 ${rawScore}）` : "（3日均）");
+  document.getElementById("market-status-desc").textContent =
+    level.desc + "（技術面自動指標，與台股同一套計分：S&P500 均線位置與方向、輝達、AI 半導體族群、觀察名單漲跌家數）";
   bar.style.display = "block";
 }
 

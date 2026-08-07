@@ -22,17 +22,33 @@
  */
 const MarketStatus = (() => {
 
-  const INDICATORS = [
-    { id:'twii_20ma', label:'加權指數站上 20MA',      w:2,   pts:'+2',   hint:'中期趨勢核心' },
-    { id:'twii_60ma', label:'加權指數站上 60MA',      w:2,   pts:'+2',   hint:'中期趨勢核心' },
-    { id:'ma20_up',   label:'20MA 方向向上',          w:1.5, pts:'+1.5', hint:'20MA 高於 5 個交易日前（取代原本的多頭排列，排列反應太慢）' },
-    { id:'ma60_up',   label:'60MA 方向向上',          w:1.5, pts:'+1.5', hint:'60MA 高於 10 個交易日前' },
-    { id:'tsmc_20ma', label:'台積電（2330）站上 20MA', w:1,   pts:'+1' },
-    { id:'ai_20ma',   label:'AI 族群站上 20MA',       w:1,   pts:'+1',   hint:'AI伺服器代工成分股平均站上20MA（廣達、緯創、緯穎等 8 檔）' },
-    { id:'twii_5ma',  label:'加權指數站上 5MA',       w:0.5, pts:'+0.5', hint:'短期動能，權重低（單日大漲就會翻正）' },
-    { id:'advance',   label:'觀察名單上漲家數 > 下跌家數', w:0.5, pts:'+0.5', hint:'短期動能，權重低（只反映當天）' },
-  ];
+  // 台股與美股用同一套指標與權重，只有名稱與對應標的不同。
+  // 兩邊各寫一份的話一定會走鐘——首頁與健檢就發生過，不再重蹈。
+  const MARKETS = {
+    TW: { index:'加權指數', bellwether:'台積電（2330）', bellwetherCode:'2330',
+          group:'AI 族群',
+          groupHint:'AI伺服器代工成分股平均站上20MA（廣達、緯創、緯穎等 8 檔）' },
+    US: { index:'S&P 500', bellwether:'輝達（NVDA）', bellwetherCode:'NVDA',
+          group:'AI 半導體族群',
+          groupHint:'AI半導體成分股平均站上20MA（輝達、博通、超微、美光、Arista）' },
+  };
 
+  /** 產生某個市場的指標定義（id 與權重共用，只換文字） */
+  function indicatorsFor(market = 'TW') {
+    const m = MARKETS[market] || MARKETS.TW;
+    return [
+      { id:'idx_20ma',  label:`${m.index}站上 20MA`, w:2,   pts:'+2',   hint:'中期趨勢核心' },
+      { id:'idx_60ma',  label:`${m.index}站上 60MA`, w:2,   pts:'+2',   hint:'中期趨勢核心' },
+      { id:'ma20_up',   label:'20MA 方向向上',        w:1.5, pts:'+1.5', hint:'20MA 高於 5 個交易日前（取代原本的多頭排列，排列反應太慢）' },
+      { id:'ma60_up',   label:'60MA 方向向上',        w:1.5, pts:'+1.5', hint:'60MA 高於 10 個交易日前' },
+      { id:'lead_20ma', label:`${m.bellwether}站上 20MA`, w:1, pts:'+1' },
+      { id:'grp_20ma',  label:`${m.group}站上 20MA`,  w:1,   pts:'+1',   hint:m.groupHint },
+      { id:'idx_5ma',   label:`${m.index}站上 5MA`,   w:0.5, pts:'+0.5', hint:'短期動能，權重低（單日大漲就會翻正）' },
+      { id:'advance',   label:'觀察名單上漲家數 > 下跌家數', w:0.5, pts:'+0.5', hint:'短期動能，權重低（只反映當天）' },
+    ];
+  }
+
+  const INDICATORS = indicatorsFor('TW');   // 預設台股，向後相容
   const MAX_SCORE = INDICATORS.reduce((a, i) => a + i.w, 0);   // = 10
 
   // 配色依台股慣例：暖色＝多方、冷色＝空方，中間用琥珀當中性。
@@ -60,41 +76,46 @@ const MarketStatus = (() => {
    * 計算各項指標。回傳 { id: true/false }，資料不足的項目不會出現在物件裡
    * （而不是給 false，避免把「不知道」當成「翻空」）。
    *
-   * @param {number[]} twiiCloses  加權指數收盤序列
+   * @param {number[]} idxCloses   大盤指數收盤序列（台股加權／美股 S&P500）
    * @param {object}   histories   code → { closes }
    * @param {object}   prices      code → { changeP }
-   * @param {string[]} aiCodes     AI伺服器代工題材的股票代號
+   * @param {string}   market      'TW' | 'US'，決定龍頭股是誰
+   * @param {string[]} groupCodes  代表性族群的股票代號
    * @param {string[]} watchCodes  觀察清單全部代號（算漲跌家數用）
    */
-  function computeIndicators({ twiiCloses, histories = {}, prices = {},
-                               aiCodes = [], watchCodes = [] }) {
+  function computeIndicators({ idxCloses, twiiCloses, histories = {}, prices = {},
+                               market = 'TW', groupCodes, aiCodes,
+                               watchCodes = [] }) {
     const auto = {};
+    const closes = idxCloses || twiiCloses;          // twiiCloses 為舊名，保留相容
+    const group  = groupCodes || aiCodes || [];
+    const leadCode = (MARKETS[market] || MARKETS.TW).bellwetherCode;
 
-    if (twiiCloses && twiiCloses.length >= 70) {
-      const c = twiiCloses;
+    if (closes && closes.length >= 70) {
+      const c = closes;
       const last = c[c.length - 1];
-      auto.twii_5ma  = last > ma(c, 5);
-      auto.twii_20ma = last > ma(c, 20);
-      auto.twii_60ma = last > ma(c, 60);
+      auto.idx_5ma  = last > ma(c, 5);
+      auto.idx_20ma = last > ma(c, 20);
+      auto.idx_60ma = last > ma(c, 60);
       // 均線「方向」而非「排列」：排列在下跌段可以連續數十天維持成立，
       // 完全不反映當下轉弱；斜率則會在趨勢反轉後數日內翻負。
       auto.ma20_up = ma(c, 20) > ma(c.slice(0, -5),  20);
       auto.ma60_up = ma(c, 60) > ma(c.slice(0, -10), 60);
     }
 
-    const tsmc = histories['2330']?.closes;
-    if (tsmc && tsmc.length >= 20) {
-      auto.tsmc_20ma = tsmc[tsmc.length - 1] > ma(tsmc, 20);
+    const lead = histories[leadCode]?.closes;
+    if (lead && lead.length >= 20) {
+      auto.lead_20ma = lead[lead.length - 1] > ma(lead, 20);
     }
 
-    const ratios = aiCodes.map(code => {
+    const ratios = group.map(code => {
       const c = histories[code]?.closes;
       if (!c || c.length < 20) return null;
       const m = ma(c, 20);
       return m ? c[c.length - 1] / m : null;
     }).filter(v => v != null);
     if (ratios.length) {
-      auto.ai_20ma = ratios.reduce((a, b) => a + b, 0) / ratios.length > 1;
+      auto.grp_20ma = ratios.reduce((a, b) => a + b, 0) / ratios.length > 1;
     }
 
     let up = 0, dn = 0;
@@ -115,7 +136,7 @@ const MarketStatus = (() => {
     return auto;
   }
 
-  /** 依權重加總。results 可混入使用者手動勾選的結果。 */
+  /** 依權重加總。results 可混入使用者手動勾選的結果。（權重與市場無關） */
   function score(results) {
     let s = 0;
     INDICATORS.forEach(ind => { if (results[ind.id]) s += ind.w; });
@@ -135,8 +156,9 @@ const MarketStatus = (() => {
     Object.entries(input.histories || {}).forEach(([code, h]) => {
       hist[code] = { ...h, closes: cut(h.closes) };
     });
-    return { ...input, twiiCloses: cut(input.twiiCloses), histories: hist,
-             prices: {} };   // 漲跌家數只有當天的資料，往前推時直接放棄該項
+    return { ...input, idxCloses: cut(input.idxCloses || input.twiiCloses),
+             twiiCloses: undefined, histories: hist,
+             prices: {} };   // 漲跌家數只有當天的資料，往前推時改由收盤序列推算
   }
 
   const SMOOTH_DAYS = 3;
@@ -176,8 +198,8 @@ const MarketStatus = (() => {
    * input 需額外帶 twiiLabels（與 twiiCloses 等長的日期字串）才有日期可標。
    */
   function evaluateSeries(input, days = 5) {
-    const labels = input.twiiLabels || [];
-    const closes = input.twiiCloses || [];
+    const labels = input.idxLabels || input.twiiLabels || [];
+    const closes = input.idxCloses  || input.twiiCloses || [];
     const out = [];
 
     for (let k = days - 1; k >= 0; k--) {
@@ -196,6 +218,6 @@ const MarketStatus = (() => {
     return out;
   }
 
-  return { INDICATORS, MAX_SCORE, LEVELS, SMOOTH_DAYS, ma,
+  return { INDICATORS, MAX_SCORE, LEVELS, SMOOTH_DAYS, MARKETS, ma, indicatorsFor,
            computeIndicators, score, levelOf, evaluate, evaluateSeries };
 })();

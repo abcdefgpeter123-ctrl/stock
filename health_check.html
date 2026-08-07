@@ -416,7 +416,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
   </div>
 </div>
 
-<script src="market_status.js?v=1"></script>
+<script src="market_status.js?v=2"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  Constants & state
@@ -510,10 +510,11 @@ function ma(arr, n) {
 function computeAutoIndicators() {
   // 計算邏輯在 market_status.js，首頁用同一份
   const ev = MarketStatus.evaluate({
-    twiiCloses: twiiHistory?.closes,
+    market: 'TW',
+    idxCloses: twiiHistory?.closes,
     histories,
     prices: priceData,
-    aiCodes:    WATCH_STOCKS.filter(s => s.theme === 'AI伺服器代工').map(s => s.code),
+    groupCodes: WATCH_STOCKS.filter(s => s.theme === 'AI伺服器代工').map(s => s.code),
     watchCodes: WATCH_STOCKS.map(s => s.code),
   });
 
@@ -534,11 +535,12 @@ function renderTrend() {
   if (!wrap || !twiiHistory?.closes?.length) return;
 
   const series = MarketStatus.evaluateSeries({
-    twiiCloses: twiiHistory.closes,
-    twiiLabels: twiiHistory.labels,
+    market: 'TW',
+    idxCloses: twiiHistory.closes,
+    idxLabels: twiiHistory.labels,
     histories,
     prices: priceData,
-    aiCodes:    WATCH_STOCKS.filter(s => s.theme === 'AI伺服器代工').map(s => s.code),
+    groupCodes: WATCH_STOCKS.filter(s => s.theme === 'AI伺服器代工').map(s => s.code),
     watchCodes: WATCH_STOCKS.map(s => s.code),
   }, 5);
   if (series.length < 2) { wrap.style.display = 'none'; return; }

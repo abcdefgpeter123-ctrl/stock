@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="market_status.js?v=1"></script>
+<script src="market_status.js?v=2"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -2103,10 +2103,11 @@ function renderMarketStatus() {
   if (!bar || !twiiHistoryData?.closes || twiiHistoryData.closes.length < 70) return;
 
   const ev = MarketStatus.evaluate({
-    twiiCloses: twiiHistoryData.closes,
+    market: 'TW',
+    idxCloses: twiiHistoryData.closes,
     histories,
     prices: priceCache,
-    aiCodes:    STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
+    groupCodes: STOCKS.filter(s => s.theme === 'AI伺服器代工' && !s._extra).map(s => s.code),
     watchCodes: STOCKS.filter(s => !s._extra).map(s => s.code),
   });
   marketStatusEval = ev;
