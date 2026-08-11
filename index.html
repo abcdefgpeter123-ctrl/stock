@@ -161,6 +161,30 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .venn-bucket-chips{display:flex;flex-wrap:wrap;gap:6px}
 .venn-empty{color:var(--text3);font-size:12px;padding:6px 0}
 
+/* ── 機會點 v2（依 5 年回測校準）── */
+.v2-note{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--yellow);
+  border-radius:0 var(--r) var(--r) 0;padding:12px 16px;margin-top:4px;font-size:12px;
+  color:var(--text2);line-height:1.75}
+.v2-note b{color:var(--text)}
+.v2-note .v2-dim{color:var(--text3)}
+.v2-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px;margin-top:10px}
+.v2-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.v2-card:hover{border-color:var(--border2)}
+.v2-card.tier1{border-left:3px solid var(--yellow)}
+.v2-card.tier2{border-left:3px solid var(--blue)}
+.v2-card.tier3{border-left:3px solid var(--border2);opacity:.72}
+.v2-hd{display:flex;align-items:baseline;gap:6px;margin-bottom:5px}
+.v2-hd .v2-code{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.v2-hd .v2-name{font-size:14px;font-weight:600;color:var(--text)}
+.v2-hd .v2-score{margin-left:auto;font-size:15px;font-weight:700;font-family:var(--mono)}
+.v2-line{font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.7}
+.v2-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.v2-tag{font-size:10px;padding:1px 6px;border-radius:4px;border:1px solid var(--border2);color:var(--text3)}
+.v2-tag.good{color:var(--yellow);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+.v2-tag.bad{color:var(--dn);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+.v2-empty{color:var(--text3);font-size:12px;padding:14px 0}
+
 
 .etf-section{margin-bottom:24px}
 .etf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
@@ -499,6 +523,10 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </svg>
     <div id="venn-detail" class="venn-detail"></div>
   </div>
+
+  <div class="sec-hd" style="margin-top:18px">🧪 機會點 v2<span class="src-tag">依 5 年回測校準的排序</span></div>
+  <div class="v2-note" id="v2-note"></div>
+  <div class="v2-grid" id="v2-grid"></div>
 
   <!-- ── 法人目標價追蹤 ── -->
   <div class="sec-hd" style="margin-top:18px">
@@ -1112,6 +1140,106 @@ function computeOppSets() {
   return { A, B, C };
 }
 
+// ── 機會點 v2：依 5 年回測（104 檔 / 2021-08~2026-08 / 39,612 訊號日）重新校準 ──
+//
+// v1 的信心評分把「落差越大」當成越好（落差極大 +25 分），回測顯示方向是反的：
+//   落差 8–12%  勝率 61.9%、中位 +2.41%
+//   落差 12–16% 勝率 59.2%、中位 +2.09%
+//   落差 16–20% 勝率 50.5%、中位 +0.40%
+//   落差 20–30% 勝率 41.9%、中位 −1.36%
+// 且這個順序在 2021~2026 每一年都成立。落差拉到 20% 以上通常不是「還沒跟上」，
+// 而是這檔本身有問題。v2 因此把 8–16% 當甜蜜區，≥20% 直接扣分。
+//
+// 另外兩件回測結果，也一併反映在這裡：
+//   ·「① 突破均線 ＋ ③ 題材補漲」的交集反而比單獨任一項差（勝率 52.1% vs 54.9%），
+//     所以 v2 不把突破均線當加分項，只當補充資訊顯示。
+//   ·大盤濾網看總表有效、但逐年只有 2/5 年成立，判定為過擬合，不採用。
+const V2_BACKTEST = {
+  n: "③ ＋ 落差8–16% ＋ 60MA上揚",
+  d20: "20日 中位 +2.24% / 勝率 60.2%",
+  d60: "60日 平均 +12.2% / 勝率 60.2%",
+  years: "逐年 4 勝 2 敗（2021、2024 為負）",
+};
+
+function _ma60Rising(closes) {
+  // 60MA 相對 5 日前是否走高——回測中唯一穩健的加分條件
+  if (!closes || closes.length < 66) return null;
+  const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+  return avg(closes.slice(-60)) > avg(closes.slice(-65, -5));
+}
+
+function scoreOppV2(o, maSet) {
+  const tags = [];
+  let score = 0;
+
+  // 落差甜蜜區（權重最高，也是與 v1 差最多的地方）
+  const gap = o.gap;
+  if (gap == null)          { }
+  else if (gap < 16)        { score += gap < 12 ? 32 : 27; tags.push(["落差甜蜜區", "good"]); }
+  else if (gap < 20)        { score += 10; }
+  else                      { score -= 12; tags.push([`落差過大 ${gap.toFixed(0)}%`, "bad"]); }
+
+  // 60MA 上揚
+  const rising = _ma60Rising(histories[o.code]?.closes);
+  if (rising === true)  { score += 20; tags.push(["60MA 上揚", "good"]); }
+  else if (rising === false) { score -= 8; tags.push(["60MA 下彎", "bad"]); }
+
+  // 龍頭熱度（v1 沿用，回測未推翻）
+  if (o.leader_p30 >= 30)      { score += 12; tags.push(["龍頭強勢", ""]); }
+  else if (o.leader_p30 >= 15) { score += 8;  tags.push(["龍頭溫和", ""]); }
+
+  // 尚未起漲：近 5 日還沒跟上才算「補漲」候選
+  if (o.p5 != null && o.p5 <= 2) { score += 6; tags.push(["尚未起漲", ""]); }
+
+  // 獲利能力
+  if (o.profit_ok === true)  score += 6;
+  if (o.profit_ok === false) { score -= 20; tags.push(["虧損", "bad"]); }
+
+  // 突破均線只當補充資訊：回測顯示交集沒有加成，不列入分數
+  if (maSet && maSet.has(o.code)) tags.push(["站上5/20/60MA", ""]);
+
+  return { score, tags, rising };
+}
+
+function renderOppV2() {
+  const grid = document.getElementById("v2-grid");
+  const note = document.getElementById("v2-note");
+  if (!grid || !note) return;
+
+  note.innerHTML =
+    `<b>和上面的差別：</b>排序改成「落差 8–16% 最佳」而非「落差越大越好」——`
+    + `回測 2021~2026 每一年都顯示落差 ≥20% 的補漲股勝率只有 41.9%，`
+    + `落差 8–12% 則有 61.9%。另外<b>不</b>把「突破均線」當加分（交集反而較差），`
+    + `也<b>不</b>加大盤濾網（逐年只有 2/5 年成立，判定為過擬合）。<br>`
+    + `<span class="v2-dim">回測基準 ${V2_BACKTEST.n}：${V2_BACKTEST.d20}、${V2_BACKTEST.d60}、${V2_BACKTEST.years}。`
+    + `這是補漲策略，20 天太短——${V2_BACKTEST.d60} 才是它的主場。樣本有存活者偏誤，數字看方向就好。</span>`;
+
+  const maSet = computeOppSets().A;
+  const list = (opps || []).map(o => ({ ...o, ...scoreOppV2(o, maSet) }))
+                           .sort((a, b) => b.score - a.score);
+  if (!list.length) {
+    grid.innerHTML = `<div class="v2-empty">目前沒有符合題材補漲條件的個股</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(o => {
+    const tier = o.score >= 55 ? "tier1" : o.score >= 35 ? "tier2" : "tier3";
+    const col  = o.score >= 55 ? "var(--yellow)" : o.score >= 35 ? "var(--blue)" : "var(--text3)";
+    const p = priceCache[o.code] || {};
+    return `<div class="v2-card ${tier}" onclick="toggleStock('${o.code}')">
+      <div class="v2-hd">
+        <span class="v2-code">${o.code}</span>
+        <span class="v2-name">${o.name}</span>
+        <span class="v2-score" style="color:${col}">${o.score}</span>
+      </div>
+      <div class="v2-line">落差 ${o.gap == null ? "—" : o.gap.toFixed(0) + "%"}　30日 ${o.p30 == null ? "—" : (o.p30 >= 0 ? "+" : "") + o.p30.toFixed(0) + "%"}</div>
+      <div class="v2-line">龍頭 ${o.leader}${o.leader_p30 != null ? ` +${o.leader_p30.toFixed(0)}%` : ""}</div>
+      <div class="v2-line">${p.price != null ? p.price.toFixed(1) : "—"}　${o.theme}</div>
+      <div class="v2-tags">${o.tags.map(([t, k]) => `<span class="v2-tag ${k}">${t}</span>`).join("")}</div>
+    </div>`;
+  }).join("");
+}
+
 // ── 機會點交集 Venn 圖 ──────────────────────────────────────
 function renderOppVenn() {
   const detailEl = document.getElementById("venn-detail");
@@ -1153,8 +1281,11 @@ function renderOppVenn() {
   const nonEmpty = order.filter(k => buckets[k].length);
   if (!nonEmpty.length) {
     detailEl.innerHTML = `<div class="venn-empty">目前尚無符合任何條件的個股</div>`;
+    renderOppV2();
     return;
   }
+
+  renderOppV2();
 
   detailEl.innerHTML = nonEmpty.map(k => {
     const chips = buckets[k].map(it =>
