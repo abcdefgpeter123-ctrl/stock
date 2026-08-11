@@ -2537,6 +2537,58 @@ def fetch_inst_stocks(all_prices, target_days=5):
 RECENT_DAYS = 280   # data.json 只留最近約 280 個交易日（足夠算到「一年」漲幅 252 天）
 
 
+def record_target_snapshots(merged, all_prices):
+    """
+    每天把「目標價 + 當時股價」寫進 targets_history.json，供日後回測。
+
+    為什麼要另外記：Yahoo 只給當下快照，沒有歷史目標價序列，所以
+    「現價低於全體分析師最低目標」這個訊號現在無法回測——沒有資料就沒有答案。
+    要驗證它，只能從今天開始自己累積。data.json 裡的 history 只存 mean、
+    且只留 30 天，回測需要的 low / median / count / 當時股價都沒有。
+
+    每天一筆，欄位刻意存成短鍵以免檔案膨脹：
+      d=日期 p=當時股價 lo=最低目標 md=中位數 mn=平均 hi=最高 c=分析師數
+      b=1 表示當天「現價低於最低目標」（先算好，回測時不必重算）
+
+    ⚠️ 這是純累積型資料，只增不減；跑再多次也不會覆蓋既有紀錄（同日只留一筆）。
+    """
+    path = "targets_history.json"
+    try:
+        with open(path, encoding="utf-8") as f:
+            hist = json.load(f)
+    except FileNotFoundError:
+        hist = {}
+    except Exception as e:
+        warn(f"targets_history.json 讀取失敗（{e}），本次快照未寫入", "error")
+        return
+
+    today = datetime.date.today().strftime("%Y/%m/%d")
+    added = below = 0
+    for code, t in merged.items():
+        low = t.get("low")
+        price = (all_prices.get(code) or {}).get("price")
+        if not t.get("mean") or not price:
+            continue
+        rows = hist.setdefault(code, [])
+        if rows and rows[-1].get("d") == today:
+            continue                     # 同一天重跑不重複記
+        is_below = 1 if (low and price < low) else 0
+        below += is_below
+        rows.append({
+            "d": today, "p": round(float(price), 2),
+            "lo": low, "md": t.get("median"), "mn": t.get("mean"),
+            "hi": t.get("high"), "c": t.get("count", 0), "b": is_below,
+        })
+        added += 1
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, ensure_ascii=False, separators=(",", ":"))
+
+    days = max((len(v) for v in hist.values()), default=0)
+    print(f"   🗃️ 目標價快照：新增 {added} 檔（其中 {below} 檔現價低於最低目標），"
+          f"累積 {len(hist)} 檔 / 最長 {days} 天")
+
+
 def split_heavy_payloads(data):
     """
     把「只有展開個股時才需要」和「只有算百分位才需要」的大塊資料抽出 data.json。
@@ -2950,6 +3002,10 @@ def main():
     n_cov = sum(1 for v in merged.values() if v.get("mean"))
     print(f"   📊 目標價合計 {len(merged)} 檔，其中 {n_cov} 檔有分析師覆蓋")
     data["analyst_targets"] = merged
+
+    # 每天留一份「目標價 + 當時股價」快照，日後才有辦法回測
+    # 「現價低於全體分析師最低目標」這個訊號到底有沒有用
+    record_target_snapshots(merged, all_prices)
 
     # 5g-2. 三種估價法（PB / PE / 現金股利）
     print("💰 估價計算中...")

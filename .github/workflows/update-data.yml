@@ -52,7 +52,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data.json history_5y.json pe_river.json margin_history.json company_info.json weekly_report.html targets.json stocks.js
+          git add data.json history_5y.json pe_river.json margin_history.json targets_history.json company_info.json weekly_report.html targets.json stocks.js
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
