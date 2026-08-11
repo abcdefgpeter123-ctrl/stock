@@ -1232,6 +1232,35 @@ function renderOppV2() {
  * 跟著股價事後調整的（台光電大漲後均價 15 日內被上調 +918），落後股的目標價
  * 通常也還沒上調。今天實測交集是 0 檔。取交集只會得到空白頁，分開看才有用。
  */
+/*
+ * 訊號追蹤進度。
+ *
+ * 「現價低於最低目標」到底有沒有用，現在無法回答——Yahoo 只給當下快照，
+ * 沒有歷史目標價序列。所以從 2026/08/12 起每天記一筆到 targets_history.json，
+ * 累積夠了才跑 backtest_belowlow.py 驗證。
+ *
+ * 這裡只讀 data.json 裡的精簡統計，不去載那份會越長越大的歷史檔。
+ */
+function _snapshotProgress() {
+  const st = window.__snapshotStats;
+  if (!st || !st.days) return "";
+  const need20 = Math.max(0, 20 - st.days);
+  const need60 = Math.max(0, 60 - st.days);
+  const bar = n => "▓".repeat(Math.round(n * 12)) + "░".repeat(12 - Math.round(n * 12));
+  return `
+    <div style="margin-top:10px;padding-top:9px;border-top:1px dashed var(--border2)">
+      <div class="v2-dim" style="margin-bottom:5px">
+        📊 <b style="color:var(--text2)">績效追蹤中</b>　自 ${st.first} 起每天記錄目標價與當時股價，
+        累積夠了就能回測這個標記到底有沒有用（<code style="font-size:10px">backtest_belowlow.py</code>）。
+      </div>
+      <div class="v2-dim" style="font-family:var(--mono);font-size:11px;line-height:1.9">
+        已累積 <b style="color:var(--text2)">${st.days}</b> 個交易日 · ${st.codes} 檔<br>
+        20 日報酬 ${bar(Math.min(1, st.days / 20))} ${need20 ? `還需 ${need20} 天` : "✓ 可回測"}<br>
+        60 日報酬 ${bar(Math.min(1, st.days / 60))} ${need60 ? `還需 ${need60} 天` : "✓ 可回測"}
+      </div>
+    </div>`;
+}
+
 function renderBelowLowStrip(v2list) {
   const el = document.getElementById("v2-belowlow");
   if (!el) return;
@@ -1265,6 +1294,7 @@ function renderBelowLowStrip(v2list) {
         ${overlap.length ? "" : "——兩個條件在設計上會互相打架：題材補漲挑的是還沒漲的，而目標價是跟著股價事後調整的，落後股的目標價通常也還沒上調。所以分開看，不取交集。"}
       </div>
       <div class="v2-dim" style="margin-top:6px">灰色 = 只有 1 位分析師（「最低」其實是「唯一」，份量低很多）。</div>
+      ${_snapshotProgress()}
     </div>`;
 }
 
@@ -3690,6 +3720,7 @@ async function loadData(){
     checkFreshness(data.prices_date || data.updated_at, "台股",
                    "可到 GitHub Actions 查 update-data.yml 是否失敗。");
     showDataWarnings(data.warnings);
+    window.__snapshotStats = data.target_snapshot_stats || null;
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
       document.getElementById("src-tag").textContent = "抓取日期：" + data.updated_at;

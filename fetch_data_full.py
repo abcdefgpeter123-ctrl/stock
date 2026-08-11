@@ -2560,7 +2560,7 @@ def record_target_snapshots(merged, all_prices):
         hist = {}
     except Exception as e:
         warn(f"targets_history.json 讀取失敗（{e}），本次快照未寫入", "error")
-        return
+        return None
 
     today = datetime.date.today().strftime("%Y/%m/%d")
     added = below = 0
@@ -2587,6 +2587,17 @@ def record_target_snapshots(merged, all_prices):
     days = max((len(v) for v in hist.values()), default=0)
     print(f"   🗃️ 目標價快照：新增 {added} 檔（其中 {below} 檔現價低於最低目標），"
           f"累積 {len(hist)} 檔 / 最長 {days} 天")
+
+    # 回傳精簡統計給前端顯示進度（前端不該為了顯示一個數字去載整份歷史，
+    # 這個檔一年會長到 1.4MB）
+    all_days = sorted({r["d"] for rows in hist.values() for r in rows})
+    return {
+        "days":       len(all_days),
+        "first":      all_days[0] if all_days else None,
+        "last":       all_days[-1] if all_days else None,
+        "codes":      len(hist),
+        "below_today": below,
+    }
 
 
 def split_heavy_payloads(data):
@@ -3005,7 +3016,9 @@ def main():
 
     # 每天留一份「目標價 + 當時股價」快照，日後才有辦法回測
     # 「現價低於全體分析師最低目標」這個訊號到底有沒有用
-    record_target_snapshots(merged, all_prices)
+    stats = record_target_snapshots(merged, all_prices)
+    if stats:
+        data["target_snapshot_stats"] = stats
 
     # 5g-2. 三種估價法（PB / PE / 現金股利）
     print("💰 估價計算中...")
