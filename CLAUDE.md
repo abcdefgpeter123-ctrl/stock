@@ -250,6 +250,24 @@ robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散
 
 ---
 
+## GitHub Token（「立即更新資料」按鈕）
+
+Token 存在 `auth.js` 的加密保險庫裡（`pj_vault_v1`），**與交易紀錄共用同一把金鑰**。
+按下按鈕的流程：未設定管理密碼 → 引導去交易紀錄頁設定；已設定未解鎖 → 要求輸入密碼；
+解鎖後沒有 token → 開 modal 輸入，存入時一併加密。收到 401 會自動把 token 從保險庫移除。
+
+開站時會檢查並清除舊版明碼殘留（`localStorage["gh_actions_token"]`），
+並提醒去 GitHub 撤銷那一組——它曾以明碼形式存在過。
+
+> **為什麼要改**：舊版直接 `localStorage.setItem` 明碼存放一組有 `actions:write`
+> 權限的 PAT。威脅模型是反的——「我的最愛」用 PBKDF2 25 萬輪加密，
+> 能改整個 repo 的憑證卻是明碼，而這個頁面是公開 origin。
+
+建議用 **Fine-grained token**：只授權這個 repo、權限只給 `Actions: Read and write`、
+有效期 30～90 天。classic token 對你所有 repo 都有效，風險大得多。
+
+---
+
 ## 其他工具
 
 **xbar 選單列 plugin**：`~/Documents/Claude/Projects/股票投資/taiwan-stocks.15m.py`

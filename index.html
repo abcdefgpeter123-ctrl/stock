@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="stocks.js?v=1"></script>
+<script src="auth.js?v=2"></script>
 <script src="market_status.js?v=3"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
@@ -707,8 +708,10 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <div style="font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.7">
         需要 GitHub Personal Access Token 才能遠端觸發 Actions。<br>
         前往 <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:#60a5fa">github.com/settings/tokens</a> →
-        「Generate new token (classic)」，勾選 <span style="color:#4ade80;font-family:var(--mono)">workflow</span> 權限後產生 token。<br>
-        Token 只儲存在你的瀏覽器，不會上傳。
+        建議用 <b style="color:var(--text2)">Fine-grained token</b>：只授權這一個 repo、權限只給
+        <span style="color:#4ade80;font-family:var(--mono)">Actions: Read and write</span>、有效期設 30～90 天。<br>
+        （classic token 也可以，勾 <span style="color:#4ade80;font-family:var(--mono)">workflow</span>，但它對你所有 repo 都有效，風險較大。）<br>
+        <span style="color:#a78bfa">🔒 Token 會用你的管理密碼加密後存在瀏覽器，跟交易紀錄同一個保險庫。</span>
       </div>
       <input id="gh-token-input" type="password" placeholder="ghp_xxxxxxxxxxxx"
         style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--text);font-family:var(--mono);outline:none;margin-bottom:12px">
@@ -3380,21 +3383,64 @@ function deleteManualTarget(idx) {
 
 const GH_REPO  = "abcdefgpeter123-ctrl/stock";
 const GH_WF    = "update-data.yml";
-const GH_TOKEN_KEY = "gh_actions_token";
+const GH_TOKEN_LEGACY = "gh_actions_token";   // 舊的明碼位置，只用來清除
 
-function triggerActions() {
-  const token = localStorage.getItem(GH_TOKEN_KEY);
-  if (!token) {
+/*
+ * GitHub Token 現在收在 auth.js 的加密保險庫裡，跟交易紀錄同一把鎖。
+ *
+ * 舊版直接 localStorage.setItem 明碼存放，威脅模型是反的——
+ * 「我的最愛」用 PBKDF2 25 萬輪加密，能改整個 repo 的憑證卻是明碼。
+ * 這個頁面是公開 origin，任何注入點都能把它讀走。
+ */
+
+// 開站就把殘留的明碼 token 清掉，並提醒去 GitHub 撤銷（它曾經明碼躺過）
+(function purgeLegacyToken() {
+  const old = localStorage.getItem(GH_TOKEN_LEGACY);
+  if (!old) return;
+  localStorage.removeItem(GH_TOKEN_LEGACY);
+  setTimeout(() => alert(
+    "⚠️ 偵測到舊版明碼儲存的 GitHub Token，已從瀏覽器移除。\n\n" +
+    "因為它曾以明碼形式存在，建議到 github.com/settings/tokens 撤銷這一組，\n" +
+    "再產生新的（下次按「立即更新資料」時會請你輸入，並改成加密儲存）。"), 800);
+})();
+
+/** 取得可用的 token；必要時引導設定密碼／解鎖／輸入 token。回傳 null 表示流程中止。 */
+async function _getGhToken() {
+  if (!Auth.isSetup()) {
+    alert("Token 需要用管理密碼加密保存。\n請先到「📒 交易紀錄」頁設定管理密碼，再回來使用。");
+    return null;
+  }
+  if (!Auth.isAdmin()) {
+    const pw = prompt("請輸入管理密碼以解鎖 GitHub Token");
+    if (!pw) return null;
+    if (!await Auth.unlock(pw)) { alert("密碼錯誤"); return null; }
+  }
+  const vault = await Auth.load();
+  return vault?.gh_token || null;
+}
+
+async function triggerActions() {
+  const token = await _getGhToken();
+  if (token === null && !Auth.isAdmin()) return;      // 未解鎖或使用者取消
+  if (!token) {                                        // 已解鎖但還沒存過 token
     document.getElementById("gh-token-modal").style.display = "flex";
     return;
   }
   _doTriggerActions(token);
 }
 
-function saveGhToken() {
+async function saveGhToken() {
   const token = document.getElementById("gh-token-input").value.trim();
   if (!token) return;
-  localStorage.setItem(GH_TOKEN_KEY, token);
+  try {
+    const vault = (await Auth.load()) || {};
+    vault.gh_token = token;
+    await Auth.save(vault);                            // 與交易紀錄同一個保險庫、同一把金鑰
+  } catch (e) {
+    alert("儲存失敗（保險庫未解鎖）：" + e.message);
+    return;
+  }
+  document.getElementById("gh-token-input").value = "";
   document.getElementById("gh-token-modal").style.display = "none";
   _doTriggerActions(token);
 }
@@ -3427,7 +3473,7 @@ async function _doTriggerActions(token) {
         btn.style.borderColor = "rgba(96,165,250,0.35)";
       }, 8000);
     } else if (res.status === 401) {
-      localStorage.removeItem(GH_TOKEN_KEY);
+      Auth.load().then(v => { if (v) { delete v.gh_token; Auth.save(v).catch(() => {}); } });
       btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Token 無效`;
       btn.style.color = "#f87171";
       setTimeout(() => {
