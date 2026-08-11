@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="freshness.js?v=1"></script>
 <script src="market_status.js?v=3"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
@@ -1772,6 +1773,8 @@ async function loadData(){
       document.getElementById("market-summary-text").textContent = data.market_summary;
       document.getElementById("market-summary-bar").style.display = "block";
       const dateEl = document.getElementById("market-summary-date");
+      checkFreshness(data.updated_at, "美股",
+                     "可到 GitHub Actions 查 update-us-data.yml 是否失敗。");
       if(dateEl && data.updated_at) dateEl.textContent = data.updated_at.split(" ")[0];
     }
     renderMarketStatus();
