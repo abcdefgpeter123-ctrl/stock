@@ -287,6 +287,37 @@ Token 存在 `auth.js` 的加密保險庫裡（`pj_vault_v1`），**與交易紀
 
 ---
 
+## 排程失敗通知
+
+兩層，因為單靠一層抓不全：
+
+**1. `if: failure()`** — 三支 workflow 都有。job 跑起來但失敗時，
+用固定標題搜尋既有 issue：有就留言、沒有才開新的（避免每天洗版）。
+
+**2. `watchdog.yml` ＋ `check_freshness.py`** — 每天 20:00 台灣時間跑在 ubuntu-latest。
+從**結果面**檢查 `data.json` / `us_data.json` / `podcast_summary.json` 的時間戳。
+
+> **為什麼要第二層**：`if: failure()` 只在「job 有跑起來但失敗」時觸發。
+> Podcast 那支跑在自架 Mac 上，電腦沒醒著時 job 根本不會開始執行，狀態是 cancelled——
+> 沒有任何 step 會跑到，自然沒人通知。實際紀錄是最近 8 次有 4 次 cancelled 且完全無聲。
+
+容許值：台股／美股 2 個平日、Podcast 4 個平日；未滿 40 小時一律視為正常
+（吸收時區差，美股那支的 `updated_at` 寫的是 UTC）。
+
+本機可直接跑 `python3 check_freshness.py` 檢查，exit 1 代表有東西過期。
+
+### 讓 Mac 在排程時間醒著
+
+Podcast 需要 Mac 在台灣時間 07:30 是開機且醒著的。設定每天 07:20 自動喚醒：
+
+```bash
+sudo pmset repeat wake MTWRFSU 07:20:00
+```
+
+（需要你自己輸入密碼執行。查目前設定：`pmset -g sched`）
+
+---
+
 ## 其他工具
 
 **xbar 選單列 plugin**：`~/Documents/Claude/Projects/股票投資/taiwan-stocks.15m.py`

@@ -1,0 +1,44 @@
+name: Data Freshness Watchdog
+
+# 為什麼另外開一支：其他三支的 `if: failure()` 只在「job 跑起來但失敗」時觸發。
+# Podcast 那支跑在自架 Mac 上，電腦沒醒著時 job 根本不會開始，狀態是 cancelled，
+# 沒有任何 step 會執行，也就沒有人通知（實際紀錄：最近 8 次有 4 次 cancelled）。
+# 這支從結果面檢查輸出檔案的時間戳，跑在 ubuntu-latest，不依賴任何自架機器。
+
+on:
+  schedule:
+    # 每天台灣時間 20:00（UTC 12:00）——三支排程都該跑完了
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check data freshness
+        id: check
+        continue-on-error: true
+        run: python3 check_freshness.py
+
+      - name: Open or update issue
+        if: steps.check.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "🟠 資料未更新"
+        run: |
+          BODY="${{ steps.check.outputs.body }}
+
+          檢查時間：$(date -u '+%Y-%m-%d %H:%M') UTC
+          執行紀錄：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          EXISTING=$(gh issue list --state open --search "$TITLE in:title" --json number -q '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi

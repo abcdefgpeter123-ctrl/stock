@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   update-podcast:
@@ -69,4 +70,22 @@ jobs:
               git pull --no-rebase --no-edit -X ours || exit 1
               sleep 3
             done
+          fi
+
+      # ── 失敗通知 ────────────────────────────────────────────────
+      # 排程失敗如果沒人通知，就只能等到哪天發現數字不對才回頭查。
+      # 用同一個標題去搜尋，已經有未關閉的 issue 就只留言，不重複開。
+      - name: Open issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "🔴 排程失敗：Podcast 摘要"
+        run: |
+          URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          EXISTING=$(gh issue list --state open --search "$TITLE in:title" --json number -q '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "又失敗一次（$(date -u '+%Y-%m-%d %H:%M') UTC）：$URL"
+          else
+            gh issue create --title "$TITLE" \
+              --body "$(printf '%s\n' "排程 \`update-podcast.yml\`  執行失敗。" "" "執行紀錄：$URL" "" "修好後請手動關閉這張 issue。")"
           fi
