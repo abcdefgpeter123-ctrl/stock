@@ -179,6 +179,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .v2-hd .v2-name{font-size:14px;font-weight:600;color:var(--text)}
 .v2-hd .v2-score{margin-left:auto;font-size:15px;font-weight:700;font-family:var(--mono)}
 .v2-line{font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.7}
+.v2-calc{margin:7px 0 2px;font-size:11px;font-family:var(--mono)}
+.v2-calc div{display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+.v2-calc span{color:var(--text3);font-family:var(--font)}
+.v2-calc b{font-weight:600}
+.v2-calc .v2-calc-sum{border-top:1px solid var(--border2);margin-top:3px;padding-top:3px}
+.v2-calc .v2-calc-sum span{color:var(--text2)}
+.v2-calc .v2-calc-sum b{color:var(--yellow)}
 .v2-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .v2-tag{font-size:10px;padding:1px 6px;border-radius:4px;border:1px solid var(--border2);color:var(--text3)}
 .v2-tag.good{color:var(--yellow);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
@@ -1155,7 +1162,7 @@ function computeOppSets() {
 //     所以 v2 不把突破均線當加分項，只當補充資訊顯示。
 //   ·大盤濾網看總表有效、但逐年只有 2/5 年成立，判定為過擬合，不採用。
 const V2_BACKTEST = {
-  n: "③ ＋ 落差8–16% ＋ 60MA上揚",
+  n: "③ 題材補漲 ＋ 落後 8–16 個百分點 ＋ 60MA上揚",
   d20: "20日 中位 +2.24% / 勝率 60.2%",
   d60: "60日 平均 +12.2% / 勝率 60.2%",
   years: "逐年 4 勝 2 敗（2021、2024 為負）",
@@ -1175,9 +1182,9 @@ function scoreOppV2(o, maSet) {
   // 落差甜蜜區（權重最高，也是與 v1 差最多的地方）
   const gap = o.gap;
   if (gap == null)          { }
-  else if (gap < 16)        { score += gap < 12 ? 32 : 27; tags.push(["落差甜蜜區", "good"]); }
+  else if (gap < 16)        { score += gap < 12 ? 32 : 27; tags.push(["落後幅度剛好", "good"]); }
   else if (gap < 20)        { score += 10; }
-  else                      { score -= 12; tags.push([`落差過大 ${gap.toFixed(0)}%`, "bad"]); }
+  else                      { score -= 12; tags.push([`落後太多 ${gap.toFixed(0)} 個百分點`, "bad"]); }
 
   // 60MA 上揚
   const rising = _ma60Rising(histories[o.code]?.closes);
@@ -1207,12 +1214,22 @@ function renderOppV2() {
   if (!grid || !note) return;
 
   note.innerHTML =
-    `<b>和上面的差別：</b>排序改成「落差 8–16% 最佳」而非「落差越大越好」——`
-    + `回測 2021~2026 每一年都顯示落差 ≥20% 的補漲股勝率只有 41.9%，`
-    + `落差 8–12% 則有 61.9%。另外<b>不</b>把「突破均線」當加分（交集反而較差），`
-    + `也<b>不</b>加大盤濾網（逐年只有 2/5 年成立，判定為過擬合）。<br>`
-    + `<span class="v2-dim">回測基準 ${V2_BACKTEST.n}：${V2_BACKTEST.d20}、${V2_BACKTEST.d60}、${V2_BACKTEST.years}。`
-    + `這是補漲策略，20 天太短——${V2_BACKTEST.d60} 才是它的主場。樣本有存活者偏誤，數字看方向就好。</span>`;
+    `<b>「落後龍頭」是什麼：</b>同一個題材裡，最強的那檔（龍頭）近 30 日漲了多少，`
+    + `減掉這檔自己近 30 日漲了多少，差幾個百分點。例如龍頭漲 +17%、這檔只漲 +5%，`
+    + `就是<b>落後 12 個百分點</b>。整個題材的錢已經在流動、但這檔還沒反應，`
+    + `所以有補漲的空間——這是整個機會點邏輯的核心假設。<br><br>`
+    + `<b>和上面 v1 的差別：</b>v1 認為<b>落後越多機會越大</b>，落後 25 個百分點以上給最高分。`
+    + `回測打臉了這件事：<br>`
+    + `<span class="v2-dim">　落後 8–12 個百分點 → 20 日勝率 <b style="color:var(--yellow)">61.9%</b><br>`
+    + `　落後 12–16 → 59.2%　／　落後 16–20 → 50.5%<br>`
+    + `　落後 20–30 個百分點 → 勝率只剩 <b style="color:var(--dn)">41.9%</b>，中位數是負的</span><br>`
+    + `而且這個順序 2021~2026 <b>每一年都成立</b>。落後太多通常不是「還沒輪到它」，`
+    + `是這檔自己有問題（產品線、客戶、財務），題材漲它也漲不動。`
+    + `所以 v2 把 8–16 當甜蜜區，20 以上直接扣分。<br><br>`
+    + `另外<b>不</b>把「突破均線」當加分（①＋③ 交集勝率 52.1%，反而低於單獨的 54.9%），`
+    + `也<b>不</b>加大盤濾網（總表看似有效，但逐年只有 2/5 年成立，判定為過擬合）。<br>`
+    + `<span class="v2-dim">回測基準「${V2_BACKTEST.n}」：${V2_BACKTEST.d20}、${V2_BACKTEST.d60}、${V2_BACKTEST.years}。`
+    + `這是補漲策略，20 天太短——60 日才是它的主場。樣本取自今天的觀察名單、有存活者偏誤，數字看方向就好。</span>`;
 
   const maSet = computeOppSets().A;
   const list = (opps || []).map(o => ({ ...o, ...scoreOppV2(o, maSet) }))
@@ -1232,8 +1249,11 @@ function renderOppV2() {
         <span class="v2-name">${o.name}</span>
         <span class="v2-score" style="color:${col}">${o.score}</span>
       </div>
-      <div class="v2-line">落差 ${o.gap == null ? "—" : o.gap.toFixed(0) + "%"}　30日 ${o.p30 == null ? "—" : (o.p30 >= 0 ? "+" : "") + o.p30.toFixed(0) + "%"}</div>
-      <div class="v2-line">龍頭 ${o.leader}${o.leader_p30 != null ? ` +${o.leader_p30.toFixed(0)}%` : ""}</div>
+      <div class="v2-calc">
+        <div><span>龍頭 ${o.leader} 近30日</span><b class="${o.leader_p30 >= 0 ? "up" : "dn"}">${o.leader_p30 == null ? "—" : (o.leader_p30 >= 0 ? "+" : "") + o.leader_p30.toFixed(0) + "%"}</b></div>
+        <div><span>${o.name} 近30日</span><b class="${(o.p30 ?? 0) >= 0 ? "up" : "dn"}">${o.p30 == null ? "—" : (o.p30 >= 0 ? "+" : "") + o.p30.toFixed(0) + "%"}</b></div>
+        <div class="v2-calc-sum"><span>落後龍頭</span><b>${o.gap == null ? "—" : o.gap.toFixed(0) + " 個百分點"}</b></div>
+      </div>
       <div class="v2-line">${p.price != null ? p.price.toFixed(1) : "—"}　${o.theme}</div>
       <div class="v2-tags">${o.tags.map(([t, k]) => `<span class="v2-tag ${k}">${t}</span>`).join("")}</div>
     </div>`;
