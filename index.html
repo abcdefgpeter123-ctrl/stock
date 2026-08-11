@@ -2195,7 +2195,24 @@ function loadFullHistory() {
   return _fullHistoryPromise;
 }
 
+// ── PE 河流圖延後載入 ────────────────────────────────
+// pe_river 佔 data.json 311K（23%），但只有展開個股面板時才畫得到，
+// 放在首屏等於每個人每次開頁都替一個可能不會點的圖付費。
+let _peRiverPromise = null;
+function loadPeRiver() {
+  if (_peRiverPromise) return _peRiverPromise;
+  _peRiverPromise = fetch(`pe_river.json?_=${Date.now()}`)
+    .then(r => r.ok ? r.json() : {})
+    .then(j => { peRiverData = j; })
+    .catch(e => { console.warn('PE 河流圖載入失敗', e); _peRiverPromise = null; });
+  return _peRiverPromise;
+}
+
 function renderPeRiver(code) {
+  // 還沒載入就先抓，回來再畫一次
+  if (!Object.keys(peRiverData).length && _peRiverPromise !== false) {
+    loadPeRiver().then(() => renderPeRiver(code));
+  }
   const river = peRiverData[code];
   const area  = document.getElementById(`tp-chart-area-${code}`);
   if (!area) return;
@@ -2890,8 +2907,9 @@ function updateMargin(margin, twiiChgP){
   // 歷史百分位：把今天的比值拿去跟過去下跌日的比值分布比較，比固定門檻更客觀
   if(pctEl){
     if(ratio != null && isFinite(ratio) && Array.isArray(margin.history)){
-      const pastRatios = margin.history
-        .map(h => h.ratio)
+      // margin.ratios 是抓取端預先抽好的百分位樣本（完整 5001 筆歷史不再進 data.json）；
+      // 舊版 data.json 沒有這個欄位，退回原本的算法。
+      const pastRatios = (margin.ratios || margin.history.map(h => h.ratio))
         .filter(r => r != null && isFinite(r));
       if(pastRatios.length >= 5){
         const belowCount = pastRatios.filter(r => r <= ratio).length;
@@ -3584,7 +3602,6 @@ async function loadData(){
       renderMarketStatus();
     }
     if(data.movers)           moversData     = data.movers;
-    if(data.pe_river)         peRiverData    = data.pe_river;
     if(data.valuation){ valuationData = data.valuation; }
     if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); }
     loadLocalTargets();   // 本機檔案，線上版沒有就自動略過

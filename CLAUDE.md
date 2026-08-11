@@ -343,6 +343,28 @@ sudo pmset repeat wake MTWRFSU 07:20:00
 
 ---
 
+## 首屏瘦身：抽出用不到的大塊資料
+
+`split_heavy_payloads()`（`fetch_data_full.py`）在寫檔前把兩塊資料移出 `data.json`：
+
+| 資料 | 原本 | 現在 | 何時載入 |
+|------|------|------|----------|
+| `pe_river` | 311K（23%） | 獨立 `pe_river.json` | 點開個股 →「河流圖」分頁才抓 |
+| `margin.history` | 261K（20%，5001 筆） | 留 30 筆 ＋ `ratios` 陣列（896 個） | 完整版存 `margin_history.json`，前端不載入 |
+
+實測 `data.json` **1327K → 761K raw（−43%）、299K → 233K gzip（−22%）**。
+
+⚠️ **`margin_history.json` 是融資歷史的正本。** `main()` 累積時必須從這個檔讀，
+不能從 `data.json` 的 `margin.history` 讀——那裡只有 30 筆，讀錯來源會每跑一次
+就把五千多筆歷史砍成 30 筆（開發時差點踩到，已加註解與 fallback）。
+
+前端的 `margin.ratios` 若不存在會退回舊算法，舊格式 `data.json` 仍能正常運作。
+
+`histories`（317K）**沒有**拆——它在首屏就要用（均線指標、Venn、機會點 v2 的 60MA），
+拆了得先解決載入順序，風險大於收益。5 年份早就另存 `history_5y.json` 延後載入了。
+
+---
+
 ## 其他工具
 
 **xbar 選單列 plugin**：`~/Documents/Claude/Projects/股票投資/taiwan-stocks.15m.py`

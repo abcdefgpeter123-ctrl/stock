@@ -2537,6 +2537,37 @@ def fetch_inst_stocks(all_prices, target_days=5):
 RECENT_DAYS = 280   # data.json 只留最近約 280 個交易日（足夠算到「一年」漲幅 252 天）
 
 
+def split_heavy_payloads(data):
+    """
+    把「只有展開個股時才需要」和「只有算百分位才需要」的大塊資料抽出 data.json。
+
+    量測（2026/08）：data.json 1327K 裡 pe_river 佔 311K、margin.history 佔 261K，
+    合計 43%——但兩者在首頁第一屏都用不到。pe_river 只有點開個股面板才畫，
+    margin 的 5001 筆歷史裡也只有 896 筆帶 ratio（唯一拿來算百分位的欄位）。
+
+    首頁載入時間先前已從 1.05MB 壓到 395K（gzip），這一步是同一個方向的延續。
+    """
+    # ── pe_river → 獨立檔，前端展開個股時才抓 ──
+    river = data.pop("pe_river", {})
+    if river:
+        with open("pe_river.json", "w", encoding="utf-8") as f:
+            json.dump(river, f, ensure_ascii=False, separators=(",", ":"))
+        print(f"   📦 pe_river 抽出 {len(river)} 支 → pe_river.json")
+
+    # ── margin.history → 只留近期 + 百分位需要的 ratio 陣列 ──
+    margin = data.get("margin")
+    if margin and isinstance(margin.get("history"), list):
+        full = margin["history"]
+        with open("margin_history.json", "w", encoding="utf-8") as f:
+            json.dump(full, f, ensure_ascii=False, separators=(",", ":"))
+        # 前端只需要兩樣：畫近 5 日增減的最近幾筆，以及算百分位的 ratio 分布
+        margin["history"] = full[-30:]
+        margin["ratios"]  = [h["ratio"] for h in full
+                             if h.get("ratio") is not None]
+        print(f"   📦 margin.history {len(full)} 筆 → 保留 30 筆 + "
+              f"{len(margin['ratios'])} 個 ratio（完整版存 margin_history.json）")
+
+
 def compact_histories(data):
     """
     histories 原本佔 data.json 八成以上體積，這裡做三件事：
@@ -2637,8 +2668,18 @@ def main():
             ratio = round(margin["change_pct"] / twii_chg_p * 100, 1)
         margin["ratio"] = ratio
 
-        # 保留完整歷史（已回補至 2006 年初，供前端算歷史百分位，不要再裁短）
-        history = data.get("margin", {}).get("history", [])
+        # 保留完整歷史（已回補至 2006 年初，供前端算歷史百分位，不要再裁短）。
+        # ⚠️ data.json 裡的 margin.history 只留最近 30 筆（split_heavy_payloads 裁的），
+        # 累積必須從 margin_history.json 讀完整版，否則每跑一次就把歷史砍成 30 筆。
+        history = []
+        try:
+            with open("margin_history.json", encoding="utf-8") as f:
+                history = json.load(f)
+        except FileNotFoundError:
+            history = data.get("margin", {}).get("history", [])   # 首次執行時退回舊位置
+        except Exception as e:
+            warn(f"margin_history.json 讀取失敗（{e}），融資歷史百分位會失準", "error")
+            history = data.get("margin", {}).get("history", [])
         if not history or history[-1].get("date") != margin["date"]:
             history.append({"date": margin["date"], "balance": margin["balance_today"], "ratio": ratio})
         margin["history"] = history
@@ -2951,8 +2992,9 @@ def main():
         "個股法人":     (len(data.get("inst_stocks", {})),      n_watch),
     })
 
-    # 8. 壓縮 histories，縮短首頁載入時間
+    # 8. 壓縮 histories、抽出首屏用不到的大塊資料，縮短載入時間
     compact_histories(data)
+    split_heavy_payloads(data)
 
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
