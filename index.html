@@ -192,6 +192,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .v2-tag.bad{color:var(--dn);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
 .v2-empty{color:var(--text3);font-size:12px;padding:14px 0}
 
+/* ── 目標價卡片：現價跌破全體分析師最低目標 ── */
+.tgt-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer}
+.tgt-card.below-low{background:rgba(96,165,250,.07);border-color:rgba(96,165,250,.45);
+  box-shadow:0 0 0 1px rgba(96,165,250,.18)}
+.tgt-below-tag{display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;
+  font-size:10px;font-weight:600;color:var(--blue);background:rgba(96,165,250,.12);
+  border:1px solid rgba(96,165,250,.35);border-radius:4px;padding:2px 7px;font-family:var(--mono)}
+
 
 .etf-section{margin-bottom:24px}
 .etf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
@@ -3341,7 +3349,17 @@ function renderAnalystTargets() {
         }</div>`
       : "";
 
-    return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer" onclick="toggleStock('${code}')">
+    // 現價低於「所有分析師裡最低的那個目標」——連最保守的一份報告都還沒看到這個價位，
+    // 是相對難得的狀態，值得一眼看見（不代表就該買，只代表值得去查為什麼）
+    const belowLow = at.low != null && price > 0 && price < at.low;
+    // 只有 1 位分析師時，「最低」＝「唯一」，講成最低會高估這個訊號的份量
+    const belowDiff = belowLow ? (at.low - price) / price * 100 : 0;
+    const belowTag = belowLow
+      ? `<div class="tgt-below-tag">↓ 現價低於${at.count === 1 ? "唯一" : "最低"}目標 ${at.low.toFixed(0)}（差 ${belowDiff < 1 ? belowDiff.toFixed(1) : belowDiff.toFixed(0)}%）</div>`
+      : "";
+
+    return `<div class="tgt-card${belowLow ? " below-low" : ""}" onclick="toggleStock('${code}')">
+      ${belowTag}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${code}</span>
         <span style="font-size:11px;color:${recColor};background:${recColor}22;padding:1px 7px;border-radius:10px">${recLabel}</span>
