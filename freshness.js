@@ -72,4 +72,30 @@
 
     document.body.insertBefore(bar, document.body.firstChild);
   };
+
+  /**
+   * 顯示抓取端記錄的資料品質警告（data.json 的 warnings）。
+   * 抓取腳本有二十幾處單筆失敗會略過不報，整批掛掉時頁面原本看起來一切正常，
+   * 只是數字悄悄變成上一輪的舊值。這條列把那些警告帶到使用者眼前。
+   */
+  window.showDataWarnings = function (warnings) {
+    if (!Array.isArray(warnings) || !warnings.length) return;
+    const hasError = warnings.some(w => w.level === "error");
+
+    const bar = document.createElement("div");
+    bar.id = "warn-bar";
+    bar.style.cssText = `
+      background:${hasError ? "rgba(248,113,113,.1)" : "rgba(251,191,36,.08)"};
+      border:1px solid ${hasError ? "rgba(248,113,113,.35)" : "rgba(251,191,36,.3)"};
+      color:${hasError ? "#f87171" : "#fbbf24"};
+      border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12.5px;line-height:1.8`;
+    bar.innerHTML =
+      `${hasError ? "🔴" : "⚠️"} <b>本次抓取有 ${warnings.length} 則資料品質警告</b>`
+      + `<span style="opacity:.75">　受影響的欄位可能是上一輪的舊值</span>`
+      + warnings.map(w => `<div style="opacity:.9">· ${w.msg}</div>`).join("");
+
+    const stale = document.getElementById("stale-bar");
+    if (stale) stale.after(bar);
+    else document.body.insertBefore(bar, document.body.firstChild);
+  };
 })();

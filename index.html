@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="freshness.js?v=1"></script>
+<script src="freshness.js?v=2"></script>
 <script src="stocks.js?v=1"></script>
 <script src="auth.js?v=2"></script>
 <script src="market_status.js?v=3"></script>
@@ -3600,6 +3600,7 @@ async function loadData(){
     // 排程掛掉時最危險的不是載入失敗，而是安靜地顯示舊資料
     checkFreshness(data.prices_date || data.updated_at, "台股",
                    "可到 GitHub Actions 查 update-data.yml 是否失敗。");
+    showDataWarnings(data.warnings);
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
       document.getElementById("src-tag").textContent = "抓取日期：" + data.updated_at;

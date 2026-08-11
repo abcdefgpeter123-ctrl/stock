@@ -428,7 +428,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
   </div>
 </div>
 
-<script src="freshness.js?v=1"></script>
+<script src="freshness.js?v=2"></script>
 <script src="stocks.js?v=1"></script>
 <script src="market_status.js?v=3"></script>
 <script>
@@ -503,6 +503,7 @@ async function loadData() {
 
     checkFreshness(d.prices_date || d.updated_at, "台股",
                    "可到 GitHub Actions 查 update-data.yml 是否失敗。");
+    showDataWarnings(d.warnings);
 
     priceData      = d.prices      || {};
     histories      = d.histories   || {};

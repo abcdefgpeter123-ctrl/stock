@@ -318,6 +318,31 @@ sudo pmset repeat wake MTWRFSU 07:20:00
 
 ---
 
+## 資料品質警告（WARNINGS / warnings）
+
+`fetch_data_full.py` 有二十幾處 `except: pass`。在無人值守的 Actions 裡這特別危險：
+抓取失敗時腳本照樣 exit 0、Actions 顯示綠勾、頁面顯示上一輪的舊值，沒有人會察覺。
+先前兩個 bug 都是這個模式（`roc_to_ad_date()` 認不得 `20260731`、
+`fetch_yahoo()` 取到過期的 `previousClose` 害 71 檔漲跌幅全錯），
+兩次都是靠肉眼看出數字怪怪的才發現。
+
+作法不是把每個 except 改成 raise（多數單筆失敗本來就該略過），而是讓它**看得見**：
+
+| 機制 | 用途 |
+|------|------|
+| `warn(msg, level)` | 來源級失敗（crumb 認證、stock_info.json 讀不到）直接記一筆 |
+| `tally(source)` | 單筆失敗只計數，17 處已接上；同來源累積 ≥10 筆才報 |
+| `report_quality(expected)` | 結尾比對「拿到幾筆／應有幾筆」：<50% 報 error、<85% 報 warn |
+
+結果印在 Actions log，同時寫進 `data.json` 的 `warnings`。
+前端 `freshness.js` 的 `showDataWarnings()` 會在頁面頂端顯示（error 紅、warn 黃），
+排在資料過期橫幅下方。
+
+判斷準則刻意用「拿到的比例」而不是「有沒有拋例外」——少數個股抓不到是常態，
+整批掛掉才是問題。
+
+---
+
 ## 其他工具
 
 **xbar 選單列 plugin**：`~/Documents/Claude/Projects/股票投資/taiwan-stocks.15m.py`

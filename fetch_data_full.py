@@ -25,6 +25,59 @@ HEADERS = {
     "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
 }
 
+# ── 資料品質記錄 ──────────────────────────────────────────────────
+# 這支腳本有二十幾處 `except: pass`，在無人值守的 Actions 裡特別危險：
+# 抓取失敗時腳本照樣 exit 0、Actions 顯示綠勾、頁面顯示上一輪的舊值，
+# 而沒有人會察覺。先前兩個 bug 都是這個模式——roc_to_ad_date() 認不得
+# 20260731 格式而用今天日期蓋過去、fetch_yahoo() 取到過期的 previousClose
+# 導致 71 檔漲跌幅全錯——兩次都是靠肉眼看出數字怪怪的才發現。
+#
+# 這裡不追求把每個 except 都改成 raise（很多單筆失敗本來就該略過），
+# 而是把「靜默」變成「看得見」：累計失敗次數，結尾印摘要並寫進
+# data.json 的 warnings，前端據此顯示黃色提示列。
+WARNINGS = []          # [(等級, 訊息)]
+FAIL_COUNTS = {}       # {來源: 失敗次數}
+
+
+def warn(msg, level="warn"):
+    """記一筆警告，同時即時印出來（Actions log 裡看得到）"""
+    WARNINGS.append((level, msg))
+    print(f"   {'🔴' if level == 'error' else '⚠️'} {msg}")
+
+
+def tally(source):
+    """單筆失敗只計數不吵；由 report_quality() 判斷比例是否異常"""
+    FAIL_COUNTS[source] = FAIL_COUNTS.get(source, 0) + 1
+
+
+def report_quality(expected):
+    """
+    結尾總結。判斷準則是「拿到的比例」而不是「有沒有例外」——
+    少數個股抓不到是常態，整批掛掉才是問題。
+    expected: {來源: (實際筆數, 應有筆數)}
+    """
+    for source, (got, want) in expected.items():
+        if not want:
+            continue
+        ratio = got / want
+        if ratio < 0.5:
+            warn(f"{source} 只取得 {got}/{want} 筆（{ratio:.0%}），資料源可能失效", "error")
+        elif ratio < 0.85:
+            warn(f"{source} 取得 {got}/{want} 筆（{ratio:.0%}），略低於預期")
+
+    for source, n in sorted(FAIL_COUNTS.items(), key=lambda x: -x[1]):
+        if n >= 10:
+            warn(f"{source} 有 {n} 筆單獨失敗")
+
+    if not WARNINGS:
+        print("\n✅ 資料品質檢查：全部正常")
+    else:
+        print(f"\n⚠️ 資料品質檢查：{len(WARNINGS)} 則警告")
+        for lv, m in WARNINGS:
+            print(f"   · [{lv}] {m}")
+    return [{"level": lv, "msg": m} for lv, m in WARNINGS]
+
+
 # ── 監控清單：唯一來源是 stocks.json ────────────────────────────────
 # 這份清單以前在這裡、index.html、health_check.html 各寫一份，格式還都不一樣。
 # 結果 health_check.html 漏掉廣達(2382)，兩頁的「AI 族群站上20MA」分別算在
@@ -265,8 +318,9 @@ def _get_yf_crumb():
             _yf_session = s
             _yf_crumb   = r.text.strip()
             return _yf_session, _yf_crumb
-    except Exception:
-        pass
+    except Exception as e:
+        # 拿不到 crumb → 後面所有 Yahoo quoteSummary 都會失敗，不能靜默
+        warn(f"Yahoo crumb 認證失敗（{e}），PE/EPS 將改用 stock_info.json 備援")
     return None, None
 
 
@@ -329,6 +383,7 @@ def fetch_valuation(codes, histories):
                             if v == v:
                                 bps_y[str(col.date())[:4]] = v / shares
                 except Exception:
+                    tally("估價")
                     pass
                 try:
                     inc = t.income_stmt
@@ -338,6 +393,7 @@ def fetch_valuation(codes, histories):
                             if v == v:
                                 eps_y[str(col.date())[:4]] = v / shares
                 except Exception:
+                    tally("估價")
                     pass
 
                 cur_bps = info.get("bookValue")
@@ -355,6 +411,7 @@ def fetch_valuation(codes, histories):
                         if (today - ts.date()).days <= 365:
                             cur_div += float(v)
                 except Exception:
+                    tally("估價")
                     pass
 
                 pb_hist, pe_hist, yld_hist = [], [], []
@@ -409,6 +466,7 @@ def fetch_valuation(codes, histories):
                     result[code] = entry
                 break
             except Exception:
+                tally("估價")
                 continue
 
         if i % 20 == 19:
@@ -476,10 +534,12 @@ def fetch_analyst_targets(codes):
                                 })
                             entry["ratings"] = ratings
                     except Exception:
+                        tally("分析師目標價")
                         pass
                     result[code] = entry
                     break
             except Exception:
+                tally("分析師目標價")
                 continue
 
         # 查得到這檔、但沒有目標價 → 是「無分析師覆蓋」，不是抓取失敗。
@@ -516,6 +576,7 @@ def fetch_trailing_pe(code):
                         "eps": round(eps, 2) if eps is not None else None,
                     }
             except Exception:
+                tally("PE/EPS")
                 continue
 
     # fallback：手動 crumb + quoteSummary API
@@ -548,6 +609,7 @@ def fetch_trailing_pe(code):
                     "eps": round(eps, 2) if eps is not None else None,
                 }
         except Exception:
+            tally("PE/EPS")
             continue
     return {}
 
@@ -575,6 +637,7 @@ def fetch_quarterly_eps(code, n_quarters=8):
                 try:
                     shares = t.info.get("sharesOutstanding")
                 except Exception:
+                    tally("季度EPS")
                     pass
                 if eps_row is None and not (ni_row is not None and shares):
                     continue
@@ -605,6 +668,7 @@ def fetch_quarterly_eps(code, n_quarters=8):
                 if out_sorted:
                     return out_sorted  # 舊到新
             except Exception:
+                tally("季度EPS")
                 continue
 
     # fallback：quoteSummary with crumb（只有4季、無日期）
@@ -635,6 +699,7 @@ def fetch_quarterly_eps(code, n_quarters=8):
             if out:
                 return out
         except Exception:
+            tally("季度EPS")
             continue
     return []
 
@@ -664,6 +729,7 @@ def fetch_annual_eps(code, n_years=6):
             try:
                 shares = t.info.get("sharesOutstanding")
             except Exception:
+                tally("年度EPS")
                 pass
             out = []
             for col in df.columns:
@@ -679,6 +745,7 @@ def fetch_annual_eps(code, n_years=6):
             if out:
                 return sorted(out, key=lambda x: x["y"])[-n_years:]
         except Exception:
+            tally("年度EPS")
             continue
     return []
 
@@ -827,6 +894,7 @@ def fetch_price_history(code):
                 volumes = [int(v) if v is not None else 0 for _, _, v in triples]
                 return closes, dates, volumes
         except Exception:
+            tally("個股歷史")
             continue
     return None, None, None
 
@@ -850,8 +918,8 @@ def compute_opportunities(all_prices, extra_codes=None, company_info=None, inst_
     try:
         with open("stock_info.json", "r", encoding="utf-8") as f:
             si_static = json.load(f)
-    except Exception:
-        pass
+    except Exception as e:
+        warn(f"stock_info.json 讀取失敗（{e}），機會點的 EPS 過濾會失準")
     ci = company_info or {}
 
     def get_eps(code):
@@ -1925,6 +1993,7 @@ def fetch_yahoo(code):
                 "date":    mkt_date,
             }
         except Exception:
+            tally("Yahoo報價")
             continue
     return None
 
@@ -2281,6 +2350,7 @@ def fetch_foreign_holding():
                     if code and shares > 0:
                         out[code] = {"shares": shares, "fh": round(fh, 2)}
                 except Exception:
+                    tally("外資持股")
                     continue
             if out:
                 print(f"   ✅ 外資持股({d.strftime('%Y/%m/%d')}): {len(out)} 檔")
@@ -2339,6 +2409,7 @@ def fetch_inst_stocks(all_prices, target_days=5):
                                     try:
                                         return int(str(v).replace(",", ""))
                                     except Exception:
+                                        tally("個股法人")
                                         pass
                             return 0
                         f_net = pg("ForeignInvestmentNetBuySell", "外陸資買賣超股數")
@@ -2870,7 +2941,17 @@ def main():
     tz_tw = datetime.timezone(datetime.timedelta(hours=8))
     data["updated_at"] = datetime.datetime.now(tz_tw).strftime("%Y/%m/%d %H:%M")
 
-    # 7. 壓縮 histories，縮短首頁載入時間
+    # 7. 資料品質總結。看「拿到幾成」而不是「有沒有拋例外」——
+    #    少數個股抓不到是常態，整批掛掉才是問題。
+    n_watch = len(FALLBACK_CODES)
+    data["warnings"] = report_quality({
+        "個股報價":     (len(data.get("prices", {})),          n_watch),
+        "個股歷史":     (len(data.get("histories", {})),        n_watch),
+        "分析師目標價": (len(data.get("analyst_targets", {})),  n_watch),
+        "個股法人":     (len(data.get("inst_stocks", {})),      n_watch),
+    })
+
+    # 8. 壓縮 histories，縮短首頁載入時間
     compact_histories(data)
 
     with open("data.json", "w", encoding="utf-8") as f:
