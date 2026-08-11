@@ -199,6 +199,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .tgt-below-tag{display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;
   font-size:10px;font-weight:600;color:var(--blue);background:rgba(96,165,250,.12);
   border:1px solid rgba(96,165,250,.35);border-radius:4px;padding:2px 7px;font-family:var(--mono)}
+/* 只有 1 位分析師：訊號份量差很多，整張卡不上藍色，標籤也退成灰階。
+   深色底上真正的黑字會看不見，所以用最暗的中性灰。 */
+.tgt-card.below-low.solo{background:var(--bg2);border-color:var(--border);box-shadow:none}
+.tgt-below-tag.solo{color:var(--text3);background:rgba(255,255,255,.04);
+  border-color:var(--border2);font-weight:400}
 
 
 .etf-section{margin-bottom:24px}
@@ -3355,10 +3360,10 @@ function renderAnalystTargets() {
     // 只有 1 位分析師時，「最低」＝「唯一」，講成最低會高估這個訊號的份量
     const belowDiff = belowLow ? (at.low - price) / price * 100 : 0;
     const belowTag = belowLow
-      ? `<div class="tgt-below-tag">↓ 現價低於${at.count === 1 ? "唯一" : "最低"}目標 ${at.low.toFixed(0)}（差 ${belowDiff < 1 ? belowDiff.toFixed(1) : belowDiff.toFixed(0)}%）</div>`
+      ? `<div class="tgt-below-tag${at.count === 1 ? " solo" : ""}">↓ 現價低於${at.count === 1 ? "唯一" : "最低"}目標 ${at.low.toFixed(0)}（差 ${belowDiff < 1 ? belowDiff.toFixed(1) : belowDiff.toFixed(0)}%）</div>`
       : "";
 
-    return `<div class="tgt-card${belowLow ? " below-low" : ""}" onclick="toggleStock('${code}')">
+    return `<div class="tgt-card${belowLow ? " below-low" : ""}${belowLow && at.count === 1 ? " solo" : ""}" onclick="toggleStock('${code}')">
       ${belowTag}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${code}</span>
