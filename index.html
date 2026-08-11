@@ -550,6 +550,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div class="sec-hd" style="margin-top:18px">🧪 機會點 v2<span class="src-tag">依 5 年回測校準的排序</span></div>
   <div class="v2-note" id="v2-note"></div>
   <div class="v2-grid" id="v2-grid"></div>
+  <div id="v2-belowlow" style="margin-top:10px"></div>
 
   <!-- ── 法人目標價追蹤 ── -->
   <div class="sec-hd" style="margin-top:18px">
@@ -1141,7 +1142,26 @@ function scoreOppV2(o, maSet) {
   // 突破均線只當補充資訊：回測顯示交集沒有加成，不列入分數
   if (maSet && maSet.has(o.code)) tags.push(["站上5/20/60MA", ""]);
 
-  return { score, tags, rising };
+  /*
+   * 分析師目標價刻意「只顯示、不計分」。
+   * Yahoo 只給當下快照、沒有歷史目標價序列，所以這個條件無法回測——
+   * 拿沒驗證過的條件去過濾驗證過的排序，整體可信度是往下走的。
+   * 而且「目標價還有上漲空間」63 檔裡有 45 檔符合（71%），本來就篩不掉什麼。
+   *
+   * 但「現價低於全體分析師最低目標」罕見得多（63 檔裡 8 檔），值得標出來；
+   * 只有 1 位分析師時「最低」等於「唯一」，份量差很多，另外標示。
+   */
+  const at = analystTargets[o.code] || {};
+  const price = (priceCache[o.code] || {}).price;
+  const tgt = at.median || at.mean;
+  const upside = (tgt && price) ? (tgt - price) / price * 100 : null;
+  const belowLow = at.low != null && price > 0 && price < at.low;
+  if (belowLow) {
+    tags.push([at.count === 1 ? "低於唯一目標（僅1位）" : `低於最低目標（${at.count}位）`,
+               at.count === 1 ? "" : "good"]);
+  }
+
+  return { score, tags, rising, upside, atCount: at.count, belowLow };
 }
 
 function renderOppV2() {
@@ -1190,10 +1210,62 @@ function renderOppV2() {
         <div><span>${o.name} 近30日</span><b class="${(o.p30 ?? 0) >= 0 ? "up" : "dn"}">${o.p30 == null ? "—" : (o.p30 >= 0 ? "+" : "") + o.p30.toFixed(0) + "%"}</b></div>
         <div class="v2-calc-sum"><span>落後龍頭</span><b>${o.gap == null ? "—" : o.gap.toFixed(0) + " 個百分點"}</b></div>
       </div>
+      <div class="v2-line" style="display:flex;justify-content:space-between;gap:8px">
+        <span style="font-family:var(--font)">目標價上漲空間</span>
+        <b style="color:${o.upside == null ? "var(--text3)" : o.upside > 0 ? "#4ade80" : "#f87171"}">${
+          o.upside == null ? "無分析師覆蓋"
+          : `${o.upside >= 0 ? "+" : ""}${o.upside.toFixed(0)}%${o.atCount ? `　${o.atCount}位` : ""}`}</b>
+      </div>
       <div class="v2-line">${p.price != null ? p.price.toFixed(1) : "—"}　${o.theme}</div>
       <div class="v2-tags">${o.tags.map(([t, k]) => `<span class="v2-tag ${k}">${t}</span>`).join("")}</div>
     </div>`;
   }).join("");
+
+  renderBelowLowStrip(list);
+}
+
+/*
+ * 「現價低於全體分析師最低目標」名單。
+ *
+ * 為什麼另外列而不是拿來跟題材補漲取交集：
+ * 兩個條件在設計上會互相打架——題材補漲挑的是「還沒漲的」，而分析師目標價是
+ * 跟著股價事後調整的（台光電大漲後均價 15 日內被上調 +918），落後股的目標價
+ * 通常也還沒上調。今天實測交集是 0 檔。取交集只會得到空白頁，分開看才有用。
+ */
+function renderBelowLowStrip(v2list) {
+  const el = document.getElementById("v2-belowlow");
+  if (!el) return;
+
+  const items = [];
+  Object.entries(analystTargets).forEach(([code, at]) => {
+    const p = (priceCache[code] || {}).price;
+    if (!at.low || !p || p >= at.low) return;
+    items.push({ code, name: nameCache[code] || code, count: at.count || 0,
+                 diff: (at.low - p) / p * 100 });
+  });
+  if (!items.length) { el.innerHTML = ""; return; }
+  items.sort((a, b) => b.count - a.count);
+
+  const inC = new Set(v2list.map(o => o.code));
+  const overlap = items.filter(i => inC.has(i.code));
+
+  const chip = i => `<span class="v2-tag ${i.count > 1 ? "good" : ""}" style="cursor:pointer;font-size:11px"
+      onclick="toggleStock('${i.code}')" title="${i.count} 位分析師，最低目標比現價高 ${i.diff.toFixed(0)}%">
+      ${i.name} <span style="opacity:.7">+${i.diff.toFixed(0)}%·${i.count}位</span></span>`;
+
+  el.innerHTML = `
+    <div class="v2-note" style="border-left-color:var(--blue)">
+      <b>另一個角度：現價低於「全體分析師最低目標」</b>　
+      <span class="v2-dim">連最保守的一份報告都還沒看到這個價位。63 檔有覆蓋的股票裡只有 ${items.length} 檔，
+      比「目標價還有上漲空間」（45 檔／71%）罕見得多，當標記才有鑑別度。</span>
+      <div class="v2-tags" style="margin-top:8px">${items.map(chip).join("")}</div>
+      <div class="v2-dim" style="margin-top:8px">
+        與上方題材補漲的交集：<b style="color:${overlap.length ? "var(--yellow)" : "var(--text3)"}">${
+          overlap.length ? overlap.map(i => i.name).join("、") : "目前 0 檔"}</b>　
+        ${overlap.length ? "" : "——兩個條件在設計上會互相打架：題材補漲挑的是還沒漲的，而目標價是跟著股價事後調整的，落後股的目標價通常也還沒上調。所以分開看，不取交集。"}
+      </div>
+      <div class="v2-dim" style="margin-top:6px">灰色 = 只有 1 位分析師（「最低」其實是「唯一」，份量低很多）。</div>
+    </div>`;
 }
 
 // ── 機會點交集 Venn 圖 ──────────────────────────────────────
