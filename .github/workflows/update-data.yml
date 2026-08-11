@@ -25,6 +25,11 @@ jobs:
       - name: Install dependencies
         run: pip3 install requests yfinance anthropic beautifulsoup4 --break-system-packages --quiet
 
+      # stocks.json 是監控清單的唯一來源，stocks.js 由它產生給網頁用。
+      # 有人只改了 json 沒重跑同步時，這一步會補上，避免網頁清單落後。
+      - name: Sync stock list
+        run: python3 sync_stocks.py
+
       - name: Fetch Taiwan stock data
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -46,7 +51,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data.json history_5y.json company_info.json weekly_report.html targets.json
+          git add data.json history_5y.json company_info.json weekly_report.html targets.json stocks.js
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

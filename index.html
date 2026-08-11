@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="stocks.js?v=1"></script>
 <script src="market_status.js?v=3"></script>
 <style>
 :root{--bg:#0b0f1a;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#ffffff;--text2:#d0daea;--text3:#a8bacf;--up:#ef4444;--dn:#22c55e;--up-bg:rgba(239,68,68,0.1);--dn-bg:rgba(34,197,94,0.1);--blue:#60a5fa;--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);--yellow:#fbbf24;--font:'Noto Sans TC',sans-serif;--mono:'DM Mono',monospace;--r:10px}
@@ -770,89 +771,11 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
 <script>
 // 靜態資料
 // 監控清單：主動型 ETF 前10大持股（29支台股）
-const STOCKS=[
-  // ── 晶圓代工 ──
-  {code:"2330",name:"台積電",theme:"晶圓代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2303",name:"聯電",theme:"晶圓代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"5347",name:"世界先進",theme:"晶圓代工",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6789",name:"采鈺",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── IC設計 ──
-  {code:"2454",name:"聯發科",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3661",name:"世芯-KY",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3034",name:"聯詠",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2379",name:"瑞昱",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"3443",name:"創意電子",theme:"IC設計",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 半導體封測 ──
-  {code:"3711",name:"日月光投控",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2449",name:"京元電",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"6223",name:"旺矽",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"6239",name:"力成",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3374",name:"精材",theme:"半導體封測",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 記憶體 ──
-  {code:"2344",name:"華邦電",theme:"記憶體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  {code:"2408",name:"南亞科",theme:"記憶體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 矽晶圓 ──
-  {code:"6488",name:"環球晶",theme:"矽晶圓",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6182",name:"合晶科技",theme:"矽晶圓",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── 化合物半導體 ──
-  {code:"3105",name:"穩懋",theme:"化合物半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2455",name:"全新",theme:"化合物半導體",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-
-  {code:"3081",name:"聯亞",theme:"光通訊",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6442",name:"光聖",theme:"光通訊",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 半導體設備 ──
-  {code:"2404",name:"漢唐",theme:"半導體設備",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3583",name:"辛耘",theme:"半導體設備",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── ABF載板 ──
-  {code:"2383",name:"台光電",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3037",name:"欣興",theme:"ABF載板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── AI伺服器 ──
-  {code:"2382",name:"廣達",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6669",name:"緯穎",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2356",name:"英業達",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2376",name:"技嘉",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3231",name:"緯創",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2357",name:"華碩",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2324",name:"仁寶",theme:"伺服器兼營廠",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2308",name:"台達電",theme:"伺服器電源",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2317",name:"鴻海",theme:"AI伺服器ODM",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2301",name:"光寶科",theme:"伺服器電源",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2059",name:"川湖",theme:"伺服器機構件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 液冷散熱 ──
-  {code:"3017",name:"奇鋐",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"8996",name:"高力",theme:"液冷散熱",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 網通 ──
-  {code:"2345",name:"智邦",theme:"網通",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"4906",name:"正文",theme:"網通",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── 面板 ──
-  {code:"3481",name:"群創",theme:"面板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2409",name:"友達",theme:"面板",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 海運 ──
-  {code:"2603",name:"長榮",theme:"海運",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2609",name:"陽明",theme:"海運",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── 航空 ──
-  {code:"2618",name:"長榮航",theme:"航空",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2610",name:"華航",theme:"航空",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── 傳產 ──
-  {code:"2002",name:"中鋼",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"6505",name:"台塑化",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"1101",name:"台泥",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"1301",name:"台塑",theme:"傳產",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 電信 ──
-  {code:"2412",name:"中華電",theme:"電信",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"4904",name:"遠傳",theme:"電信",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── 金融 ──
-  {code:"2881",name:"富邦金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2882",name:"國泰金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2891",name:"中信金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2885",name:"元大金",theme:"金融",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  // ── 光學 ──
-  {code:"3008",name:"大立光",theme:"光學",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"3484",name:"亞光",theme:"光學",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"opp"},
-  // ── 被動元件 ──
-  {code:"2327",name:"國巨",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2492",name:"華新科",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"},
-  {code:"2472",name:"立隆電",theme:"被動元件",p1:null,p5:null,p30:null,p180:null,i5f:0,i5t:0,i5s:0,sig:"up"}];
+// 監控清單來自 stocks.js（由 stocks.json 產生），index.html 與 health_check.html 共用同一份。
+// p1/p5/p30/p180、i5f/i5t/i5s 是載入 data.json 後才填的執行期欄位，這裡先給預設值。
+const STOCKS = (window.STOCK_DATA?.tw_watchlist || []).map(s => ({
+  ...s, p1:null, p5:null, p30:null, p180:null, i5f:0, i5t:0, i5s:0, sig:"up"
+}));
 // 題材說明（顯示於各區塊標頭）
 const THEME_DESCS = {
   "晶圓代工":    "代客製造晶片，台積電為全球龍頭，技術護城河最深，聯電主攻成熟製程",
@@ -912,11 +835,7 @@ const THEME_PE = {
 };
 
 // 半導體子題材對應父題材（讓「半導體」pill 可一鍵篩選全部子類）
-const THEME_PARENT = {
-  "晶圓代工": "半導體", "IC設計": "半導體", "半導體封測": "半導體",
-  "記憶體": "半導體", "矽晶圓": "半導體", "化合物半導體": "半導體", "半導體設備": "半導體",
-  "AI伺服器ODM": "AI伺服器", "伺服器兼營廠": "AI伺服器",
-};
+const THEME_PARENT = window.STOCK_DATA?.theme_parent || {};
 
 // 機會點資料由 data.json 動態載入（fetch_data_full.py 每日自動偵測）
 let opps = [];

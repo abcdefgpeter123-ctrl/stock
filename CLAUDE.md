@@ -51,23 +51,32 @@ stock_info.json     ← 靜態補充資料（EPS fallback）
 
 ---
 
-## 監控股票清單（STOCKS）
+## 監控股票清單 — 唯一來源 `stocks.json`
 
-共 30 支，定義在 `index.html` 約第 382 行：
+**改清單只改 `stocks.json`，然後跑 `python3 sync_stocks.py`。**
 
-| 題材 | 股票代號 |
-|------|---------|
-| 半導體 | 2330、3711、2454、2303、3661、6488、2449、3034、2379、2344、6223 |
-| ABF載板 | 2383、3037 |
-| AI伺服器代工 | 2382、6669、2356、2376、3231、2357、2324、2317 |
-| 伺服器電源 | 2308、2301 |
-| 伺服器機構件 | 2059 |
-| 光通訊 | 3081、6442 |
-| 液冷散熱 | 3017 |
-| 網通 | 2345 |
-| 海運 | 2603 |
-| 傳產 | 2002、6505 |
-| 金融 | 2881、2882、2891 |
+```
+stocks.json          ← 唯一來源（手改這個）
+  ├─ sync_stocks.py → stocks.js   ← 產生檔，網頁用（不要手改）
+  │                    ├─ index.html        const STOCKS
+  │                    └─ health_check.html const WATCH_STOCKS
+  └─ fetch_data_full.py 直接讀   FALLBACK_CODES / WATCH_NAMES / THEME_GROUPS
+```
+
+| 欄位 | 說明 |
+|------|------|
+| `tw_watchlist` | 監控個股 `{code, name, theme}`，目前 62 檔 |
+| `tw_fetch_extra` | 一併抓取但不列入清單的代號（ETF、部分金融股），14 筆 |
+| `us_names` | 美股代號→中文名，供大盤日評顯示 |
+| `theme_parent` | 子題材→父題材（半導體、AI伺服器的一鍵篩選） |
+| `theme_groups` | 機會點演算法的 leaders / members |
+
+`sync_stocks.py` 會檢查兩個頁面是否真的改用共用清單，沒接上會 exit 1。
+update-data.yml 每天執行前也會跑一次同步。
+
+> **為什麼要這樣做**：這份清單原本在 `index.html`、`health_check.html`、
+> `fetch_data_full.py` 各寫一份，格式都不一樣。結果 health_check 漏掉廣達(2382)，
+> 兩頁的「AI 族群站上20MA」分別算在 8 檔與 7 檔上，而且沒有任何機制會發現。
 
 ---
 
