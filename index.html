@@ -523,26 +523,21 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   </div>
   <div class="theme-review-grid" id="theme-review-grid"></div>
   <div class="sec-hd" style="margin-top:4px">🎯 機會點快覽<span class="src-tag">點擊直接展開個股詳情</span></div>
-  <div class="mkt-opp-row" id="opp-row-ma"></div>
   <div class="mkt-opp-row" id="opp-row-target" style="margin-top:8px"></div>
   <div class="mkt-opp-row" id="mkt-opp-row" style="margin-top:8px"></div>
 
-  <div class="sec-hd" style="margin-top:18px">🔵 機會點交集圖<span class="src-tag">同時符合越多條件訊號越強</span></div>
+  <div class="sec-hd" style="margin-top:18px">🔵 機會點交集圖<span class="src-tag">兩項同時成立訊號較強</span></div>
   <div class="venn-container">
-    <svg viewBox="0 0 300 270" class="venn-svg">
-      <circle cx="150" cy="95"  r="90" class="venn-circle venn-a"/>
-      <circle cx="110" cy="170" r="90" class="venn-circle venn-b"/>
-      <circle cx="190" cy="170" r="90" class="venn-circle venn-c"/>
-      <text x="150" y="30" class="venn-set-label">① 突破均線</text>
-      <text x="55"  y="252" class="venn-set-label">② 目標價上漲</text>
-      <text x="245" y="252" class="venn-set-label" style="cursor:help">③ 題材補漲<title>整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）</title></text>
-      <text id="venn-count-a"   x="150" y="55"  class="venn-count">0</text>
-      <text id="venn-count-b"   x="88"  y="205" class="venn-count">0</text>
-      <text id="venn-count-c"   x="212" y="205" class="venn-count">0</text>
-      <text id="venn-count-ab"  x="112" y="130" class="venn-count">0</text>
-      <text id="venn-count-ac"  x="188" y="130" class="venn-count">0</text>
-      <text id="venn-count-bc"  x="150" y="205" class="venn-count">0</text>
-      <text id="venn-count-abc" x="150" y="170" class="venn-count venn-count-strong">0</text>
+    <!-- 原本三圈，2026/08 移除「① 突破均線」：5 年回測逐年檢查只有 1/6 年成立，
+         總表看起來勝過基準純粹是樣本組成（多頭年份站上均線的日子本來就多）。 -->
+    <svg viewBox="0 0 300 220" class="venn-svg">
+      <circle cx="115" cy="110" r="88" class="venn-circle venn-b"/>
+      <circle cx="185" cy="110" r="88" class="venn-circle venn-c"/>
+      <text x="62"  y="212" class="venn-set-label">① 目標價上漲</text>
+      <text x="238" y="212" class="venn-set-label" style="cursor:help">② 題材補漲<title>整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）</title></text>
+      <text id="venn-count-b"  x="72"  y="118" class="venn-count">0</text>
+      <text id="venn-count-c"  x="228" y="118" class="venn-count">0</text>
+      <text id="venn-count-bc" x="150" y="118" class="venn-count venn-count-strong">0</text>
     </svg>
     <div id="venn-detail" class="venn-detail"></div>
   </div>
@@ -950,7 +945,7 @@ function renderMarketSummary() {
   }
   const show = opps.slice(0, 8);
   row.innerHTML =
-    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）">③ 題材補漲：</span>` +
+    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）">② 題材補漲：</span>` +
     show.map(o => {
       const d = priceCache[o.code];
       const chgTxt = d ? `<span style="color:${d.change>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.change>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
@@ -962,7 +957,6 @@ function renderMarketSummary() {
     }).join("") +
     (opps.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${opps.length - 8} 支</span>` : "");
 
-  renderMaBreakoutOpps();
   renderTargetUpsideOpps();
   renderOppVenn();
 }
@@ -973,49 +967,9 @@ function _maOf(closes, n) {
   return slice.reduce((a, b) => a + b, 0) / n;
 }
 
-// ── 階段① 突破所有均線（5/20/60）── 純技術面 ──────────────────
-function renderMaBreakoutOpps() {
-  const row = document.getElementById("opp-row-ma");
-  if (!row) return;
-
-  const hits = [];
-  STOCKS.forEach(s => {
-    if (s._extra) return;
-    const p = priceCache[s.code];
-    const h = histories[s.code];
-    const closes = h?.closes;
-    if (!p || !p.price || !closes || closes.length < 60) return;
-    const price = p.price;
-    const ma5  = _maOf(closes, 5);
-    const ma20 = _maOf(closes, 20);
-    const ma60 = _maOf(closes, 60);
-    if (ma5 == null || ma20 == null || ma60 == null) return;
-    if (price <= ma5 || price <= ma20 || price <= ma60) return;  // 需站上三均線
-
-    const above20Pct = (price / ma20 - 1) * 100;
-    hits.push({ code: s.code, name: nameCache[s.code] || s.name, above20Pct });
-  });
-
-  hits.sort((a, b) => b.above20Pct - a.above20Pct);
-
-  if (!hits.length) {
-    row.innerHTML = `<span style="color:var(--text3);font-size:12px">① 突破所有均線（5/20/60）：目前無符合個股</span>`;
-    return;
-  }
-
-  row.innerHTML =
-    `<span style="font-size:12px;color:#4ade80;white-space:nowrap;font-weight:500">① 突破所有均線：</span>` +
-    hits.slice(0, 8).map(h => {
-      const d = priceCache[h.code];
-      const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" style="border-color:rgba(74,222,128,0.4)" onclick="toggleStock('${h.code}')">
-        <span style="color:var(--text)">${h.name}</span>
-        ${chgTxt}
-        <span style="color:#4ade80">站上20MA+${h.above20Pct.toFixed(1)}%</span>
-      </span>`;
-    }).join("") +
-    (hits.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${hits.length - 8} 支</span>` : "");
-}
+// 註：原本這裡有 renderMaBreakoutOpps()（機會點快覽的「突破均線」列）。
+// 2026/08 隨交集圖一起移除——5 年回測逐年檢查只有 1/6 年成立，
+// 總表勝過基準是樣本組成造成的假象。_maOf() 保留給其他計算使用。
 
 // ── 階段② 券商目標價，上漲空間為正 ──────────────────────────
 function renderTargetUpsideOpps() {
@@ -1042,7 +996,7 @@ function renderTargetUpsideOpps() {
   }
 
   row.innerHTML =
-    `<span style="font-size:12px;color:#a78bfa;white-space:nowrap;font-weight:500">② 目標價上漲空間為正：</span>` +
+    `<span style="font-size:12px;color:#a78bfa;white-space:nowrap;font-weight:500">① 目標價上漲空間為正：</span>` +
     hits.slice(0, 8).map(h => {
       const d = priceCache[h.code];
       const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
@@ -1057,7 +1011,7 @@ function renderTargetUpsideOpps() {
 
 // ── 三大條件集合（供 Venn 圖使用）──────────────────────────
 function computeOppSets() {
-  const A = new Map();  // ① 突破均線
+  const A = new Map();  // 站上 5/20/60 均線 —— 已退出交集圖，只留給 v2 當補充標籤
   STOCKS.forEach(s => {
     if (s._extra) return;
     const p = priceCache[s.code];
@@ -1073,7 +1027,7 @@ function computeOppSets() {
     A.set(s.code, { code: s.code, name: nameCache[s.code] || s.name });
   });
 
-  const B = new Map();  // ② 目標價上漲空間為正
+  const B = new Map();  // ① 目標價上漲空間為正
   Object.entries(analystTargets).forEach(([code, at]) => {
     if (!at.mean) return;
     const p = priceCache[code];
@@ -1084,7 +1038,7 @@ function computeOppSets() {
   });
 
   /*
-   * ③ 題材已漲、個股未反應 —— 收斂到「落後龍頭 8–12 個百分點」。
+   * ② 題材已漲、個股未反應 —— 收斂到「落後龍頭 8–12 個百分點」。
    *
    * 抓取端仍保留 gap ≥ 8 的完整名單（機會點快覽與 v2 都吃那份），這裡只縮篩選範圍。
    * 依據：5 年回測按落後幅度分桶，20 日勝率
@@ -1113,11 +1067,11 @@ function computeOppSets() {
 // 而是這檔本身有問題。v2 因此把 8–16% 當甜蜜區，≥20% 直接扣分。
 //
 // 另外兩件回測結果，也一併反映在這裡：
-//   ·「① 突破均線 ＋ ③ 題材補漲」的交集反而比單獨任一項差（勝率 52.1% vs 54.9%），
+//   ·「突破均線 ＋ 題材補漲」的交集反而比單獨任一項差（勝率 52.1% vs 54.9%），
 //     所以 v2 不把突破均線當加分項，只當補充資訊顯示。
 //   ·大盤濾網看總表有效、但逐年只有 2/5 年成立，判定為過擬合，不採用。
 const V2_BACKTEST = {
-  n: "③ 題材補漲 ＋ 落後 8–16 個百分點 ＋ 60MA上揚",
+  n: "題材補漲 ＋ 落後 8–16 個百分點 ＋ 60MA上揚",
   d20: "20日 中位 +2.24% / 勝率 60.2%",
   d60: "60日 平均 +12.2% / 勝率 60.2%",
   years: "逐年 4 勝 2 敗（2021、2024 為負）",
@@ -1345,20 +1299,17 @@ function renderOppVenn() {
   if (!detailEl) return;
 
   const { A, B, C } = computeOppSets();
-  const allCodes = new Set([...A.keys(), ...B.keys(), ...C.keys()]);
+  const allCodes = new Set([...B.keys(), ...C.keys()]);   // A 仍供 v2 當補充標籤，不進交集圖
 
-  const buckets = { abc: [], ab: [], ac: [], bc: [], a: [], b: [], c: [] };
+  const buckets = { bc: [], b: [], c: [] };
   allCodes.forEach(code => {
-    const inA = A.has(code), inB = B.has(code), inC = C.has(code);
-    const src = A.get(code) || B.get(code) || C.get(code);
+    const inB = B.has(code), inC = C.has(code);
+    const src = B.get(code) || C.get(code);
+    if (!src) return;
     const item = { code, name: src.name };
-    if (inA && inB && inC) buckets.abc.push(item);
-    else if (inA && inB)   buckets.ab.push(item);
-    else if (inA && inC)   buckets.ac.push(item);
-    else if (inB && inC)   buckets.bc.push(item);
-    else if (inA)          buckets.a.push(item);
-    else if (inB)          buckets.b.push(item);
-    else                   buckets.c.push(item);
+    if (inB && inC)   buckets.bc.push(item);
+    else if (inB)     buckets.b.push(item);
+    else if (inC)     buckets.c.push(item);
   });
 
   Object.entries(buckets).forEach(([k, arr]) => {
@@ -1367,15 +1318,11 @@ function renderOppVenn() {
   });
 
   const LABELS = {
-    abc: "🏆 三項全中（強力訊號）",
-    ab:  "① 突破均線 ＋ ② 目標價上漲",
-    ac:  "① 突破均線 ＋ ③ 題材補漲",
-    bc:  "② 目標價上漲 ＋ ③ 題材補漲",
-    a:   "僅 ① 突破均線",
-    b:   "僅 ② 目標價上漲空間",
-    c:   "僅 ③ 題材補漲",
+    bc: "🏆 兩項全中",
+    b:  "僅 ① 目標價上漲空間",
+    c:  "僅 ② 題材補漲",
   };
-  const order = ["abc", "ab", "ac", "bc", "a", "b", "c"];
+  const order = ["bc", "b", "c"];
 
   const nonEmpty = order.filter(k => buckets[k].length);
   if (!nonEmpty.length) {
@@ -1391,7 +1338,7 @@ function renderOppVenn() {
       `<span class="opp-chip" onclick="toggleStock('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
     ).join("");
     const hasC = k.includes("c") || k === "abc";
-    const titleAttr = hasC ? ` title="③ 題材補漲：整體題材已漲、該個股尚未反應，落後龍頭 8–12 個百分點" style="cursor:help"` : "";
+    const titleAttr = hasC ? ` title="② 題材補漲：整體題材已漲、該個股尚未反應，落後龍頭 8–12 個百分點" style="cursor:help"` : "";
     return `<div>
       <div class="venn-bucket-hd"${titleAttr}>${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
       <div class="venn-bucket-chips">${chips}</div>
