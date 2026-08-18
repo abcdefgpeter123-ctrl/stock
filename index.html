@@ -550,6 +550,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   </div>
   <div class="v2-note" id="v2-note" style="display:none"></div>
   <div class="v2-grid" id="v2-grid"></div>
+  <div id="v2-outer"></div>
   <div id="v2-belowlow" style="margin-top:10px"></div>
 
   <!-- ── 法人目標價追蹤 ── -->
@@ -1182,15 +1183,56 @@ function renderOppV2() {
     + `這是補漲策略，20 天太短——60 日才是它的主場。樣本取自今天的觀察名單、有存活者偏誤，數字看方向就好。</span>`;
 
   const maSet = computeOppSets().A;
-  const list = (opps || []).map(o => ({ ...o, ...scoreOppV2(o, maSet) }))
-                           .sort((a, b) => b.score - a.score);
-  if (!list.length) {
-    grid.innerHTML = `<div class="v2-empty">目前沒有符合題材補漲條件的個股</div>`;
-    return;
-  }
+  const scored = (opps || []).map(o => ({ ...o, ...scoreOppV2(o, maSet) }))
+                             .sort((a, b) => b.score - a.score);
 
-  grid.innerHTML = list.map(o => {
-    const tier = o.score >= 55 ? "tier1" : o.score >= 35 ? "tier2" : "tier3";
+  /*
+   * 主名單與交集圖的 ② 題材補漲用同一個定義（落後 8–12 個百分點），
+   * 兩處數字才對得起來。超出範圍的不是刪掉、是收到下面的「未達標準」區——
+   * 抓取端本來就只給 gap ≥ 8 的候選，看得到它們差在哪比看不到有用。
+   */
+  const list  = scored.filter(o => o.gap != null && o.gap >= 8 && o.gap <= 12);
+  const outer = scored.filter(o => !list.includes(o));
+
+  grid.innerHTML = list.length
+    ? list.map(cardHtml).join("")
+    : `<div class="v2-empty">目前沒有落後龍頭 8–12 個百分點的個股${
+        outer.length ? `（另有 ${outer.length} 檔落在範圍外，見下方）` : ""}</div>`;
+
+  renderV2Outer(outer);
+  renderBelowLowStrip(list);
+  initV2Note();
+}
+
+/* 超出 8–12 範圍的候選：預設收起，點開才看得到 */
+function renderV2Outer(outer) {
+  const el = document.getElementById("v2-outer");
+  if (!el) return;
+  if (!outer.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `
+    <button class="sec-toggle" onclick="toggleV2Outer(this)" style="margin-top:8px">
+      ▶ 範圍外的候選（${outer.length}）</button>
+    <div id="v2-outer-grid" class="v2-grid" style="display:none">
+      <div class="v2-empty" style="grid-column:1/-1;padding:0 0 4px">
+        這些也在題材補漲的原始名單裡，但落後幅度不在 8–12 個百分點。
+        回測顯示落後 20–30 個百分點的勝率只有 41.9%、中位數是負的——
+        通常不是「還沒輪到它」，是個股本身有問題。
+      </div>
+      ${outer.map(cardHtml).join("")}
+    </div>`;
+}
+
+function toggleV2Outer(btn) {
+  const g = document.getElementById("v2-outer-grid");
+  const open = g.style.display === "none";
+  g.style.display = open ? "" : "none";
+  btn.textContent = open
+    ? btn.textContent.replace("▶", "▼")
+    : btn.textContent.replace("▼", "▶");
+}
+
+function cardHtml(o) {
+  const tier = o.score >= 55 ? "tier1" : o.score >= 35 ? "tier2" : "tier3";
     const col  = o.score >= 55 ? "var(--yellow)" : o.score >= 35 ? "var(--blue)" : "var(--text3)";
     const p = priceCache[o.code] || {};
     return `<div class="v2-card ${tier}" onclick="toggleStock('${o.code}')">
@@ -1213,10 +1255,6 @@ function renderOppV2() {
       <div class="v2-line">${p.price != null ? p.price.toFixed(1) : "—"}　${o.theme}</div>
       <div class="v2-tags">${o.tags.map(([t, k]) => `<span class="v2-tag ${k}">${t}</span>`).join("")}</div>
     </div>`;
-  }).join("");
-
-  renderBelowLowStrip(list);
-  initV2Note();
 }
 
 /*
