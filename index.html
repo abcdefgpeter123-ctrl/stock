@@ -535,7 +535,7 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <circle cx="190" cy="170" r="90" class="venn-circle venn-c"/>
       <text x="150" y="30" class="venn-set-label">① 突破均線</text>
       <text x="55"  y="252" class="venn-set-label">② 目標價上漲</text>
-      <text x="245" y="252" class="venn-set-label" style="cursor:help">③ 題材補漲<title>整體題材已漲，該個股屬於此題材但股價尚未反應</title></text>
+      <text x="245" y="252" class="venn-set-label" style="cursor:help">③ 題材補漲<title>整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）</title></text>
       <text id="venn-count-a"   x="150" y="55"  class="venn-count">0</text>
       <text id="venn-count-b"   x="88"  y="205" class="venn-count">0</text>
       <text id="venn-count-c"   x="212" y="205" class="venn-count">0</text>
@@ -547,8 +547,13 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div id="venn-detail" class="venn-detail"></div>
   </div>
 
-  <div class="sec-hd" style="margin-top:18px">🧪 機會點 v2<span class="src-tag">依 5 年回測校準的排序</span></div>
-  <div class="v2-note" id="v2-note"></div>
+  <div class="sec-hd" style="margin-top:18px">🧪 機會點 v2
+    <span style="display:flex;align-items:center;gap:8px">
+      <span class="src-tag">依 5 年回測校準的排序</span>
+      <button class="sec-toggle" id="v2-note-toggle" onclick="toggleV2Note(this)">▶ 這是什麼</button>
+    </span>
+  </div>
+  <div class="v2-note" id="v2-note" style="display:none"></div>
   <div class="v2-grid" id="v2-grid"></div>
   <div id="v2-belowlow" style="margin-top:10px"></div>
 
@@ -945,7 +950,7 @@ function renderMarketSummary() {
   }
   const show = opps.slice(0, 8);
   row.innerHTML =
-    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲，該個股屬於此題材但股價尚未反應">③ 題材補漲：</span>` +
+    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）">③ 題材補漲：</span>` +
     show.map(o => {
       const d = priceCache[o.code];
       const chgTxt = d ? `<span style="color:${d.change>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.change>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
@@ -1078,8 +1083,21 @@ function computeOppSets() {
     B.set(code, { code, name: nameCache[code] || code, upside });
   });
 
-  const C = new Map();  // ③ 題材已漲，個股未反應
-  (opps || []).forEach(o => { C.set(o.code, { code: o.code, name: o.name, gap: o.gap }); });
+  /*
+   * ③ 題材已漲、個股未反應 —— 收斂到「落後龍頭 8–12 個百分點」。
+   *
+   * 抓取端仍保留 gap ≥ 8 的完整名單（機會點快覽與 v2 都吃那份），這裡只縮篩選範圍。
+   * 依據：5 年回測按落後幅度分桶，20 日勝率
+   *   8–12pt 61.9% ／ 12–16pt 59.2% ／ 16–20pt 50.5% ／ 20–30pt 41.9%（中位數轉負）
+   * 而且這個順序 2021–2026 每一年都成立。落後太多通常不是「還沒輪到它」，
+   * 是個股本身有問題，題材漲它也漲不動。
+   */
+  const GAP_LO = 8, GAP_HI = 12;
+  const C = new Map();
+  (opps || []).forEach(o => {
+    if (o.gap == null || o.gap < GAP_LO || o.gap > GAP_HI) return;
+    C.set(o.code, { code: o.code, name: o.name, gap: o.gap });
+  });
 
   return { A, B, C };
 }
@@ -1164,6 +1182,28 @@ function scoreOppV2(o, maSet) {
   return { score, tags, rising, upside, atCount: at.count, belowLow };
 }
 
+/*
+ * v2 的說明預設收起。內容很長（要交代為什麼排序跟 v1 相反、哪些條件被回測否決），
+ * 但那是「第一次看」才需要的東西，天天攤開來只會把真正要看的卡片擠到下面。
+ * 選擇記在 localStorage，不用每次重開。
+ */
+const V2_NOTE_KEY = "v2_note_open";
+function toggleV2Note(btn) {
+  const el = document.getElementById("v2-note");
+  const open = el.style.display === "none";
+  el.style.display = open ? "" : "none";
+  btn.textContent = open ? "▼ 收合說明" : "▶ 這是什麼";
+  try { localStorage.setItem(V2_NOTE_KEY, open ? "1" : "0"); } catch (e) {}
+}
+let _v2NoteInit = false;
+function initV2Note() {
+  if (_v2NoteInit) return;      // renderOppV2 會重複呼叫，只在第一次套用偏好
+  _v2NoteInit = true;
+  let open = false;
+  try { open = localStorage.getItem(V2_NOTE_KEY) === "1"; } catch (e) {}
+  if (open) toggleV2Note(document.getElementById("v2-note-toggle"));
+}
+
 function renderOppV2() {
   const grid = document.getElementById("v2-grid");
   const note = document.getElementById("v2-note");
@@ -1222,6 +1262,7 @@ function renderOppV2() {
   }).join("");
 
   renderBelowLowStrip(list);
+  initV2Note();
 }
 
 /*
@@ -1350,7 +1391,7 @@ function renderOppVenn() {
       `<span class="opp-chip" onclick="toggleStock('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
     ).join("");
     const hasC = k.includes("c") || k === "abc";
-    const titleAttr = hasC ? ` title="③ 題材補漲：整體題材已漲，該個股屬於此題材但股價尚未反應" style="cursor:help"` : "";
+    const titleAttr = hasC ? ` title="③ 題材補漲：整體題材已漲、該個股尚未反應，落後龍頭 8–12 個百分點" style="cursor:help"` : "";
     return `<div>
       <div class="venn-bucket-hd"${titleAttr}>${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
       <div class="venn-bucket-chips">${chips}</div>
