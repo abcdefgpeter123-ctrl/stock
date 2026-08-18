@@ -36,7 +36,8 @@ HEADERS = {
 # 而是把「靜默」變成「看得見」：累計失敗次數，結尾印摘要並寫進
 # data.json 的 warnings，前端據此顯示黃色提示列。
 WARNINGS = []          # [(等級, 訊息)]
-FAIL_COUNTS = {}       # {來源: 失敗次數}
+FAIL_COUNTS = {}       # {來源: 失敗檔數}
+FAIL_CODES  = {}       # {來源: {已計過的股票代號}}，避免同一檔重複計數
 
 
 def warn(msg, level="warn"):
@@ -45,8 +46,24 @@ def warn(msg, level="warn"):
     print(f"   {'🔴' if level == 'error' else '⚠️'} {msg}")
 
 
-def tally(source):
-    """單筆失敗只計數不吵；由 report_quality() 判斷比例是否異常"""
+def tally(source, code=None):
+    """
+    單筆失敗只計數不吵；由 report_quality() 判斷比例是否異常。
+
+    ⚠️ 只在「整檔放棄」時呼叫，不要放在 .TW / .TWO 的重試迴圈裡。
+    上櫃股票一定會先 .TW 失敗再 .TWO 成功，放在迴圈裡等於把正常的備援
+    路徑算成失敗——先前「個股歷史 有 29 筆單獨失敗」就是這樣來的，
+    其中至少 8 筆是上櫃股（世界先進、旺矽、精材、環球晶、合晶、穩懋、聯亞、亞光）。
+
+    同一檔重複呼叫只算一次，數字才對得上「幾檔抓不到」。
+    """
+    s = FAIL_CODES.setdefault(source, set())
+    if code is None:
+        FAIL_COUNTS[source] = FAIL_COUNTS.get(source, 0) + 1
+        return
+    if code in s:
+        return
+    s.add(code)
     FAIL_COUNTS[source] = FAIL_COUNTS.get(source, 0) + 1
 
 
@@ -67,7 +84,9 @@ def report_quality(expected):
 
     for source, n in sorted(FAIL_COUNTS.items(), key=lambda x: -x[1]):
         if n >= 10:
-            warn(f"{source} 有 {n} 筆單獨失敗")
+            codes = sorted(FAIL_CODES.get(source, set()))
+            eg = ("：" + "、".join(codes[:8]) + ("…" if len(codes) > 8 else "")) if codes else ""
+            warn(f"{source} 有 {n} 檔完全抓不到{eg}")
 
     if not WARNINGS:
         print("\n✅ 資料品質檢查：全部正常")
@@ -383,7 +402,6 @@ def fetch_valuation(codes, histories):
                             if v == v:
                                 bps_y[str(col.date())[:4]] = v / shares
                 except Exception:
-                    tally("估價")
                     pass
                 try:
                     inc = t.income_stmt
@@ -393,7 +411,6 @@ def fetch_valuation(codes, histories):
                             if v == v:
                                 eps_y[str(col.date())[:4]] = v / shares
                 except Exception:
-                    tally("估價")
                     pass
 
                 cur_bps = info.get("bookValue")
@@ -411,7 +428,6 @@ def fetch_valuation(codes, histories):
                         if (today - ts.date()).days <= 365:
                             cur_div += float(v)
                 except Exception:
-                    tally("估價")
                     pass
 
                 pb_hist, pe_hist, yld_hist = [], [], []
@@ -466,7 +482,6 @@ def fetch_valuation(codes, histories):
                     result[code] = entry
                 break
             except Exception:
-                tally("估價")
                 continue
 
         if i % 20 == 19:
@@ -534,12 +549,10 @@ def fetch_analyst_targets(codes):
                                 })
                             entry["ratings"] = ratings
                     except Exception:
-                        tally("分析師目標價")
                         pass
                     result[code] = entry
                     break
             except Exception:
-                tally("分析師目標價")
                 continue
 
         # 查得到這檔、但沒有目標價 → 是「無分析師覆蓋」，不是抓取失敗。
@@ -548,8 +561,10 @@ def fetch_analyst_targets(codes):
         if code not in result:
             # reached=True  → Yahoo 有回應但沒有目標價，是真的沒人追蹤
             # reached=False → 這次根本沒查到，狀態未知，交給呼叫端沿用舊值
+            if not reached:
+                tally("分析師目標價", code)
             result[code] = {
-                "covered": False if reached else None,
+                "covered": False if reached else None,   # None＝查詢失敗，交給呼叫端沿用舊值
                 "checked": datetime.date.today().strftime("%Y/%m/%d"),
             }
         if i % 20 == 19:
@@ -576,7 +591,6 @@ def fetch_trailing_pe(code):
                         "eps": round(eps, 2) if eps is not None else None,
                     }
             except Exception:
-                tally("PE/EPS")
                 continue
 
     # fallback：手動 crumb + quoteSummary API
@@ -609,7 +623,6 @@ def fetch_trailing_pe(code):
                     "eps": round(eps, 2) if eps is not None else None,
                 }
         except Exception:
-            tally("PE/EPS")
             continue
     return {}
 
@@ -637,7 +650,6 @@ def fetch_quarterly_eps(code, n_quarters=8):
                 try:
                     shares = t.info.get("sharesOutstanding")
                 except Exception:
-                    tally("季度EPS")
                     pass
                 if eps_row is None and not (ni_row is not None and shares):
                     continue
@@ -668,7 +680,6 @@ def fetch_quarterly_eps(code, n_quarters=8):
                 if out_sorted:
                     return out_sorted  # 舊到新
             except Exception:
-                tally("季度EPS")
                 continue
 
     # fallback：quoteSummary with crumb（只有4季、無日期）
@@ -699,7 +710,6 @@ def fetch_quarterly_eps(code, n_quarters=8):
             if out:
                 return out
         except Exception:
-            tally("季度EPS")
             continue
     return []
 
@@ -729,7 +739,6 @@ def fetch_annual_eps(code, n_years=6):
             try:
                 shares = t.info.get("sharesOutstanding")
             except Exception:
-                tally("年度EPS")
                 pass
             out = []
             for col in df.columns:
@@ -745,7 +754,6 @@ def fetch_annual_eps(code, n_years=6):
             if out:
                 return sorted(out, key=lambda x: x["y"])[-n_years:]
         except Exception:
-            tally("年度EPS")
             continue
     return []
 
@@ -894,8 +902,8 @@ def fetch_price_history(code):
                 volumes = [int(v) if v is not None else 0 for _, _, v in triples]
                 return closes, dates, volumes
         except Exception:
-            tally("個股歷史")
-            continue
+            continue          # .TW 失敗是上櫃股的正常路徑，換 .TWO 再試
+    tally("個股歷史", code)   # 兩個交易所都拿不到才算真的失敗
     return None, None, None
 
 
@@ -1993,8 +2001,8 @@ def fetch_yahoo(code):
                 "date":    mkt_date,
             }
         except Exception:
-            tally("Yahoo報價")
-            continue
+            continue   # .TW 失敗是上櫃股的正常路徑
+    tally("Yahoo報價", code)   # 兩個交易所都拿不到才算真的失敗
     return None
 
 
