@@ -23,6 +23,20 @@ import sys
 
 D = os.path.dirname(os.path.abspath(__file__))
 MIN_SAMPLES = 30          # 少於這個數就只報告、不下結論
+LEVELS = ["大牛", "小牛", "橫盤", "小熊", "大熊"]
+
+
+def market_levels():
+    """
+    {日期: 市場溫度}。用 market_temp_lib 逐日重算，不需要當初記錄——
+    加權指數的 5 年歷史本來就在 data.json 裡，溫度隨時可以回推。
+    """
+    try:
+        import market_temp_lib
+        return market_temp_lib.market_levels()
+    except Exception as e:
+        print(f"（市場溫度分組不可用：{e}）")
+        return {}
 
 
 def load_prices():
@@ -111,6 +125,15 @@ def main():
         describe([r[1][n] for r in solo],     "  └ 只有 1 位分析師")
         describe([r[1][n] for r in deep],     "  └ 低於最低目標 ≥15%")
         describe([r[1][n] for r in shallow],  "  └ 低於最低目標 <15%")
+        print()
+
+    lv = market_levels()
+    if lv:
+        print("═══ 依進場當天的市場溫度分組（20 日報酬）═══")
+        print("  這是本來想問的問題：這個訊號在哪種市場狀態下最有效。")
+        for name in LEVELS:
+            describe([r[1][20] for r in signal if lv.get(r[0]["d"]) == name],
+                     f"低於最低目標 ＋ {name}")
         print()
 
     n20 = len([r for r in signal if r[1][20] is not None])
