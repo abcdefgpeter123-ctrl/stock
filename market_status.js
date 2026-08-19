@@ -174,6 +174,55 @@ const MarketStatus = (() => {
    * （也試過改用「連續 3 日站上才算」，以及加入融資籌碼指標；
    *   前者改善有限，後者反而讓跳動增加到 343，都不採用。）
    */
+  /*
+   * 盤整偵測：分數在多方位置，但指數其實一個月沒走出去。
+   *
+   * 八項指標全都是「站上均線」或「均線方向」——量的是位置與斜率，
+   * 沒有任何一項在問「到底有沒有前進」。均線落後於價格，所以一波大漲之後
+   * 就算指數橫向震盪一整個月，均線仍然在上、價格仍然在均線上方，
+   * 分數可以一直停在大牛。
+   *
+   * 用 Kaufman 效率比補上這個維度：
+   *     效率比 = |淨移動| ÷ Σ|每日變動|      1＝單向直線，0＝完全來回
+   *
+   * 2026/08/19 的實例：分數 9.2（大牛），但近 20 日淨變動 −2.04%、效率比 0.05，
+   * 屬於大牛裡最罕見的 3%（近20日淨變動為負）。
+   *
+   * ⚠️ 這個訊號刻意「不」列入計分。5 年回測顯示「大牛＋低效率」之後 60 日
+   * 仍有 +6.5%／勝率 66%，而且逐年只有 2/4 年比高效率差——沒有足夠證據
+   * 支持降分。它要解決的是「標籤與體感不符」，不是「分數預測不準」。
+   */
+  const CHOP_ER = 0.15;      // 效率比低於此視為來回洗
+  const CHOP_NET = 2;        // 近 20 日淨變動絕對值小於此視為原地
+
+  function chopiness(closes, n = 20) {
+    if (!closes || closes.length < n + 1) return null;
+    const seg = closes.slice(-(n + 1));
+    let total = 0;
+    for (let i = 1; i < seg.length; i++) total += Math.abs(seg[i] - seg[i - 1]);
+    if (!total) return null;
+    const net = seg[seg.length - 1] - seg[0];
+    return {
+      er:   Math.round(Math.abs(net) / total * 100) / 100,
+      net:  Math.round(net / seg[0] * 1000) / 10,     // 近 n 日淨變動 %
+      days: n,
+    };
+  }
+
+  /** 多方位置但沒在前進 → 回傳可直接顯示的提示，否則 null */
+  function chopWarning(level, closes) {
+    const c = chopiness(closes);
+    if (!c) return null;
+    const bullish = level && (level.label === '大牛' || level.label === '小牛');
+    if (!bullish) return null;
+    if (c.er >= CHOP_ER && Math.abs(c.net) >= CHOP_NET) return null;
+    return {
+      ...c,
+      text: `位置偏多但近 ${c.days} 日原地震盪（淨 ${c.net >= 0 ? '+' : ''}${c.net}%、`
+          + `效率比 ${c.er.toFixed(2)}），實際體感接近橫盤`,
+    };
+  }
+
   function evaluate(input) {
     const results = computeIndicators(input);
     const raw = score(results);
@@ -186,8 +235,10 @@ const MarketStatus = (() => {
     }
     const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10;
 
+    const level = levelOf(avg);
     return { results, score: avg, rawScore: raw, days: scores.length,
-             max: MAX_SCORE, level: levelOf(avg) };
+             max: MAX_SCORE, level,
+             chop: chopWarning(level, input.idxCloses) };
   }
 
   /**

@@ -430,7 +430,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 
 <script src="freshness.js?v=2"></script>
 <script src="stocks.js?v=1"></script>
-<script src="market_status.js?v=3"></script>
+<script src="market_status.js?v=4"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  Constants & state
@@ -662,7 +662,12 @@ function updateScore() {
   document.getElementById('total-score').textContent = score;
   document.getElementById('market-label').textContent = level.label;
   document.getElementById('market-label').style.color = level.color;
-  document.getElementById('market-desc').textContent = level.desc;
+  // 位置偏多但實際沒在前進時補一行提示（與首頁共用 MarketStatus 的判斷）
+  const chop = state.autoEval?.chop;
+  document.getElementById('market-desc').innerHTML =
+    level.desc + (chop
+      ? `<div style="margin-top:5px;font-size:12px;color:var(--yellow)">⚠️ ${chop.text}</div>`
+      : '');
   document.getElementById('s1-badge').textContent = `${score} / ${MAX_SCORE}`;
   const rawEl = document.getElementById('score-raw');
   if (rawEl && state.autoEval) {
