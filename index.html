@@ -195,6 +195,30 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .v2-tag.bad{color:var(--dn);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
 .v2-empty{color:var(--text3);font-size:12px;padding:14px 0}
 
+/* ── 機會懶人包 ── */
+.cheat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-top:4px}
+.cheat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.cheat-card.c1{border-left:3px solid var(--purple)}
+.cheat-card.c2{border-left:3px solid var(--teal)}
+.cheat-card.c3{border-left:3px solid var(--yellow)}
+.cheat-hd{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.cheat-sub{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:9px}
+.cheat-n{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:7px}
+.cheat-chips{display:flex;flex-wrap:wrap;gap:5px}
+.cheat-chip{font-size:11.5px;padding:2px 8px;border-radius:12px;cursor:pointer;
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap}
+.cheat-chip:hover{border-color:var(--purple);color:var(--text)}
+.cheat-chip .q{font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-left:3px}
+.cheat-chip.dim{opacity:.55}
+.cheat-empty{font-size:11.5px;color:var(--text3);padding:4px 0;line-height:1.7}
+.cheat-ma{display:flex;flex-direction:column;gap:5px;margin-top:2px}
+.cheat-ma-row{display:flex;align-items:center;gap:8px;font-size:12px;font-family:var(--mono)}
+.cheat-ma-row .lbl{color:var(--text2);font-family:var(--font);min-width:66px}
+.cheat-ma-row .val{color:var(--text3);margin-left:auto}
+.cheat-mark{font-weight:700;font-size:13px;width:14px;text-align:center}
+.cheat-mark.yes{color:var(--dn)}
+.cheat-mark.no{color:var(--up)}
+
 /* ── 目標價卡片：現價跌破全體分析師最低目標 ── */
 .tgt-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer}
 .tgt-card.below-low{background:rgba(96,165,250,.07);border-color:rgba(96,165,250,.45);
@@ -511,6 +535,10 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </div>
     <div id="market-status-desc" style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6"></div>
   </div>
+
+  <!-- 機會懶人包：三種不同的進場理由各佔一格，彼此獨立不取交集 -->
+  <div class="sec-hd" style="margin-top:18px">🧺 機會懶人包<span class="src-tag">三種進場理由，各看各的</span></div>
+  <div class="cheat-grid" id="cheat-grid"></div>
 
   <!-- 題材回顧 + 機會點摘要 -->
   <div class="sec-hd" id="theme-review-hd">📈 近期大盤題材回顧</div>
@@ -879,6 +907,85 @@ function favBtn(code) {
   return `<button class="fav-btn ${active ? 'active' : ''}" onclick="event.stopPropagation();toggleFav('${code}')" title="${active ? '取消最愛' : '加入最愛'}">${active ? '★' : '☆'}</button>`;
 }
 
+/*
+ * 機會懶人包 —— 三種「為什麼現在可以買」的理由各佔一格。
+ *
+ * 刻意不取交集：先前回測兩次證明在這個儀表板上「交集＝更強」是錯的
+ * （突破均線＋題材補漲 勝率 52.1%，低於單獨任一項的 54.9%）。
+ * 三種理由背後的假設互相獨立，甚至會互相打架——專家目標價是跟著股價
+ * 事後調整的，題材補漲挑的卻是還沒漲的，兩者交集常常是空的。
+ * 所以並列，讓你自己選要相信哪一套，而不是硬湊出一個綜合分數。
+ */
+function renderCheatSheet() {
+  const el = document.getElementById("cheat-grid");
+  if (!el) return;
+
+  // ① 專家評估基本面：現價低於全體分析師最低目標
+  const belowLow = [];
+  Object.entries(analystTargets).forEach(([code, at]) => {
+    const p = (priceCache[code] || {}).price;
+    if (!at.low || !p || p >= at.low) return;
+    belowLow.push({ code, name: nameCache[code] || code, count: at.count || 0,
+                    diff: (at.low - p) / p * 100 });
+  });
+  belowLow.sort((a, b) => b.count - a.count);
+
+  // ② 相信護國神山：台積電跌破 5/10/20 日線
+  const tsmc = histories["2330"]?.closes;
+  const tsmcPrice = (priceCache["2330"] || {}).price;
+  const maRows = [5, 10, 20].map(n => {
+    const m = _maOf(tsmc, n);
+    return { n, ma: m, broken: (m != null && tsmcPrice) ? tsmcPrice < m : null };
+  });
+  const brokenCount = maRows.filter(r => r.broken === true).length;
+
+  // ③ 相信整體族群：題材補漲 8–12 個百分點
+  const lag = (opps || []).filter(o => o.gap != null && o.gap >= 8 && o.gap <= 12);
+
+  const chip = (code, name, extra, dim) =>
+    `<span class="cheat-chip${dim ? " dim" : ""}" onclick="toggleStockDetail('${code}')">${name}` +
+    (extra ? `<span class="q">${extra}</span>` : "") + `</span>`;
+
+  el.innerHTML = `
+    <div class="cheat-card c1">
+      <div class="cheat-hd">① 專家評估基本面</div>
+      <div class="cheat-sub">現價低於<b>全體分析師最低目標</b>——連最保守的一份報告都還沒看到這個價位。</div>
+      <div class="cheat-n">${belowLow.length} 檔${belowLow.length
+        ? `／共 ${Object.values(analystTargets).filter(a => a.mean).length} 檔有分析師覆蓋` : ""}</div>
+      ${belowLow.length
+        ? `<div class="cheat-chips">${belowLow.map(i =>
+             chip(i.code, i.name, `+${i.diff.toFixed(0)}%·${i.count}位`, i.count <= 1)).join("")}</div>
+           <div class="cheat-empty" style="margin-top:7px">淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
+        : `<div class="cheat-empty">目前沒有個股跌破分析師的最低目標。</div>`}
+    </div>
+
+    <div class="cheat-card c2">
+      <div class="cheat-hd">② 相信護國神山</div>
+      <div class="cheat-sub">台積電跌破均線 = 龍頭回檔，若你相信它終究會回來，這是相對便宜的時點。</div>
+      <div class="cheat-n">現價 ${tsmcPrice ? tsmcPrice.toFixed(1) : "—"}　跌破 ${brokenCount}/3 條</div>
+      <div class="cheat-ma">
+        ${maRows.map(r => `
+          <div class="cheat-ma-row">
+            <span class="cheat-mark ${r.broken ? "yes" : "no"}">${r.broken == null ? "—" : r.broken ? "✓" : "✕"}</span>
+            <span class="lbl">跌破 ${r.n} 日線</span>
+            <span class="val">${r.ma != null ? r.ma.toFixed(1) : "—"}</span>
+          </div>`).join("")}
+      </div>
+      <div class="cheat-empty" style="margin-top:7px">✓ = 已跌破（符合這個理由）　✕ = 仍站在線上。</div>
+    </div>
+
+    <div class="cheat-card c3">
+      <div class="cheat-hd">③ 相信整體族群</div>
+      <div class="cheat-sub">同題材龍頭已漲、這檔還沒動，<b>落後 8–12 個百分點</b>——回測中勝率最高的區間（61.9%）。</div>
+      <div class="cheat-n">${lag.length} 檔</div>
+      ${lag.length
+        ? `<div class="cheat-chips">${lag.map(o =>
+             chip(o.code, o.name, `落後${o.gap.toFixed(0)}pt`)).join("")}</div>`
+        : `<div class="cheat-empty">目前沒有落後 8–12 個百分點的個股。<br>
+             落後太多（&gt;20pt）勝率只剩 41.9%，通常是個股本身有問題，所以不放寬。</div>`}
+    </div>`;
+}
+
 // ── 近期大盤題材回顧 + 機會點快覽 ─────────────────────────
 function renderMarketSummary() {
   // ① 題材績效統計（從 STOCKS 動態算）
@@ -1001,7 +1108,7 @@ function renderTargetUpsideOpps() {
     hits.slice(0, 8).map(h => {
       const d = priceCache[h.code];
       const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" style="border-color:rgba(167,139,250,0.4)" onclick="toggleStock('${h.code}')">
+      return `<span class="opp-chip" style="border-color:rgba(167,139,250,0.4)" onclick="toggleStockDetail('${h.code}')">
         <span style="color:var(--text)">${h.name}</span>
         ${chgTxt}
         <span style="color:#a78bfa">↑${h.upside.toFixed(0)}%</span>
@@ -1235,7 +1342,7 @@ function cardHtml(o) {
   const tier = o.score >= 55 ? "tier1" : o.score >= 35 ? "tier2" : "tier3";
     const col  = o.score >= 55 ? "var(--yellow)" : o.score >= 35 ? "var(--blue)" : "var(--text3)";
     const p = priceCache[o.code] || {};
-    return `<div class="v2-card ${tier}" onclick="toggleStock('${o.code}')">
+    return `<div class="v2-card ${tier}" onclick="toggleStockDetail('${o.code}')">
       <div class="v2-hd">
         <span class="v2-code">${o.code}</span>
         <span class="v2-name">${o.name}</span>
@@ -1312,7 +1419,7 @@ function renderBelowLowStrip(v2list) {
   const overlap = items.filter(i => inC.has(i.code));
 
   const chip = i => `<span class="v2-tag ${i.count > 1 ? "good" : ""}" style="cursor:pointer;font-size:11px"
-      onclick="toggleStock('${i.code}')" title="${i.count} 位分析師，最低目標比現價高 ${i.diff.toFixed(0)}%">
+      onclick="toggleStockDetail('${i.code}')" title="${i.count} 位分析師，最低目標比現價高 ${i.diff.toFixed(0)}%">
       ${i.name} <span style="opacity:.7">+${i.diff.toFixed(0)}%·${i.count}位</span></span>`;
 
   el.innerHTML = `
@@ -1373,7 +1480,7 @@ function renderOppVenn() {
 
   detailEl.innerHTML = nonEmpty.map(k => {
     const chips = buckets[k].map(it =>
-      `<span class="opp-chip" onclick="toggleStock('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
+      `<span class="opp-chip" onclick="toggleStockDetail('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
     ).join("");
     const hasC = k.includes("c") || k === "abc";
     const titleAttr = hasC ? ` title="② 題材補漲：整體題材已漲、該個股尚未反應，落後龍頭 8–12 個百分點" style="cursor:help"` : "";
@@ -3432,7 +3539,7 @@ function renderAnalystTargets() {
       ? `<div class="tgt-below-tag${at.count === 1 ? " solo" : ""}">↓ 現價低於${at.count === 1 ? "唯一" : "最低"}目標 ${at.low.toFixed(0)}（差 ${belowDiff < 1 ? belowDiff.toFixed(1) : belowDiff.toFixed(0)}%）</div>`
       : "";
 
-    return `<div class="tgt-card${belowLow ? " below-low" : ""}${belowLow && at.count === 1 ? " solo" : ""}" onclick="toggleStock('${code}')">
+    return `<div class="tgt-card${belowLow ? " below-low" : ""}${belowLow && at.count === 1 ? " solo" : ""}" onclick="toggleStockDetail('${code}')">
       ${belowTag}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${code}</span>
@@ -3731,7 +3838,7 @@ async function loadData(){
     }
     if(data.movers)           moversData     = data.movers;
     if(data.valuation){ valuationData = data.valuation; }
-    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); }
+    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); renderCheatSheet(); }
     loadLocalTargets();   // 本機檔案，線上版沒有就自動略過
     // 大盤走勢分析一句話
     if(data.market_summary){
