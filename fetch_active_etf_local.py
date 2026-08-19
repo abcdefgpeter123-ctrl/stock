@@ -9,7 +9,7 @@
 ║ 問題在再散布：該站自述「本站資料整理自 CMoney（其數據源自臺灣證券      ║
 ║ 交易所、櫃買中心、公開資訊觀測站等公開資訊），僅供研究觀察之用」——     ║
 ║ 它跟我們一樣是被授權方/整理者，沒有立場把 CMoney 的資料再授權給我們。   ║
-║ 而本專案 repo 是 public、又用 GitHub Pages 對外提供，把數字 commit     ║
+║ 而本專案 repo 是 public、又部署在 Vercel 對外提供，把數字 commit     ║
 ║ 進去就等於再散布。跟 fetch_targets_local.py 是同一個判斷。            ║
 ║                                                                      ║
 ║ 因此輸出檔 active_etf_local.json 已列入 .gitignore，只存在你的電腦上， ║

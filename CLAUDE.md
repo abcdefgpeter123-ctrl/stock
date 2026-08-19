@@ -5,7 +5,10 @@
 靜態 HTML 儀表板，搭配 GitHub Actions 每日自動抓取台股資料。
 
 - **主要檔案**：`index.html`（單頁 SPA）、`fetch_data_full.py`（資料抓取）、`data.json`（日更資料）、`company_info.json`（公司基本資料 + PE/EPS）
-- **部署**：GitHub Pages（靜態），Actions 每天 18:30 TWN 在自架 Mac runner 上執行
+- **部署**：**Vercel** — https://stock-pi-rose.vercel.app（接 GitHub repo，push 後自動部署）。
+  GitHub Pages 是關閉的（`gh api .../pages` 回 404），別再誤記成 Pages。
+- **資料更新**：GitHub Actions 每天 18:30 TWN（台股）／07:00（美股），皆為 ubuntu-latest；
+  只有 Podcast 那支跑在自架 Mac runner
 - **Runner**：本機 Mac（台灣 IP），以 launchd service 方式常駐，確保 TWSE 不擋 IP
 
 ---
@@ -290,7 +293,7 @@ python3 fetch_active_etf_local.py
 來源站 robots.txt 是 `Allow: /`、也沒有禁止程式讀取，抓取本身沒問題；
 問題在再散布——該站自述「本站資料整理自 CMoney（其數據源自臺灣證券交易所、
 櫃買中心、公開資訊觀測站等公開資訊），僅供研究觀察之用」，它跟我們一樣是
-整理者，沒有立場把 CMoney 的資料轉授權。本 repo 是 public 且用 GitHub Pages
+整理者，沒有立場把 CMoney 的資料轉授權。本 repo 是 public 且部署在 Vercel
 對外提供，commit 進去就是再散布。與 `fetch_targets_local.py` 同一個判斷。
 
 > 想要能公開的版本，正途是自己從投信每日 PCF／TWSE 公告算持股差異——
@@ -316,7 +319,7 @@ python3 fetch_targets_local.py
 
 ⚠️ **絕對不要放進 GitHub Actions 或 run_and_push.sh。**
 來源網站服務條款禁止未經書面授權的「重製、公開傳播、散布」，
-本 repo 是 public 且以 GitHub Pages 對外提供，把資料 commit 進去就是條款明文禁止的行為。
+本 repo 是 public 且部署在 Vercel 對外提供，把資料 commit 進去就是條款明文禁止的行為。
 原始資料源是 FactSet，鉅亨自身也只是被授權方，無法轉授權。
 robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散布」是可接受的用法。
 
