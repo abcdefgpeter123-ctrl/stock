@@ -564,6 +564,10 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       <span class="src-tag" id="aetf-meta">—</span>
     </div>
     <div class="aetf-grid" id="aetf-grid"></div>
+    <div class="sec-hd" style="margin-top:14px">📦 我的 ETF 今日調整
+      <span class="src-tag">ETF 專區那 6 檔逐檔列出</span>
+    </div>
+    <div class="aetf-grid" id="myetf-grid"></div>
   </div>
 
   <!-- ETF 持股加減碼：用官方持股自己算，可公開 -->
@@ -1009,6 +1013,7 @@ async function loadActiveEtf() {
       名稱下方是主要動作的基金。點任一列可展開該檔個股詳情。
       資料整理自籌碼小宇 ETF（其來源為 CMoney），僅存在這台電腦、不會上傳。
     </div>`;
+  renderMyEtf(j.mine);
   sec.style.display = "";
 }
 
@@ -1056,6 +1061,55 @@ function renderEtfFlows(flows) {
       資料源為每日抓取的官方持股揭露。
     </div>`;
   sec.style.display = "";
+}
+
+/*
+ * 我追蹤的那幾檔 ETF，各自今天加碼／減碼了什麼。
+ *
+ * d1 是張數變化（來源已算好），new / clear 是新進榜與清倉——
+ * 這兩種比單純加減碼更值得看，代表基金經理人改變了判斷而不只是調整比重。
+ * updated=false 代表該檔今天還沒揭露，顯示的是舊數字，必須標出來，
+ * 否則會把「還沒更新」誤讀成「今天沒動作」。
+ */
+function renderMyEtf(mine) {
+  const grid = document.getElementById("myetf-grid");
+  if (!grid || !mine?.length) return;
+
+  const line = (r, cls) => `
+    <div class="aetf-row" onclick="toggleStockDetail('${r.code}')">
+      <span class="nm">${r.name}</span>
+      <span class="cd">${r.code}</span>
+      <span class="chg ${r.chg >= 0 ? "up" : "dn"}">${r.chg >= 0 ? "+" : ""}${(r.chg ?? 0).toFixed(1)}%</span>
+      <span class="lots ${cls}">${r.d1 > 0 ? "+" : ""}${(r.d1 ?? 0).toLocaleString()} 張</span>
+    </div>`;
+
+  const tagRow = (r, label, cls) => `
+    <div class="aetf-row" onclick="toggleStockDetail('${r.code}')">
+      <span class="nm">${r.name}</span>
+      <span class="cd">${r.code}</span>
+      <span class="lots ${cls}">${label}</span>
+    </div>`;
+
+  grid.innerHTML = mine.map(m => {
+    const stale = m.updated === false
+      ? `<div style="font-size:11px;color:var(--warn,#fb923c);margin-bottom:6px">
+           ⚠️ 這檔今天尚未揭露，以下是前一次的數字</div>` : "";
+    const body =
+      (m.news.length ? m.news.map(r => tagRow(r, "新進榜", "up")).join("") : "") +
+      (m.outs.length ? m.outs.map(r => tagRow(r, "已清倉", "dn")).join("") : "") +
+      m.adds.map(r => line(r, "up")).join("") +
+      m.cuts.map(r => line(r, "dn")).join("");
+    return `<div class="aetf-card" style="border-left:3px solid var(--teal)">
+        <div class="aetf-hd">${m.code} ${m.name.replace("主動", "")}
+          <span class="cnt">加 ${m.add_n} / 減 ${m.cut_n}</span></div>
+        ${stale}
+        ${body || `<div class="cheat-empty">今日無持股異動</div>`}
+      </div>`;
+  }).join("") + `
+    <div class="aetf-note">
+      張數為該 ETF 當日持股增減。<b>新進榜／已清倉</b>比單純加減碼更值得注意——
+      那代表經理人改變了判斷，而不只是調整比重。點任一列可展開該檔個股詳情。
+    </div>`;
 }
 
 function renderCheatSheet() {

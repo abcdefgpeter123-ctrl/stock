@@ -270,9 +270,17 @@ python3 fetch_active_etf_local.py
 ```
 
 - 來源：`https://xiaoyu-etf.pages.dev/data.js`（單一 2.4MB 檔，`window.DATA`）
-- 需要的欄位在 `rank.active.d1.buy / .sell`；腳本各取前 15 檔、每檔列 4 家 ETF，輸出約 7K
+- 全市場排行在 `rank.active.d1.buy / .sell`；腳本各取前 15 檔、每檔列 4 家 ETF
+- **我的 6 檔逐檔調整**在 `etfs[].holdings[]`，每筆有 `lots`（張）、`d1`（當日增減）、
+  `new`（新進榜）、`clear`（已清倉）。`MY_ETFS` 定義要追蹤哪幾檔，需與 index.html 的 ETFS 對齊
+- 輸出約 15K
 - 輸出 `active_etf_local.json`，**已列入 .gitignore**
-- `index.html` 的 `loadActiveEtf()` 載入不到就整區隱藏（線上版必然如此，不是錯誤）
+- `index.html` 的 `loadActiveEtf()` 載入不到就整區隱藏（線上版必然如此，不是錯誤）；
+  `renderMyEtf()` 畫「我的 ETF 今日調整」
+
+⚠️ 來源的 `updated` 欄位是 False 代表該檔今天**還沒揭露**，顯示的是舊數字。
+前端一定要標出來（橘色提示），否則會把「還沒更新」誤讀成「今天沒動作」——
+海外主動式（00988A、00990A）常態性比較晚。
 
 ⚠️ **絕對不要放進 GitHub Actions。**
 來源站 robots.txt 是 `Allow: /`、也沒有禁止程式讀取，抓取本身沒問題；

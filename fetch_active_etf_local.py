@@ -42,8 +42,13 @@ HEADERS = {
     "Accept-Language": "zh-TW,zh;q=0.9",
 }
 
-TOP_N = 15          # 買、賣各留幾檔（畫面上只看得完這麼多）
+TOP_N = 15          # 全市場買、賣各留幾檔（畫面上只看得完這麼多）
 KEEP_ETFS = 4       # 每檔個股列出幾家 ETF
+PER_ETF_N = 12      # 每檔 ETF 的加碼／減碼各列幾檔
+
+# 儀表板 ETF 專區有的那幾檔（index.html 的 ETFS）。
+# 這裡是自己追蹤的清單，改了要跟 index.html 對齊。
+MY_ETFS = ["0050", "0056", "00992A", "00981A", "00988A", "00990A"]
 
 
 def slim(row):
@@ -57,6 +62,28 @@ def slim(row):
         "chg":   row.get("chg"),           # 當日漲跌%
         "n":     row.get("etf_count"),     # 幾檔 ETF 動作
         "etfs":  [{"name": e["name"].replace("主動", ""), "lots": e.get("d1")} for e in etfs],
+    }
+
+
+def etf_moves(etf):
+    """單一 ETF 的當日持股增減。d1 是張數變化，new/clear 是新進與清倉。"""
+    adds, cuts, news, outs = [], [], [], []
+    for h in etf.get("holdings") or []:
+        row = {"code": h["code"], "name": h["name"], "lots": h.get("lots"),
+               "d1": h.get("d1") or 0, "w": h.get("weight"), "chg": h.get("chg")}
+        if h.get("new"):     news.append(row)
+        elif h.get("clear"): outs.append(row)
+        elif row["d1"] > 0:  adds.append(row)
+        elif row["d1"] < 0:  cuts.append(row)
+    adds.sort(key=lambda r: -r["d1"])
+    cuts.sort(key=lambda r: r["d1"])
+    return {
+        "code": etf["code"], "name": etf["name"],
+        "updated": etf.get("updated"),        # False＝這檔今天還沒揭露，數字是舊的
+        "date": etf.get("date"),
+        "net": etf.get("net"), "add_n": etf.get("add_n"), "cut_n": etf.get("cut_n"),
+        "adds": adds[:PER_ETF_N], "cuts": cuts[:PER_ETF_N],
+        "news": news[:6], "outs": outs[:6],
     }
 
 
@@ -91,6 +118,8 @@ def main():
         "source": "籌碼小宇 ETF（整理自 CMoney）— 本機自用，請勿散布",
         "buy":  [slim(x) for x in d1.get("buy",  [])[:TOP_N]],
         "sell": [slim(x) for x in d1.get("sell", [])[:TOP_N]],
+        # 自己追蹤的那幾檔 ETF，逐檔列出當天加碼／減碼了什麼
+        "mine": [etf_moves(e) for e in data.get("etfs", []) if e.get("code") in MY_ETFS],
     }
 
     with open(OUT, "w", encoding="utf-8") as f:
@@ -100,6 +129,13 @@ def main():
           f"／{result['updated']}/{result['active_total']} 檔主動型 ETF 已更新")
     print(f"✓ 買超 {len(result['buy'])} 檔、賣超 {len(result['sell'])} 檔 → {OUT}")
     print(f"  （{os.path.getsize(OUT)/1024:.0f}K，未納入 git，僅本機可見）\n")
+    print("  我的 ETF：")
+    for m in result["mine"]:
+        stale = "" if m["updated"] else "  ⚠️尚未揭露，數字為舊值"
+        top = "、".join(f"{a['name']}{a['d1']:+}" for a in m["adds"][:2]) or "—"
+        print(f"    {m['code']:<8} {m['name']:<14} 加{m['add_n']:>2}/減{m['cut_n']:>2}  "
+              f"主要加碼 {top}{stale}")
+    print()
     for side, label in (("buy", "買超"), ("sell", "賣超")):
         print(f"  {label}前 3：")
         for x in result[side][:3]:
