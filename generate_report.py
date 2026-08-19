@@ -77,7 +77,16 @@ def calc_tw(data):
         meta_name, theme = TW_META.get(code, (code, "—"))
         name  = p.get("name") or meta_name
         closes = h.get("closes", [])
-        labels = h.get("labels", [])
+        # compact_histories() 會把每檔的 labels 抽成共用的 history_dates，
+        # 個股裡只留索引 l。這裡沒跟著改，labels 一直是空的 → YTD 全部算不出來，
+        # 週報的台股「今年以來」榜單因此整區空白（美股沒被壓縮所以正常）。
+        labels = h.get("labels") or (
+            data.get("history_dates", [[]])[int(h.get("l", 0))]
+            if data.get("history_dates") else []
+        )
+        # 壓縮後 labels 是全部交易日、closes 只留最近 N 天，尾端對齊才不會錯位
+        if len(labels) > len(closes):
+            labels = labels[-len(closes):]
         if not price or not closes:
             continue
         chg_d  = p.get("changeP") if p.get("changeP") is not None else (
@@ -235,7 +244,9 @@ def generate():
   --bg:#0C1018;--bg2:#131820;--bg3:#1A2130;
   --border:#222B3A;--border2:#2D3A4E;
   --text:#D8E4F0;--text2:#8A9BB0;--text3:#4E5F72;
-  --up:#2EC96E;--dn:#F05656;--accent:#4D9FEC;--gold:#C9993A;--warn:#E0933A;
+  /* 台股慣例：漲＝紅、跌＝綠。這份週報原本沿用美股配色（漲綠跌紅），
+     跟儀表板其他頁面剛好相反，同一個數字在兩頁看到的顏色不一樣。 */
+  --up:#F05656;--dn:#2EC96E;--accent:#4D9FEC;--gold:#C9993A;--warn:#E0933A;
   --mono:"SF Mono","Fira Code","Consolas",monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --r:6px;
@@ -254,10 +265,10 @@ body{{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:1
 .masthead{{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:12px;margin-bottom:24px;flex-wrap:wrap;gap:6px}}
 .m-title{{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}}
 .m-date{{font-size:11px;color:var(--text3);font-family:var(--mono)}}
-.alert{{background:rgba(240,86,86,.1);border:1px solid rgba(240,86,86,.3);border-left:3px solid var(--dn);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}}
+.alert{{background:rgba(240,86,86,.1);border:1px solid rgba(240,86,86,.3);border-left:3px solid #F05656;border-radius:var(--r);padding:10px 14px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}}
 .alert-icon{{font-size:14px;line-height:1.4;flex-shrink:0}}
 .alert-body{{font-size:12px;color:var(--text2);line-height:1.6}}
-.alert-body strong{{color:var(--dn)}}
+.alert-body strong{{color:#F05656}}
 .sec{{display:flex;align-items:center;gap:10px;margin:24px 0 14px}}
 .sec-line{{flex:1;height:1px;background:var(--border)}}
 .sec-label{{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-weight:600;white-space:nowrap}}

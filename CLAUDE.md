@@ -588,6 +588,23 @@ python3 market_temp_lib.py      # 完整回測報告
 
 ---
 
+## 週報（generate_report.py）
+
+每週五由 `update-data.yml` 產生 `weekly_report.html`。
+
+⚠️ **它讀 `data.json` 的 `histories`，而那份已被 `compact_histories()` 壓縮過**——
+每檔的 `labels` 被抽成共用的 `history_dates`，個股裡只留索引 `l`。
+`calc_tw()` 原本直接讀 `h["labels"]`，壓縮後永遠是空的 → YTD 全部算不出來 →
+週報的台股「今年以來」榜單整區空白（美股讀 `us_data.json`，沒被壓縮所以正常）。
+現在會 fallback 到 `history_dates[l]`，並把 labels 尾端對齊 closes 長度。
+
+**配色是台股慣例：漲＝紅（`--up:#F05656`）、跌＝綠（`--dn:#2EC96E`）。**
+原本沿用美股配色（漲綠跌紅），跟儀表板其他頁面剛好相反。
+警示框 `.alert` 用固定紅色而不是 `var(--dn)`——它是「壞消息」語意，
+不該跟著漲跌色一起翻轉。
+
+---
+
 ## 其他工具
 
 **xbar 選單列 plugin**：`~/Documents/Claude/Projects/股票投資/taiwan-stocks.15m.py`
