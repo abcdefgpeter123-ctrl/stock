@@ -3288,9 +3288,16 @@ const GH_TOKEN_LEGACY = "gh_actions_token";   // 舊的明碼位置，只用來�
 
 /** 取得可用的 token；必要時引導設定密碼／解鎖／輸入 token。回傳 null 表示流程中止。 */
 async function _getGhToken() {
+  // 交易紀錄頁 2026/08 起不需登入，密碼設定改成在這裡就地完成——
+  // 保險庫現在只剩下這個 token 一項用途。
   if (!Auth.isSetup()) {
-    alert("Token 需要用管理密碼加密保存。\n請先到「📒 交易紀錄」頁設定管理密碼，再回來使用。");
-    return null;
+    const pw = prompt(
+      "Token 會用一組密碼加密後存在這個瀏覽器裡（密碼本身不會被儲存）。\n" +
+      "請設定密碼（至少 8 碼）：");
+    if (!pw) return null;
+    if (pw.length < 8) { alert("密碼至少 8 碼"); return null; }
+    await Auth.setup(pw, {});
+    alert("密碼已設定。忘記的話 token 就要重新輸入一次，沒有其他影響。");
   }
   if (!Auth.isAdmin()) {
     const pw = prompt("請輸入管理密碼以解鎖 GitHub Token");

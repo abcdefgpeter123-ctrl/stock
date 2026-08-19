@@ -250,6 +250,29 @@ robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散
 
 ---
 
+## 交易紀錄：不需登入，各自記錄
+
+2026/08 起 `trades.html` **不再有管理員／訪客之分**，資料就是純 localStorage
+（`stock_trades_v1`、`stock_trade_notes_v1`），誰打開就看誰自己的。
+移除了 `isGuest()`、`renderGuest()`、`AuthUI` 掛載與保險庫讀寫。
+
+**一次性搬遷**：偵測到舊的 `pj_vault_v1` 且本機還沒有資料時，頁面頂端會出現
+提示，輸入一次舊密碼就把 `trades` / `notes` 倒回明碼 localStorage
+（`offerVaultMigration` / `doVaultMigration`，完成後記 `trades_migrated_v1`）。
+**刻意不刪除保險庫**——index.html 的 GitHub Token 還放在同一個保險庫裡。
+
+⚠️ 沒有任何備援：換裝置、清除資料、無痕視窗都會看不到，只能靠「匯出備份」。
+
+### 順帶修掉的隱含全域
+
+`renderMarket()` 用到的 `twiiHistory` / `spxHistory` / `mktMarket` / `mktPeriod` /
+`MKT_PERIODS` **全部沒有宣告**，只在 `loadPrices()` 裡直接賦值。
+`renderAll()` 在 `loadPrices()` 之前就會先跑一次 → ReferenceError，
+而錯誤被 async IIFE 吞掉，畫面上其他區塊照常渲染——所以「大盤對照圖」
+從實作以來就**從來沒有出現過，也沒有任何錯誤訊息**。補上宣告後才正常顯示。
+
+---
+
 ## GitHub Token（「立即更新資料」按鈕）
 
 Token 存在 `auth.js` 的加密保險庫裡（`pj_vault_v1`），**與交易紀錄共用同一把金鑰**。
