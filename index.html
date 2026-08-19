@@ -2504,6 +2504,63 @@ function renderMarketStatus() {
  * 原本整段擠成一大塊很難讀，這裡在每個句號後斷行；
  * 開頭附上市場狀態，讓「今天發生什麼」與「現在該怎麼做」放在一起看。
  */
+/** 頁面上已知的題材名稱，用來把日評裡的題材從連接詞中切出來 */
+let _themeNamesCache = null;
+function _themeNames() {
+  if (_themeNamesCache) return _themeNamesCache;
+  const set = new Set();
+  (typeof STOCKS !== "undefined" ? STOCKS : []).forEach(s => s.theme && set.add(s.theme));
+  Object.keys(typeof THEME_DESCS !== "undefined" ? THEME_DESCS : {}).forEach(t => set.add(t));
+  Object.keys(typeof THEME_PARENT !== "undefined" ? THEME_PARENT : {}).forEach(t => set.add(t));
+  Object.values(typeof THEME_PARENT !== "undefined" ? THEME_PARENT : {}).forEach(t => set.add(t));
+  return (_themeNamesCache = [...set]);
+}
+
+/*
+ * 大盤日評上色：正數紅、負數綠（台股慣例），數字前面的主體一起上色。
+ *
+ * 「被動元件（+2.0%）」要整組變紅，不能只有數字有顏色——一眼掃過去時，
+ * 看的是「哪個題材強」，不是「+2.0 這個數字」。個股同理。
+ *
+ * 用單一個 master regex 一次掃完，不做多輪 replace：多輪的話第二輪會再匹配到
+ * 第一輪插進去的 HTML 內容，造成巢狀 span。
+ */
+function _colorSummary(escaped) {
+  const cls = v => String(v).trim().startsWith("-") ? "dn" : "up";
+  const RE = new RegExp(
+    // ① 個股：名稱(代號) ±x.x%
+    "([\\u4e00-\\u9fff\\w·\\-]+)\\((\\d{4}[A-Z]?)\\)\\s*([+-][\\d.]+%)" +
+    // ② 題材：名稱（±x.x%）
+    "|([\\u4e00-\\u9fff\\w]+)（([+-][\\d.]+%)）" +
+    // ③ 括號內的點數：（-692）
+    "|（([+-][\\d,]+)）" +
+    // ④ 其餘單獨的百分比
+    "|([+-][\\d.]+%)" +
+    // ⑤ 買超／賣超 N 億（原文沒有正負號，靠語意判斷）
+    "|(買超|賣超)\\s*([\\d,.]+\\s*億)", "g");
+
+  return escaped.replace(RE,
+    (m, nm, code, pct, theme, tpct, pts, solo, side, amt) => {
+      if (pct)  return `<span class="${cls(pct)}">${nm}(${code}) ${pct}</span>`;
+      if (tpct) {
+        // 貪婪匹配會把前面的連接詞一起吃掉（「題材面以被動元件」整串變色），
+        // 所以用已知題材名取最長的後綴，取不到才退回原字串。
+        const known = _themeNames().filter(n => theme.endsWith(n))
+                                   .sort((a, b) => b.length - a.length)[0];
+        const head = known ? theme.slice(0, theme.length - known.length) : "";
+        const body = known || theme;
+        return `${head}<span class="${cls(tpct)}">${body}（${tpct}）</span>`;
+      }
+      if (pts)  return `（<span class="${cls(pts)}">${pts}</span>）`;
+      if (solo) return `<span class="${cls(solo)}">${solo}</span>`;
+      if (side) {
+        const c = side === "買超" ? "up" : "dn";
+        return `<span class="${c}">${side} ${amt}</span>`;
+      }
+      return m;
+    });
+}
+
 function renderMarketSummaryText(text) {
   const el = document.getElementById("market-summary-text");
   if (!el) return;
@@ -2534,7 +2591,7 @@ function renderMarketSummaryText(text) {
     </div>` : "";
 
   el.innerHTML = status +
-    paras.map(t => `<p style="margin:0 0 7px">${esc(t)}</p>`).join("");
+    paras.map(t => `<p style="margin:0 0 7px">${_colorSummary(esc(t))}</p>`).join("");
 
   // 狀態已經在日評裡了，收起獨立那張避免重複
   if (ev) {
