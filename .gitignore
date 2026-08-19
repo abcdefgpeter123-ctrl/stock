@@ -1,3 +1,6 @@
 
 # 本機自用的券商目標價（鉅亨網 ToS 禁止散布，絕對不要 commit）
 targets_local.json
+
+# 主動型 ETF 每日增減（來源整理自 CMoney，禁止再散布）
+active_etf_local.json

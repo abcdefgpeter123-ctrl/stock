@@ -226,6 +226,32 @@ if (data.etf_holdings) {
 
 ---
 
+## 本機專用：主動型 ETF 每日增減（不進版控）
+
+22 檔主動型 ETF 的單日持股增減，含「哪幾檔基金動的手」。
+
+```bash
+python3 fetch_active_etf_local.py
+# 或在 Finder 點兩下「更新主動ETF增減.command」
+```
+
+- 來源：`https://xiaoyu-etf.pages.dev/data.js`（單一 2.4MB 檔，`window.DATA`）
+- 需要的欄位在 `rank.active.d1.buy / .sell`；腳本各取前 15 檔、每檔列 4 家 ETF，輸出約 7K
+- 輸出 `active_etf_local.json`，**已列入 .gitignore**
+- `index.html` 的 `loadActiveEtf()` 載入不到就整區隱藏（線上版必然如此，不是錯誤）
+
+⚠️ **絕對不要放進 GitHub Actions。**
+來源站 robots.txt 是 `Allow: /`、也沒有禁止程式讀取，抓取本身沒問題；
+問題在再散布——該站自述「本站資料整理自 CMoney（其數據源自臺灣證券交易所、
+櫃買中心、公開資訊觀測站等公開資訊），僅供研究觀察之用」，它跟我們一樣是
+整理者，沒有立場把 CMoney 的資料轉授權。本 repo 是 public 且用 GitHub Pages
+對外提供，commit 進去就是再散布。與 `fetch_targets_local.py` 同一個判斷。
+
+> 想要能公開的版本，正途是自己從投信每日 PCF／TWSE 公告算持股差異——
+> 那是原始公開資訊，沒有轉授權問題，但工程量大得多。
+
+---
+
 ## 本機專用：券商目標價（不進版控）
 
 Yahoo Finance 只給 mean/median/high/low，**沒有個別券商目標價與日期**，

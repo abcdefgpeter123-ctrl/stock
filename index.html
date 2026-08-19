@@ -219,6 +219,24 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .cheat-mark.yes{color:var(--dn)}
 .cheat-mark.no{color:var(--up)}
 
+/* ── 主動型 ETF 每日增減 ── */
+.aetf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-top:4px}
+.aetf-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.aetf-card.buy{border-left:3px solid var(--up)}
+.aetf-card.sell{border-left:3px solid var(--dn)}
+.aetf-hd{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:baseline;gap:8px}
+.aetf-hd .cnt{font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:auto}
+.aetf-row{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;font-size:12px}
+.aetf-row:last-child{border-bottom:none}
+.aetf-row:hover .nm{color:var(--text)}
+.aetf-row .nm{color:var(--text2);font-weight:500;min-width:66px}
+.aetf-row .cd{font-family:var(--mono);font-size:10.5px;color:var(--text3)}
+.aetf-row .lots{margin-left:auto;font-family:var(--mono);font-weight:600;white-space:nowrap}
+.aetf-row .chg{font-family:var(--mono);font-size:10.5px;width:52px;text-align:right}
+.aetf-who{font-size:10.5px;color:var(--text3);padding:0 0 6px 74px;line-height:1.6;margin-top:-3px}
+.aetf-note{font-size:11px;color:var(--text3);line-height:1.7;margin-top:8px;grid-column:1/-1}
+
 /* ── 目標價卡片：現價跌破全體分析師最低目標 ── */
 .tgt-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer}
 .tgt-card.below-low{background:rgba(96,165,250,.07);border-color:rgba(96,165,250,.45);
@@ -539,6 +557,14 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <!-- 機會懶人包：三種不同的進場理由各佔一格，彼此獨立不取交集 -->
   <div class="sec-hd" style="margin-top:18px">🧺 機會懶人包<span class="src-tag">三種進場理由，各看各的</span></div>
   <div class="cheat-grid" id="cheat-grid"></div>
+
+  <!-- 主動型 ETF 每日增減（本機資料，線上版沒有這個檔就整區隱藏）-->
+  <div id="aetf-section" style="display:none">
+    <div class="sec-hd" style="margin-top:18px">🔎 主動型 ETF 今日增減
+      <span class="src-tag" id="aetf-meta">—</span>
+    </div>
+    <div class="aetf-grid" id="aetf-grid"></div>
+  </div>
 
   <!-- 題材回顧 + 機會點摘要 -->
   <div class="sec-hd" id="theme-review-hd">📈 近期大盤題材回顧</div>
@@ -923,6 +949,59 @@ function _snapshotProgress() {
         60 日 ${bar(Math.min(1, st.days / 60))} ${need60 ? `還需 ${need60} 天` : "✓"}
       </div>
     </div>`;
+}
+
+/*
+ * 主動型 ETF 今日增減（本機資料）。
+ *
+ * 來源站的資料自述「整理自 CMoney」，它跟我們一樣是整理者、無法轉授權，
+ * 而本 repo 是 public 且用 GitHub Pages 對外提供 —— 把數字 commit 進去
+ * 就是再散布。所以走跟券商目標價同一條路：本機腳本產生、.gitignore、
+ * 線上版載不到就整區隱藏（那是預期行為，不是錯誤）。
+ *
+ * 產生方式：python3 fetch_active_etf_local.py
+ */
+async function loadActiveEtf() {
+  let j;
+  try {
+    const res = await fetch("active_etf_local.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return;                       // 線上版必然 404
+    j = await res.json();
+  } catch (e) { return; }
+  if (!j || (!j.buy?.length && !j.sell?.length)) return;
+
+  const sec = document.getElementById("aetf-section");
+  document.getElementById("aetf-meta").textContent =
+    `${j.data_date || ""} 對比 ${j.prev_date || ""}　${j.updated}/${j.active_total} 檔已更新　🔒 僅本機`;
+
+  const row = x => {
+    const who = (x.etfs || []).map(e =>
+      `${e.name}<span style="font-family:var(--mono)"> ${e.lots > 0 ? "+" : ""}${e.lots}</span>`).join("、");
+    const more = x.n > (x.etfs || []).length ? `　等 ${x.n} 檔` : "";
+    return `<div class="aetf-row" onclick="toggleStockDetail('${x.code}')">
+        <span class="nm">${x.name}</span>
+        <span class="cd">${x.code}</span>
+        <span class="chg ${x.chg >= 0 ? "up" : "dn"}">${x.chg >= 0 ? "+" : ""}${(x.chg ?? 0).toFixed(1)}%</span>
+        <span class="lots ${x.lots >= 0 ? "up" : "dn"}">${x.lots > 0 ? "+" : ""}${x.lots.toLocaleString()} 張</span>
+      </div>
+      <div class="aetf-who">${who}${more}</div>`;
+  };
+
+  document.getElementById("aetf-grid").innerHTML = `
+    <div class="aetf-card buy">
+      <div class="aetf-hd">📈 買超<span class="cnt">${j.buy.length} 檔</span></div>
+      ${j.buy.map(row).join("")}
+    </div>
+    <div class="aetf-card sell">
+      <div class="aetf-hd">📉 賣超<span class="cnt">${j.sell.length} 檔</span></div>
+      ${j.sell.map(row).join("")}
+    </div>
+    <div class="aetf-note">
+      張數為所有主動型 ETF 合計的單日持股增減（依持股揭露推估，非官方法人買賣超）。
+      名稱下方是主要動作的基金。點任一列可展開該檔個股詳情。
+      資料整理自籌碼小宇 ETF（其來源為 CMoney），僅存在這台電腦、不會上傳。
+    </div>`;
+  sec.style.display = "";
 }
 
 function renderCheatSheet() {
@@ -3477,6 +3556,7 @@ async function loadData(){
     window.__snapshotStats = data.target_snapshot_stats || null;
     if(data.analyst_targets){ analystTargets = data.analyst_targets; renderOppVenn(); renderCheatSheet(); }
     loadLocalTargets();   // 本機檔案，線上版沒有就自動略過
+    loadActiveEtf();      // 同上：主動型 ETF 每日增減
     // 大盤走勢分析一句話
     if(data.market_summary){
       renderMarketSummaryText(data.market_summary);
