@@ -2608,6 +2608,94 @@ def record_target_snapshots(merged, all_prices):
     }
 
 
+def track_etf_holdings(data, all_prices):
+    """
+    用我們自己抓到的官方持股資料，算出各 ETF 的每日加減碼。
+
+    【為什麼算的是「隱含股數」而不是直接看權重】
+    etf_holdings 給的是權重(%)，不是股數。權重會被股價漲跌帶動——
+    某檔漲停，它的權重自然變高，但基金可能一股都沒動。
+    所以改用 weight / price 當「隱含持股比例」，再看它相對前一日的變化：
+
+        隱含股數 ∝ 權重 × 基金淨值 ÷ 股價
+
+    同一檔 ETF 同一天的淨值是共同因子，算「相對前一日的比值」時會約掉，
+    因此不需要知道淨值就能估出股數變動的百分比。這是加減碼的估計值，
+    不是官方申贖清單的精確股數——標示清楚，不要當成精確數字用。
+
+    ⚠️ 只有能自動抓到持股的 ETF 才有資料（目前 etfinfo 來源涵蓋
+    0050／0056／00929／00891）。主動式 ETF 各家投信的 PCF 檔格式不一、
+    也沒有統一的公開 API，暫時無法自動化——那幾檔的持股是手動快照。
+    """
+    hist_path = "etf_holdings_history.json"
+    try:
+        with open(hist_path, encoding="utf-8") as f:
+            hist = json.load(f)
+    except FileNotFoundError:
+        hist = {}
+    except Exception as e:
+        warn(f"etf_holdings_history.json 讀取失敗（{e}），本次不計算 ETF 加減碼")
+        return
+
+    today = data.get("prices_date") or datetime.date.today().strftime("%Y/%m/%d")
+    holdings = data.get("etf_holdings") or {}
+    if not holdings:
+        return
+
+    def px(code):
+        p = (all_prices.get(code) or {}).get("price")
+        return p if p and p > 0 else None
+
+    flows = {}
+    for etf, rows in holdings.items():
+        snap = {r["code"]: r["weight"] for r in rows
+                if r.get("code") and r.get("weight")}
+        if not snap:
+            continue
+        days = hist.setdefault(etf, [])
+        prev = days[-1] if days and days[-1].get("d") != today else (days[-2] if len(days) > 1 else None)
+
+        if prev:
+            changes = []
+            for code, w in snap.items():
+                p_now, w_old = px(code), prev["w"].get(code)
+                p_old = (prev.get("p") or {}).get(code)
+                if not p_now or not p_old or not w_old:
+                    # 新進榜：前一日不在名單裡
+                    if w_old is None and px(code):
+                        changes.append({"code": code, "name": (all_prices.get(code) or {}).get("name", ""),
+                                        "new": True, "w": round(w, 2)})
+                    continue
+                # 隱含股數比值：(w_now/p_now) ÷ (w_old/p_old)，淨值共同因子會約掉
+                ratio = (w / p_now) / (w_old / p_old)
+                pct = (ratio - 1) * 100
+                if abs(pct) >= 1.0:          # 1% 以內多半是四捨五入雜訊
+                    changes.append({"code": code, "name": (all_prices.get(code) or {}).get("name", ""),
+                                    "pct": round(pct, 1), "w": round(w, 2)})
+            for code, w_old in prev["w"].items():
+                if code not in snap:
+                    changes.append({"code": code, "name": (all_prices.get(code) or {}).get("name", ""),
+                                    "out": True, "w": round(w_old, 2)})
+            changes.sort(key=lambda c: -abs(c.get("pct") or (999 if c.get("new") or c.get("out") else 0)))
+            if changes:
+                flows[etf] = {"date": today, "prev": prev["d"], "changes": changes[:20]}
+
+        if not days or days[-1].get("d") != today:
+            days.append({"d": today, "w": snap,
+                         "p": {c: px(c) for c in snap if px(c)}})
+        hist[etf] = days[-10:]          # 只留 10 天，夠算日變化又不會脹大
+
+    with open(hist_path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, ensure_ascii=False, separators=(",", ":"))
+
+    if flows:
+        data["etf_flows"] = flows
+        n = sum(len(v["changes"]) for v in flows.values())
+        print(f"   🔀 ETF 加減碼：{len(flows)} 檔 ETF／{n} 筆異動")
+    else:
+        print(f"   🔀 ETF 加減碼：尚無前一日快照可比對（今天先建立基準）")
+
+
 def split_heavy_payloads(data):
     """
     把「只有展開個股時才需要」和「只有算百分位才需要」的大塊資料抽出 data.json。
@@ -3068,6 +3156,9 @@ def main():
         "分析師目標價": (len(data.get("analyst_targets", {})),  n_watch),
         "個股法人":     (len(data.get("inst_stocks", {})),      n_watch),
     })
+
+    # 7b. ETF 每日加減碼（用官方持股資料自己算，可公開）
+    track_etf_holdings(data, all_prices)
 
     # 8. 壓縮 histories、抽出首屏用不到的大塊資料，縮短載入時間
     compact_histories(data)

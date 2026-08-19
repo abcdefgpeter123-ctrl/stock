@@ -566,6 +566,14 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div class="aetf-grid" id="aetf-grid"></div>
   </div>
 
+  <!-- ETF 持股加減碼：用官方持股自己算，可公開 -->
+  <div id="etfflow-section" style="display:none">
+    <div class="sec-hd" style="margin-top:18px">📦 ETF 持股加減碼
+      <span class="src-tag" id="etfflow-meta">—</span>
+    </div>
+    <div class="aetf-grid" id="etfflow-grid"></div>
+  </div>
+
   <!-- 題材回顧 + 機會點摘要 -->
   <div class="sec-hd" id="theme-review-hd">📈 近期大盤題材回顧</div>
   <div class="theme-period-tabs">
@@ -1000,6 +1008,52 @@ async function loadActiveEtf() {
       張數為所有主動型 ETF 合計的單日持股增減（依持股揭露推估，非官方法人買賣超）。
       名稱下方是主要動作的基金。點任一列可展開該檔個股詳情。
       資料整理自籌碼小宇 ETF（其來源為 CMoney），僅存在這台電腦、不會上傳。
+    </div>`;
+  sec.style.display = "";
+}
+
+/*
+ * ETF 持股加減碼 —— 用我們自己抓的官方持股資料算，可以公開。
+ *
+ * 顯示的是「隱含股數變動%」而不是權重變動：權重會被股價漲跌帶動，
+ * 某檔漲停權重自然變高，但基金可能一股沒動。抓取端已用 weight/price
+ * 的比值把價格因素消掉（淨值是共同因子會約掉），這裡只負責呈現。
+ *
+ * 這是估計值不是官方申贖清單的精確股數，文案要講清楚。
+ */
+function renderEtfFlows(flows) {
+  if (!flows || !Object.keys(flows).length) return;
+  const sec = document.getElementById("etfflow-section");
+  const names = {};
+  (typeof ETFS !== "undefined" ? ETFS : []).forEach(e => { names[e.code] = e.name; });
+
+  const first = Object.values(flows)[0];
+  document.getElementById("etfflow-meta").textContent =
+    `${first.prev} → ${first.date}　依官方持股權重與股價自行推算`;
+
+  document.getElementById("etfflow-grid").innerHTML =
+    Object.entries(flows).map(([etf, v]) => {
+      const rows = v.changes.map(c => {
+        const tag = c.new ? `<span class="lots up">新進榜</span>`
+                  : c.out ? `<span class="lots dn">已剔除</span>`
+                  : `<span class="lots ${c.pct >= 0 ? "up" : "dn"}">${c.pct > 0 ? "+" : ""}${c.pct}%</span>`;
+        return `<div class="aetf-row" onclick="toggleStockDetail('${c.code}')">
+            <span class="nm">${c.name || c.code}</span>
+            <span class="cd">${c.code}</span>
+            <span class="chg" style="color:var(--text3)">權重 ${c.w}%</span>
+            ${tag}
+          </div>`;
+      }).join("");
+      return `<div class="aetf-card" style="border-left:3px solid var(--purple)">
+          <div class="aetf-hd">${etf} ${names[etf] || ""}<span class="cnt">${v.changes.length} 筆異動</span></div>
+          ${rows}
+        </div>`;
+    }).join("") + `
+    <div class="aetf-note">
+      百分比是<b>隱含持股股數</b>的變動，已扣掉股價漲跌的影響
+      （權重 ÷ 股價，淨值為共同因子會約掉），<b>屬推算值</b>，
+      不是官方申贖清單的精確股數；1% 以內的變動視為四捨五入雜訊已濾除。
+      資料源為每日抓取的官方持股揭露。
     </div>`;
   sec.style.display = "";
 }
@@ -3557,6 +3611,7 @@ async function loadData(){
     if(data.analyst_targets){ analystTargets = data.analyst_targets; renderOppVenn(); renderCheatSheet(); }
     loadLocalTargets();   // 本機檔案，線上版沒有就自動略過
     loadActiveEtf();      // 同上：主動型 ETF 每日增減
+    renderEtfFlows(data.etf_flows);
     // 大盤走勢分析一句話
     if(data.market_summary){
       renderMarketSummaryText(data.market_summary);
