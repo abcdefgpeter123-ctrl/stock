@@ -550,10 +550,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <button class="theme-period-tab" data-period="p365" onclick="switchThemePeriod('p365',this)">一年</button>
   </div>
   <div class="theme-review-grid" id="theme-review-grid"></div>
-  <div class="sec-hd" style="margin-top:4px">🎯 機會點快覽<span class="src-tag">點擊直接展開個股詳情</span></div>
-  <div class="mkt-opp-row" id="opp-row-target" style="margin-top:8px"></div>
-  <div class="mkt-opp-row" id="mkt-opp-row" style="margin-top:8px"></div>
-
   <div class="sec-hd" style="margin-top:18px">🔵 機會點交集圖<span class="src-tag">兩項同時成立訊號較強</span></div>
   <div class="venn-container">
     <!-- 原本三圈，2026/08 移除「① 突破均線」：5 年回測逐年檢查只有 1/6 年成立，
@@ -569,17 +565,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </svg>
     <div id="venn-detail" class="venn-detail"></div>
   </div>
-
-  <div class="sec-hd" style="margin-top:18px">🧪 機會點 v2
-    <span style="display:flex;align-items:center;gap:8px">
-      <span class="src-tag">依 5 年回測校準的排序</span>
-      <button class="sec-toggle" id="v2-note-toggle" onclick="toggleV2Note(this)">▶ 這是什麼</button>
-    </span>
-  </div>
-  <div class="v2-note" id="v2-note" style="display:none"></div>
-  <div class="v2-grid" id="v2-grid"></div>
-  <div id="v2-outer"></div>
-  <div id="v2-belowlow" style="margin-top:10px"></div>
 
   <!-- ── 法人目標價追蹤 ── -->
   <div class="sec-hd" style="margin-top:18px">
@@ -792,9 +777,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     </div>
   </div>
 
-  <div class="sec-hd">受惠尚未啟動 — 機會點追蹤</div>
-  <div class="opp-grid" id="opp-grid"></div>
-  <div id="opp-detail-panel"></div>
 
   <div class="footer">
     <span>資料來源：data.json（由 n8n 每日抓取台灣證交所/玩股網更新）</span>
@@ -916,6 +898,33 @@ function favBtn(code) {
  * 事後調整的，題材補漲挑的卻是還沒漲的，兩者交集常常是空的。
  * 所以並列，讓你自己選要相信哪一套，而不是硬湊出一個綜合分數。
  */
+/*
+ * 目標價快照的累積進度。
+ *
+ * 「現價低於最低目標」到底有沒有用，現在無法回答——Yahoo 只給當下快照、
+ * 沒有歷史目標價序列。所以從 2026/08/12 起每天記一筆到 targets_history.json，
+ * 累積夠了才跑 backtest_belowlow.py 驗證。
+ *
+ * 這裡只讀 data.json 裡的精簡統計，不去載那份會越長越大的歷史檔。
+ */
+function _snapshotProgress() {
+  const st = window.__snapshotStats;
+  if (!st || !st.days) return "";
+  const need20 = Math.max(0, 20 - st.days);
+  const need60 = Math.max(0, 60 - st.days);
+  const bar = n => "▓".repeat(Math.round(n * 10)) + "░".repeat(10 - Math.round(n * 10));
+  return `
+    <div style="margin-top:9px;padding-top:8px;border-top:1px dashed var(--border2)">
+      <div class="cheat-empty">📊 <b style="color:var(--text2)">績效追蹤中</b>　自 ${st.first} 起每天記錄，
+        累積夠了就能回測這個標記有沒有用。</div>
+      <div class="cheat-empty" style="font-family:var(--mono);line-height:1.9">
+        已累積 <b style="color:var(--text2)">${st.days}</b> 個交易日<br>
+        20 日 ${bar(Math.min(1, st.days / 20))} ${need20 ? `還需 ${need20} 天` : "✓"}<br>
+        60 日 ${bar(Math.min(1, st.days / 60))} ${need60 ? `還需 ${need60} 天` : "✓"}
+      </div>
+    </div>`;
+}
+
 function renderCheatSheet() {
   const el = document.getElementById("cheat-grid");
   if (!el) return;
@@ -957,6 +966,7 @@ function renderCheatSheet() {
              chip(i.code, i.name, `+${i.diff.toFixed(0)}%·${i.count}位`, i.count <= 1)).join("")}</div>
            <div class="cheat-empty" style="margin-top:7px">淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
         : `<div class="cheat-empty">目前沒有個股跌破分析師的最低目標。</div>`}
+      ${_snapshotProgress()}
     </div>
 
     <div class="cheat-card c2">
@@ -1044,28 +1054,7 @@ function renderMarketSummary() {
     </div>`;
   }).join("");
 
-  // ② 機會點快覽列
-  const row = document.getElementById("mkt-opp-row");
-  if(!row) return;
-  if(!opps || !opps.length){
-    row.innerHTML = `<span style="color:var(--text3);font-size:13px">今日暫無機會點（每日收盤後自動更新）</span>`;
-    return;
-  }
-  const show = opps.slice(0, 8);
-  row.innerHTML =
-    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）">② 題材補漲：</span>` +
-    show.map(o => {
-      const d = priceCache[o.code];
-      const chgTxt = d ? `<span style="color:${d.change>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.change>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" onclick="scrollToOpp('${o.code}')">
-        <span style="color:var(--text)">${o.name}</span>
-        ${chgTxt}
-        <span style="color:var(--text3)">落差${o.gap}%</span>
-      </span>`;
-    }).join("") +
-    (opps.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${opps.length - 8} 支</span>` : "");
-
-  renderTargetUpsideOpps();
+  // 註：原本這裡還會渲染「🎯 機會點快覽」兩列，2026/08 依需求移除。
   renderOppVenn();
 }
 
@@ -1078,46 +1067,6 @@ function _maOf(closes, n) {
 // 註：原本這裡有 renderMaBreakoutOpps()（機會點快覽的「突破均線」列）。
 // 2026/08 隨交集圖一起移除——5 年回測逐年檢查只有 1/6 年成立，
 // 總表勝過基準是樣本組成造成的假象。_maOf() 保留給其他計算使用。
-
-// ── 階段② 券商目標價，上漲空間為正 ──────────────────────────
-function renderTargetUpsideOpps() {
-  const row = document.getElementById("opp-row-target");
-  if (!row) return;
-
-  const hits = [];
-  Object.entries(analystTargets).forEach(([code, at]) => {
-    if (!at.mean) return;
-    const p = priceCache[code];
-    if (!p || !p.price) return;
-    const upside = ((at.median || at.mean) - p.price) / p.price * 100;   // 中位數優先
-    if (upside <= 0) return;                            // 上漲空間需為正
-
-    const name = nameCache[code] || code;
-    hits.push({ code, name, upside });
-  });
-
-  hits.sort((a, b) => b.upside - a.upside);
-
-  if (!hits.length) {
-    row.innerHTML = `<span style="color:var(--text3);font-size:12px">② 券商目標價上漲空間為正：目前無符合個股</span>`;
-    return;
-  }
-
-  row.innerHTML =
-    `<span style="font-size:12px;color:#a78bfa;white-space:nowrap;font-weight:500">① 目標價上漲空間為正：</span>` +
-    hits.slice(0, 8).map(h => {
-      const d = priceCache[h.code];
-      const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" style="border-color:rgba(167,139,250,0.4)" onclick="toggleStockDetail('${h.code}')">
-        <span style="color:var(--text)">${h.name}</span>
-        ${chgTxt}
-        <span style="color:#a78bfa">↑${h.upside.toFixed(0)}%</span>
-      </span>`;
-    }).join("") +
-    (hits.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${hits.length - 8} 支</span>` : "");
-}
-
-// ── 三大條件集合（供 Venn 圖使用）──────────────────────────
 function computeOppSets() {
   const A = new Map();  // 站上 5/20/60 均線 —— 已退出交集圖，只留給 v2 當補充標籤
   STOCKS.forEach(s => {
@@ -1176,269 +1125,6 @@ function computeOppSets() {
 //
 // 另外兩件回測結果，也一併反映在這裡：
 //   ·「突破均線 ＋ 題材補漲」的交集反而比單獨任一項差（勝率 52.1% vs 54.9%），
-//     所以 v2 不把突破均線當加分項，只當補充資訊顯示。
-//   ·大盤濾網看總表有效、但逐年只有 2/5 年成立，判定為過擬合，不採用。
-const V2_BACKTEST = {
-  n: "題材補漲 ＋ 落後 8–16 個百分點 ＋ 60MA上揚",
-  d20: "20日 中位 +2.24% / 勝率 60.2%",
-  d60: "60日 平均 +12.2% / 勝率 60.2%",
-  years: "逐年 4 勝 2 敗（2021、2024 為負）",
-};
-
-function _ma60Rising(closes) {
-  // 60MA 相對 5 日前是否走高——回測中唯一穩健的加分條件
-  if (!closes || closes.length < 66) return null;
-  const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
-  return avg(closes.slice(-60)) > avg(closes.slice(-65, -5));
-}
-
-function scoreOppV2(o, maSet) {
-  const tags = [];
-  let score = 0;
-
-  // 落差甜蜜區（權重最高，也是與 v1 差最多的地方）
-  const gap = o.gap;
-  if (gap == null)          { }
-  else if (gap < 16)        { score += gap < 12 ? 32 : 27; tags.push(["落後幅度剛好", "good"]); }
-  else if (gap < 20)        { score += 10; }
-  else                      { score -= 12; tags.push([`落後太多 ${gap.toFixed(0)} 個百分點`, "bad"]); }
-
-  // 60MA 上揚
-  const rising = _ma60Rising(histories[o.code]?.closes);
-  if (rising === true)  { score += 20; tags.push(["60MA 上揚", "good"]); }
-  else if (rising === false) { score -= 8; tags.push(["60MA 下彎", "bad"]); }
-
-  // 龍頭熱度（v1 沿用，回測未推翻）
-  if (o.leader_p30 >= 30)      { score += 12; tags.push(["龍頭強勢", ""]); }
-  else if (o.leader_p30 >= 15) { score += 8;  tags.push(["龍頭溫和", ""]); }
-
-  // 尚未起漲：近 5 日還沒跟上才算「補漲」候選
-  if (o.p5 != null && o.p5 <= 2) { score += 6; tags.push(["尚未起漲", ""]); }
-
-  // 獲利能力
-  if (o.profit_ok === true)  score += 6;
-  if (o.profit_ok === false) { score -= 20; tags.push(["虧損", "bad"]); }
-
-  // 突破均線只當補充資訊：回測顯示交集沒有加成，不列入分數
-  if (maSet && maSet.has(o.code)) tags.push(["站上5/20/60MA", ""]);
-
-  /*
-   * 分析師目標價刻意「只顯示、不計分」。
-   * Yahoo 只給當下快照、沒有歷史目標價序列，所以這個條件無法回測——
-   * 拿沒驗證過的條件去過濾驗證過的排序，整體可信度是往下走的。
-   * 而且「目標價還有上漲空間」63 檔裡有 45 檔符合（71%），本來就篩不掉什麼。
-   *
-   * 但「現價低於全體分析師最低目標」罕見得多（63 檔裡 8 檔），值得標出來；
-   * 只有 1 位分析師時「最低」等於「唯一」，份量差很多，另外標示。
-   */
-  const at = analystTargets[o.code] || {};
-  const price = (priceCache[o.code] || {}).price;
-  const tgt = at.median || at.mean;
-  const upside = (tgt && price) ? (tgt - price) / price * 100 : null;
-  const belowLow = at.low != null && price > 0 && price < at.low;
-  if (belowLow) {
-    tags.push([at.count === 1 ? "低於唯一目標（僅1位）" : `低於最低目標（${at.count}位）`,
-               at.count === 1 ? "" : "good"]);
-  }
-
-  return { score, tags, rising, upside, atCount: at.count, belowLow };
-}
-
-/*
- * v2 的說明預設收起。內容很長（要交代為什麼排序跟 v1 相反、哪些條件被回測否決），
- * 但那是「第一次看」才需要的東西，天天攤開來只會把真正要看的卡片擠到下面。
- * 選擇記在 localStorage，不用每次重開。
- */
-const V2_NOTE_KEY = "v2_note_open";
-function toggleV2Note(btn) {
-  const el = document.getElementById("v2-note");
-  const open = el.style.display === "none";
-  el.style.display = open ? "" : "none";
-  btn.textContent = open ? "▼ 收合說明" : "▶ 這是什麼";
-  try { localStorage.setItem(V2_NOTE_KEY, open ? "1" : "0"); } catch (e) {}
-}
-let _v2NoteInit = false;
-function initV2Note() {
-  if (_v2NoteInit) return;      // renderOppV2 會重複呼叫，只在第一次套用偏好
-  _v2NoteInit = true;
-  let open = false;
-  try { open = localStorage.getItem(V2_NOTE_KEY) === "1"; } catch (e) {}
-  if (open) toggleV2Note(document.getElementById("v2-note-toggle"));
-}
-
-function renderOppV2() {
-  const grid = document.getElementById("v2-grid");
-  const note = document.getElementById("v2-note");
-  if (!grid || !note) return;
-
-  note.innerHTML =
-    `<b>「落後龍頭」是什麼：</b>同一個題材裡，最強的那檔（龍頭）近 30 日漲了多少，`
-    + `減掉這檔自己近 30 日漲了多少，差幾個百分點。例如龍頭漲 +17%、這檔只漲 +5%，`
-    + `就是<b>落後 12 個百分點</b>。整個題材的錢已經在流動、但這檔還沒反應，`
-    + `所以有補漲的空間——這是整個機會點邏輯的核心假設。<br><br>`
-    + `<b>和上面 v1 的差別：</b>v1 認為<b>落後越多機會越大</b>，落後 25 個百分點以上給最高分。`
-    + `回測打臉了這件事：<br>`
-    + `<span class="v2-dim">　落後 8–12 個百分點 → 20 日勝率 <b style="color:var(--yellow)">61.9%</b><br>`
-    + `　落後 12–16 → 59.2%　／　落後 16–20 → 50.5%<br>`
-    + `　落後 20–30 個百分點 → 勝率只剩 <b style="color:var(--dn)">41.9%</b>，中位數是負的</span><br>`
-    + `而且這個順序 2021~2026 <b>每一年都成立</b>。落後太多通常不是「還沒輪到它」，`
-    + `是這檔自己有問題（產品線、客戶、財務），題材漲它也漲不動。`
-    + `所以 v2 把 8–16 當甜蜜區，20 以上直接扣分。<br><br>`
-    + `另外<b>不</b>把「突破均線」當加分（①＋③ 交集勝率 52.1%，反而低於單獨的 54.9%），`
-    + `也<b>不</b>加大盤濾網（總表看似有效，但逐年只有 2/5 年成立，判定為過擬合）。<br>`
-    + `<span class="v2-dim">回測基準「${V2_BACKTEST.n}」：${V2_BACKTEST.d20}、${V2_BACKTEST.d60}、${V2_BACKTEST.years}。`
-    + `這是補漲策略，20 天太短——60 日才是它的主場。樣本取自今天的觀察名單、有存活者偏誤，數字看方向就好。</span>`;
-
-  const maSet = computeOppSets().A;
-  const scored = (opps || []).map(o => ({ ...o, ...scoreOppV2(o, maSet) }))
-                             .sort((a, b) => b.score - a.score);
-
-  /*
-   * 主名單與交集圖的 ② 題材補漲用同一個定義（落後 8–12 個百分點），
-   * 兩處數字才對得起來。超出範圍的不是刪掉、是收到下面的「未達標準」區——
-   * 抓取端本來就只給 gap ≥ 8 的候選，看得到它們差在哪比看不到有用。
-   */
-  const list  = scored.filter(o => o.gap != null && o.gap >= 8 && o.gap <= 12);
-  const outer = scored.filter(o => !list.includes(o));
-
-  grid.innerHTML = list.length
-    ? list.map(cardHtml).join("")
-    : `<div class="v2-empty">目前沒有落後龍頭 8–12 個百分點的個股${
-        outer.length ? `（另有 ${outer.length} 檔落在範圍外，見下方）` : ""}</div>`;
-
-  renderV2Outer(outer);
-  renderBelowLowStrip(list);
-  initV2Note();
-}
-
-/* 超出 8–12 範圍的候選：預設收起，點開才看得到 */
-function renderV2Outer(outer) {
-  const el = document.getElementById("v2-outer");
-  if (!el) return;
-  if (!outer.length) { el.innerHTML = ""; return; }
-  el.innerHTML = `
-    <button class="sec-toggle" onclick="toggleV2Outer(this)" style="margin-top:8px">
-      ▶ 範圍外的候選（${outer.length}）</button>
-    <div id="v2-outer-grid" class="v2-grid" style="display:none">
-      <div class="v2-empty" style="grid-column:1/-1;padding:0 0 4px">
-        這些也在題材補漲的原始名單裡，但落後幅度不在 8–12 個百分點。
-        回測顯示落後 20–30 個百分點的勝率只有 41.9%、中位數是負的——
-        通常不是「還沒輪到它」，是個股本身有問題。
-      </div>
-      ${outer.map(cardHtml).join("")}
-    </div>`;
-}
-
-function toggleV2Outer(btn) {
-  const g = document.getElementById("v2-outer-grid");
-  const open = g.style.display === "none";
-  g.style.display = open ? "" : "none";
-  btn.textContent = open
-    ? btn.textContent.replace("▶", "▼")
-    : btn.textContent.replace("▼", "▶");
-}
-
-function cardHtml(o) {
-  const tier = o.score >= 55 ? "tier1" : o.score >= 35 ? "tier2" : "tier3";
-    const col  = o.score >= 55 ? "var(--yellow)" : o.score >= 35 ? "var(--blue)" : "var(--text3)";
-    const p = priceCache[o.code] || {};
-    return `<div class="v2-card ${tier}" onclick="toggleStockDetail('${o.code}')">
-      <div class="v2-hd">
-        <span class="v2-code">${o.code}</span>
-        <span class="v2-name">${o.name}</span>
-        <span class="v2-score" style="color:${col}">${o.score}</span>
-      </div>
-      <div class="v2-calc">
-        <div><span>龍頭 ${o.leader} 近30日</span><b class="${o.leader_p30 >= 0 ? "up" : "dn"}">${o.leader_p30 == null ? "—" : (o.leader_p30 >= 0 ? "+" : "") + o.leader_p30.toFixed(0) + "%"}</b></div>
-        <div><span>${o.name} 近30日</span><b class="${(o.p30 ?? 0) >= 0 ? "up" : "dn"}">${o.p30 == null ? "—" : (o.p30 >= 0 ? "+" : "") + o.p30.toFixed(0) + "%"}</b></div>
-        <div class="v2-calc-sum"><span>落後龍頭</span><b>${o.gap == null ? "—" : o.gap.toFixed(0) + " 個百分點"}</b></div>
-      </div>
-      <div class="v2-line" style="display:flex;justify-content:space-between;gap:8px">
-        <span style="font-family:var(--font)">目標價上漲空間</span>
-        <b style="color:${o.upside == null ? "var(--text3)" : o.upside > 0 ? "#4ade80" : "#f87171"}">${
-          o.upside == null ? "無分析師覆蓋"
-          : `${o.upside >= 0 ? "+" : ""}${o.upside.toFixed(0)}%${o.atCount ? `　${o.atCount}位` : ""}`}</b>
-      </div>
-      <div class="v2-line">${p.price != null ? p.price.toFixed(1) : "—"}　${o.theme}</div>
-      <div class="v2-tags">${o.tags.map(([t, k]) => `<span class="v2-tag ${k}">${t}</span>`).join("")}</div>
-    </div>`;
-}
-
-/*
- * 「現價低於全體分析師最低目標」名單。
- *
- * 為什麼另外列而不是拿來跟題材補漲取交集：
- * 兩個條件在設計上會互相打架——題材補漲挑的是「還沒漲的」，而分析師目標價是
- * 跟著股價事後調整的（台光電大漲後均價 15 日內被上調 +918），落後股的目標價
- * 通常也還沒上調。今天實測交集是 0 檔。取交集只會得到空白頁，分開看才有用。
- */
-/*
- * 訊號追蹤進度。
- *
- * 「現價低於最低目標」到底有沒有用，現在無法回答——Yahoo 只給當下快照，
- * 沒有歷史目標價序列。所以從 2026/08/12 起每天記一筆到 targets_history.json，
- * 累積夠了才跑 backtest_belowlow.py 驗證。
- *
- * 這裡只讀 data.json 裡的精簡統計，不去載那份會越長越大的歷史檔。
- */
-function _snapshotProgress() {
-  const st = window.__snapshotStats;
-  if (!st || !st.days) return "";
-  const need20 = Math.max(0, 20 - st.days);
-  const need60 = Math.max(0, 60 - st.days);
-  const bar = n => "▓".repeat(Math.round(n * 12)) + "░".repeat(12 - Math.round(n * 12));
-  return `
-    <div style="margin-top:10px;padding-top:9px;border-top:1px dashed var(--border2)">
-      <div class="v2-dim" style="margin-bottom:5px">
-        📊 <b style="color:var(--text2)">績效追蹤中</b>　自 ${st.first} 起每天記錄目標價與當時股價，
-        累積夠了就能回測這個標記到底有沒有用（<code style="font-size:10px">backtest_belowlow.py</code>）。
-      </div>
-      <div class="v2-dim" style="font-family:var(--mono);font-size:11px;line-height:1.9">
-        已累積 <b style="color:var(--text2)">${st.days}</b> 個交易日 · ${st.codes} 檔<br>
-        20 日報酬 ${bar(Math.min(1, st.days / 20))} ${need20 ? `還需 ${need20} 天` : "✓ 可回測"}<br>
-        60 日報酬 ${bar(Math.min(1, st.days / 60))} ${need60 ? `還需 ${need60} 天` : "✓ 可回測"}
-      </div>
-    </div>`;
-}
-
-function renderBelowLowStrip(v2list) {
-  const el = document.getElementById("v2-belowlow");
-  if (!el) return;
-
-  const items = [];
-  Object.entries(analystTargets).forEach(([code, at]) => {
-    const p = (priceCache[code] || {}).price;
-    if (!at.low || !p || p >= at.low) return;
-    items.push({ code, name: nameCache[code] || code, count: at.count || 0,
-                 diff: (at.low - p) / p * 100 });
-  });
-  if (!items.length) { el.innerHTML = ""; return; }
-  items.sort((a, b) => b.count - a.count);
-
-  const inC = new Set(v2list.map(o => o.code));
-  const overlap = items.filter(i => inC.has(i.code));
-
-  const chip = i => `<span class="v2-tag ${i.count > 1 ? "good" : ""}" style="cursor:pointer;font-size:11px"
-      onclick="toggleStockDetail('${i.code}')" title="${i.count} 位分析師，最低目標比現價高 ${i.diff.toFixed(0)}%">
-      ${i.name} <span style="opacity:.7">+${i.diff.toFixed(0)}%·${i.count}位</span></span>`;
-
-  el.innerHTML = `
-    <div class="v2-note" style="border-left-color:var(--blue)">
-      <b>另一個角度：現價低於「全體分析師最低目標」</b>　
-      <span class="v2-dim">連最保守的一份報告都還沒看到這個價位。63 檔有覆蓋的股票裡只有 ${items.length} 檔，
-      比「目標價還有上漲空間」（45 檔／71%）罕見得多，當標記才有鑑別度。</span>
-      <div class="v2-tags" style="margin-top:8px">${items.map(chip).join("")}</div>
-      <div class="v2-dim" style="margin-top:8px">
-        與上方題材補漲的交集：<b style="color:${overlap.length ? "var(--yellow)" : "var(--text3)"}">${
-          overlap.length ? overlap.map(i => i.name).join("、") : "目前 0 檔"}</b>　
-        ${overlap.length ? "" : "——兩個條件在設計上會互相打架：題材補漲挑的是還沒漲的，而目標價是跟著股價事後調整的，落後股的目標價通常也還沒上調。所以分開看，不取交集。"}
-      </div>
-      <div class="v2-dim" style="margin-top:6px">灰色 = 只有 1 位分析師（「最低」其實是「唯一」，份量低很多）。</div>
-      ${_snapshotProgress()}
-    </div>`;
-}
-
-// ── 機會點交集 Venn 圖 ──────────────────────────────────────
 function renderOppVenn() {
   const detailEl = document.getElementById("venn-detail");
   if (!detailEl) return;
@@ -1472,11 +1158,8 @@ function renderOppVenn() {
   const nonEmpty = order.filter(k => buckets[k].length);
   if (!nonEmpty.length) {
     detailEl.innerHTML = `<div class="venn-empty">目前尚無符合任何條件的個股</div>`;
-    renderOppV2();
     return;
   }
-
-  renderOppV2();
 
   detailEl.innerHTML = nonEmpty.map(k => {
     const chips = buckets[k].map(it =>
@@ -1491,12 +1174,9 @@ function renderOppVenn() {
   }).join("");
 }
 
-// 點機會點 chip → 滾動到 opp-grid 並展開
+// 機會點卡片牆已移除，改為直接展開個股表格裡的詳情列
 function scrollToOpp(code) {
-  const sec = document.getElementById("opp-grid");
-  if(!sec) return;
-  sec.scrollIntoView({behavior:"smooth", block:"start"});
-  setTimeout(() => toggleOppDetail(code), 500);
+  toggleStockDetail(code);
 }
 
 function renderFavorites() {
@@ -3299,60 +2979,8 @@ function render(){
     tbody.innerHTML = html;
   }
 
-  const filtOpps = opps.filter(o => activeTheme==="all" || o.theme===activeTheme);
-  if(filtOpps.length === 0){
-    document.getElementById("opp-grid").innerHTML =
-      `<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text3);font-size:13px">
-        ${opps.length === 0
-          ? "今日暫無機會點（每日收盤後自動更新）"
-          : "目前篩選題材無機會點"}
-      </div>`;
-  } else {
-    document.getElementById("opp-grid").innerHTML = filtOpps.map(o => {
-      const d = priceCache[o.code];
-      const ps = d
-        ? `<div class="oc-price" style="color:${d.change>=0?'var(--up)':'var(--dn)'}">NT$${d.price.toFixed(1)} <span style="font-size:11px">(${d.change>=0?"+":""}${d.changeP.toFixed(1)}%)</span></div>`
-        : `<div class="oc-price" style="color:var(--text3)">—</div>`;
-      const p30txt = o.p30!=null ? `<span style="color:var(--text2);font-size:11px">30日 ${o.p30>=0?"+":""}${o.p30}%</span>` : "";
-      const gaptxt = o.gap!=null ? `<span class="badge b-opp" style="margin-left:6px">落差${o.gap}%</span>` : "";
-      const isOppActive = expandedOpp === o.code;
-      // 獲利能力標示
-      const profitBadge = o.profit_ok === true
-        ? `<span style="font-size:10px;color:#4ade80;margin-left:6px">✅ 獲利</span>`
-        : o.profit_ok === false
-          ? `<span style="font-size:10px;color:#f87171;margin-left:6px">⚠️ 虧損</span>`
-          : `<span style="font-size:10px;color:var(--text3);margin-left:6px">獲利未知</span>`;
-      const epsTxt = (o.eps != null)
-        ? `<span style="font-size:10px;color:var(--text3)">EPS ${o.eps >= 0 ? "+" : ""}${o.eps}</span>`
-        : "";
-      const scoreBadge = o.score != null
-        ? `<span style="font-size:11px;font-weight:600;color:${o.score>=75?'#4ade80':o.score>=55?'#facc15':'var(--text3)'}">
-            ${o.score_grade || ''} ${o.score}分
-           </span>`
-        : "";
-      const scoreTags = (o.score_tags && o.score_tags.length)
-        ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${o.score_tags.map(t=>`<span style="font-size:10px;background:var(--bg3);color:var(--text2);border-radius:3px;padding:1px 5px">${t}</span>`).join('')}</div>`
-        : "";
-      return `<div class="opp-card${isOppActive ? ' opp-active' : ''}" data-code="${o.code}" onclick="toggleOppDetail('${o.code}')">
-        <div class="oc-code">${o.code} <span class="badge b-theme">${o.theme}</span>${gaptxt}</div>
-        <div class="oc-name" style="display:flex;align-items:center;justify-content:space-between">${o.name}${profitBadge} ${scoreBadge}</div>
-        ${ps}
-        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">${p30txt}${epsTxt}</div>
-        ${scoreTags}
-        <div class="oc-reason" style="margin-top:6px">${o.reason}</div>
-        <div class="oc-tag"><span class="badge b-opp">尚未啟動</span> <span style="color:var(--text3);font-size:11px;margin-left:6px">${isOppActive ? '▲ 收起' : '▼ 展開詳情'}</span></div>
-      </div>`;
-    }).join("");
-  }
-  // 若機會點有展開則重繪看盤面板
-  const oppPanel = document.getElementById("opp-detail-panel");
-  if (oppPanel) {
-    if (expandedOpp) {
-      oppPanel.innerHTML = renderDetail(expandedOpp);
-    } else {
-      oppPanel.innerHTML = "";
-    }
-  }
+  // 註：原本這裡渲染「受惠尚未啟動 — 機會點追蹤」的卡片牆與展開面板，
+  // 2026/08 依需求移除（機會懶人包已涵蓋同樣的資訊且更精簡）。
   // 同步更新機會點快覽列（主題篩選改變時）
   renderMarketSummary();
   // 展開股票後也初始化折線圖
@@ -3838,7 +3466,9 @@ async function loadData(){
     }
     if(data.movers)           moversData     = data.movers;
     if(data.valuation){ valuationData = data.valuation; }
-    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderTargetUpsideOpps(); renderOppVenn(); renderCheatSheet(); }
+    // 懶人包①要顯示快照累積進度，必須先接上統計再渲染
+    window.__snapshotStats = data.target_snapshot_stats || null;
+    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderOppVenn(); renderCheatSheet(); }
     loadLocalTargets();   // 本機檔案，線上版沒有就自動略過
     // 大盤走勢分析一句話
     if(data.market_summary){
@@ -3853,7 +3483,6 @@ async function loadData(){
     checkFreshness(data.prices_date || data.updated_at, "台股",
                    "可到 GitHub Actions 查 update-data.yml 是否失敗。");
     showDataWarnings(data.warnings);
-    window.__snapshotStats = data.target_snapshot_stats || null;
     if(data.updated_at){
       document.getElementById("update-time").textContent = "更新 " + data.updated_at;
       document.getElementById("src-tag").textContent = "抓取日期：" + data.updated_at;

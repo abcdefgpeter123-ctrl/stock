@@ -400,6 +400,24 @@ python3 backtest_belowlow.py
 
 ---
 
+## 2026/08 移除的區塊
+
+依需求移除，功能由「機會懶人包」與「機會點交集圖」承接：
+
+| 移除的區塊 | 一併清掉的程式 |
+|-----------|--------------|
+| 🎯 機會點快覽（兩列 chip） | `renderTargetUpsideOpps()`、`renderMarketSummary()` 尾端的快覽列 |
+| 🧪 機會點 v2（含說明、範圍外、低於最低目標名單） | `renderOppV2` `scoreOppV2` `cardHtml` `renderV2Outer` `toggleV2Outer` `renderBelowLowStrip` |
+| 受惠尚未啟動 — 機會點追蹤（卡片牆＋展開面板） | `render()` 內的 opp-grid 渲染（54 行） |
+
+`_snapshotProgress()`（目標價快照累積進度）原本掛在 v2 底下，已移到懶人包①保留。
+⚠️ 它讀 `window.__snapshotStats`，該賦值必須在 `renderCheatSheet()` **之前**執行，
+否則第一次渲染時進度條不會出現（改動時踩過一次）。
+
+`scrollToOpp()` 原本捲到 opp-grid 再展開，目標消失後改為直接呼叫 `toggleStockDetail()`。
+
+---
+
 ## 機會點交集圖：為什麼從三圈變兩圈
 
 2026/08 移除「突破均線」，剩下 ① 目標價上漲空間、② 題材補漲。
