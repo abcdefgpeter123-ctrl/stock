@@ -1014,7 +1014,33 @@ async function loadActiveEtf() {
       資料整理自籌碼小宇 ETF（其來源為 CMoney），僅存在這台電腦、不會上傳。
     </div>`;
   renderMyEtf(j.mine);
+  applyLocalHoldings(j);
   sec.style.display = "";
+}
+
+/*
+ * 用本機資料覆蓋 ETF 專區的持股圓餅圖。
+ *
+ * 那幾檔主動式的持股原本是好幾個月前的手動快照（00992A 停在 2026/05/28），
+ * 因為 etfinfo 不收主動式、TWSE 也沒有可用的 PCF API。本機這份是日更的，
+ * 有就拿來蓋掉；沒有（線上版）就維持原本的靜態快照與警語，不會變成空的。
+ */
+function applyLocalHoldings(j) {
+  if (typeof ETFS === "undefined" || !j.mine?.length) return;
+  let n = 0;
+  j.mine.forEach(m => {
+    if (!m.holdings?.length) return;
+    const etf = ETFS.find(e => e.code === m.code);
+    if (!etf) return;
+    etf.holdings       = m.holdings;
+    etf._holdingsLive  = false;            // 不是官方來源，沿用警語樣式但換文字
+    etf.holdingsDate   = j.data_date || m.date || "";
+    etf.holdingsSource = m.updated === false
+      ? "本機資料 · 該檔尚未揭露" : "本機資料（籌碼小宇）";
+    n++;
+  });
+  if (n && typeof renderETFs === "function") renderETFs();
+  console.log(`ETF 持股已由本機資料更新 ${n} 檔`);
 }
 
 /*

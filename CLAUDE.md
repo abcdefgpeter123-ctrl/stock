@@ -277,6 +277,10 @@ python3 fetch_active_etf_local.py
 - 輸出 `active_etf_local.json`，**已列入 .gitignore**
 - `index.html` 的 `loadActiveEtf()` 載入不到就整區隱藏（線上版必然如此，不是錯誤）；
   `renderMyEtf()` 畫「我的 ETF 今日調整」
+- `applyLocalHoldings()` 另外把 **ETF 專區的持股圓餅圖**換成這份日更資料。
+  那幾檔主動式原本是手動快照（00992A 停在 2026/05/28、00981A 停在 05/27），
+  因為 etfinfo 不收主動式、TWSE 也沒有可用的 PCF API。
+  沒有本機檔時會維持原本的靜態快照與警語，不會變成空的。
 
 ⚠️ 來源的 `updated` 欄位是 False 代表該檔今天**還沒揭露**，顯示的是舊數字。
 前端一定要標出來（橘色提示），否則會把「還沒更新」誤讀成「今天沒動作」——

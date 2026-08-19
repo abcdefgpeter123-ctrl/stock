@@ -45,6 +45,7 @@ HEADERS = {
 TOP_N = 15          # 全市場買、賣各留幾檔（畫面上只看得完這麼多）
 KEEP_ETFS = 4       # 每檔個股列出幾家 ETF
 PER_ETF_N = 12      # 每檔 ETF 的加碼／減碼各列幾檔
+HOLD_N    = 15      # 回填 ETF 專區圓餅圖的前幾大持股
 
 # 儀表板 ETF 專區有的那幾檔（index.html 的 ETFS）。
 # 這裡是自己追蹤的清單，改了要跟 index.html 對齊。
@@ -77,6 +78,9 @@ def etf_moves(etf):
         elif row["d1"] < 0:  cuts.append(row)
     adds.sort(key=lambda r: -r["d1"])
     cuts.sort(key=lambda r: r["d1"])
+    # ETF 專區的圓餅圖也吃這份——原本那裡是好幾個月前的手動快照
+    top = sorted((etf.get("holdings") or []),
+                 key=lambda h: -(h.get("weight") or 0))[:HOLD_N]
     return {
         "code": etf["code"], "name": etf["name"],
         "updated": etf.get("updated"),        # False＝這檔今天還沒揭露，數字是舊的
@@ -84,6 +88,8 @@ def etf_moves(etf):
         "net": etf.get("net"), "add_n": etf.get("add_n"), "cut_n": etf.get("cut_n"),
         "adds": adds[:PER_ETF_N], "cuts": cuts[:PER_ETF_N],
         "news": news[:6], "outs": outs[:6],
+        "holdings": [{"code": h["code"], "name": h["name"], "weight": h.get("weight")}
+                     for h in top],
     }
 
 
