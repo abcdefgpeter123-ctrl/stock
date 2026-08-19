@@ -196,6 +196,7 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
 </nav>
 
 <div id="migrate-bar"></div>
+<div id="repair-bar"></div>
 
 <div class="note">
   <strong>📌 資料存在哪：</strong>所有紀錄只存在<strong>你目前這台裝置的瀏覽器</strong>裡，
@@ -345,6 +346,33 @@ const fmt  = (n, d=0) => (n==null||isNaN(n)) ? '—'
   : n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const cur  = m => m === 'TW' ? 'NT$' : 'US$';
 
+/*
+ * 名稱 → 代號的反查。
+ *
+ * 代號欄位如果被打成公司名（例如直接輸入「國巨」而不是 2327），
+ * 原本會被當成另一檔股票：computePositions() 用 t.code 分組，
+ * 於是同一檔會裂成兩張卡片；更糟的是 isTW() 判斷「開頭是不是數字」，
+ * 中文名不是數字 → 被當成美股 → 查不到報價、手續費也用美股規則算。
+ * 使用者實際踩到過（國巨、辛耘各出現兩格，其中一格無報價）。
+ */
+const NAME_TO_CODE = (() => {
+  const m = {};
+  Object.entries(TW_NAMES).forEach(([c, n]) => { if (n) m[n] = c; });
+  return m;
+})();
+
+/** 把使用者輸入的東西正規化成代號；認得代號、公司名，認不得就原樣回傳 */
+function resolveCode(input) {
+  const raw = (input || '').trim();
+  if (!raw) return '';
+  const up = raw.toUpperCase();
+  if (NAME_TO_CODE[raw]) return NAME_TO_CODE[raw];
+  // 也接受行情資料裡的名稱（監控清單以外的個股）
+  for (const [c, p] of Object.entries(twPrices)) if (p?.name === raw) return c;
+  for (const [c, p] of Object.entries(usPrices)) if (p?.name === raw) return c;
+  return up;
+}
+
 function nameOf(code) {
   code = code.trim().toUpperCase();
   if (isTW(code)) return TW_NAMES[code] || twPrices[code]?.name || '';
@@ -402,7 +430,7 @@ function setSide(s) {
 }
 
 function onCodeInput() {
-  const code = document.getElementById('f-code').value.trim().toUpperCase();
+  const code = resolveCode(document.getElementById('f-code').value);
   const hint = document.getElementById('code-hint');
   const qh   = document.getElementById('qty-hint');
   if (!code) { hint.textContent = ' '; qh.textContent = ' '; updateCalc(); return; }
@@ -419,7 +447,7 @@ function onCodeInput() {
 }
 
 function updateCalc() {
-  const code  = document.getElementById('f-code').value.trim().toUpperCase();
+  const code  = resolveCode(document.getElementById('f-code').value);
   const qty   = +document.getElementById('f-qty').value   || 0;
   const price = +document.getElementById('f-price').value || 0;
   const feeEl = document.getElementById('f-fee');
@@ -435,7 +463,7 @@ function updateCalc() {
 }
 
 async function saveTx() {
-  const code  = document.getElementById('f-code').value.trim().toUpperCase();
+  const code  = resolveCode(document.getElementById('f-code').value);
   const date  = document.getElementById('f-date').value;
   const qty   = +document.getElementById('f-qty').value;
   const price = +document.getElementById('f-price').value;
@@ -1000,6 +1028,59 @@ async function loadPrices() {
 //  Init
 // ══════════════════════════════════════════════════════
 /*
+ * 修掉已經存錯的紀錄：代號欄位被打成公司名的那些。
+ *
+ * 這種紀錄會讓同一檔股票在畫面上裂成兩張卡片，而且被誤判成美股所以沒有報價。
+ * 開站時自動偵測，出現提示讓使用者一鍵合併（不自動改，因為改的是他的資料）。
+ */
+function findMiscodedTrades() {
+  return trades.filter(t => NAME_TO_CODE[t.code] && NAME_TO_CODE[t.code] !== t.code);
+}
+
+function offerCodeRepair() {
+  const bad = findMiscodedTrades();
+  const bar = document.getElementById('repair-bar');
+  if (!bar || !bad.length) { if (bar) bar.innerHTML = ''; return; }
+
+  const groups = {};
+  bad.forEach(t => {
+    const to = NAME_TO_CODE[t.code];
+    (groups[`${t.code}→${to}`] ||= { from: t.code, to, n: 0 }).n++;
+  });
+  const list = Object.values(groups)
+    .map(g => `<b>${g.from}</b> → <b>${g.to} ${TW_NAMES[g.to]}</b>（${g.n} 筆）`).join('、');
+
+  bar.innerHTML = `
+    <div style="background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.35);
+                border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8">
+      ⚠️ <b>有 ${bad.length} 筆紀錄的代號欄位填的是公司名</b>
+      　同一檔股票會因此裂成兩張卡片，而且抓不到報價（被當成美股）。<br>
+      <span style="color:var(--text3)">${list}</span>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="repairCodes()">合併成正確代號</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('repair-bar').innerHTML=''">先不要</button>
+      </div>
+    </div>`;
+}
+
+async function repairCodes() {
+  const bad = findMiscodedTrades();
+  if (!bad.length) return;
+  bad.forEach(t => {
+    const to = NAME_TO_CODE[t.code];
+    t.name   = TW_NAMES[to] || t.name;
+    t.code   = to;
+    t.market = isTW(to) ? 'TW' : 'US';
+    // 手續費原本用美股規則（0）算的，一併重估
+    if (!t.fee) t.fee = estimateFee(t.market, t.side, t.qty, t.price);
+  });
+  await save();
+  document.getElementById('repair-bar').innerHTML = '';
+  renderAll();
+  alert(`已修正 ${bad.length} 筆紀錄，相同個股的卡片會合併成一張。`);
+}
+
+/*
  * 一次性搬遷：把舊版加密保險庫裡的交易紀錄搬回本機明碼。
  *
  * 這頁 2026/08 之前用 auth.js 把資料鎖在 pj_vault_v1 裡，改成「各自記錄」後
@@ -1062,6 +1143,7 @@ window.__priceLookup = code => priceOf(code);
 (async () => {
   await load();
   await offerVaultMigration();          // 舊版加密資料一次性搬回本機
+  offerCodeRepair();                    // 代號被打成公司名的舊紀錄
   cancelEdit();
   renderAll();
   await loadPrices();
