@@ -82,7 +82,17 @@ th{text-align:left;font-size:11px;color:var(--text3);font-weight:500;letter-spac
   padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.1)}
 td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text2);vertical-align:top}
 tr:last-child td{border-bottom:none}
-td:first-child{white-space:nowrap;color:var(--text)}
+td:first-child{white-space:nowrap;color:var(--text);width:1%}
+
+/* 窄螢幕時兩欄表格會把說明欄擠成一字一行，改成上下堆疊 */
+@media (max-width:560px){
+  table, tbody, tr, td{display:block;width:auto}
+  td{padding:2px 0;border-bottom:none}
+  /* 桌機版的 width:1% 會讓標題欄縮成一字一行，這裡要一併蓋掉 */
+  td:first-child{white-space:normal;font-weight:600;padding-top:8px;width:auto}
+  tr{border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:8px}
+  tr:last-child{border-bottom:none}
+}
 td .mono{font-family:var(--mono);font-size:12px}
 
 .pages-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:6px}
@@ -130,7 +140,7 @@ td .mono{font-family:var(--mono);font-size:12px}
 今日加權指數小幅收黑 -0.15%，收 44,329 點⋯資金動能偏多。
 題材面以伺服器機構件（+10.0%）⋯相對落後。
 個股表現分化，<span class="hi">川湖(2059) +10.0%</span> 等強勢⋯</div>
-        <div class="tip"><b>分數的用途是決定今天該進攻還是防守</b>，不是預測會漲多少。這點很重要，下面「三個限制」會再說明。</div>
+        <div class="tip"><b>分數的用途是決定今天該進攻還是防守</b>，不是預測會漲多少。這點很重要，下面「四個限制」會再說明。</div>
       </div>
     </div>
 
@@ -162,7 +172,7 @@ td .mono{font-family:var(--mono);font-size:12px}
   <!-- ── 第一週 ── -->
   <div class="stage">
     <div class="stage-hd">
-      <h2>熟了之後加上這兩個</h2>
+      <h2>熟了之後加上這三個</h2>
       <span class="when">第一週</span>
     </div>
     <div class="stage-sub">開始找標的時才需要用到。</div>
@@ -170,19 +180,38 @@ td .mono{font-family:var(--mono);font-size:12px}
     <div class="step">
       <span class="step-n">4</span>
       <div class="step-body">
-        <h3>機會點 — 找標的的入口</h3>
-        <p>三個階段各自代表不同意義，別混為一談：</p>
+        <h3>機會懶人包 — 三種進場理由，各看各的</h3>
+        <p>三張卡片背後是三套完全不同的邏輯，<b>刻意不混在一起算分數</b>：</p>
         <table>
-          <tr><td>① 突破均線</td><td>純技術面，股價剛轉強</td></tr>
-          <tr><td>② 目標價上漲空間</td><td>法人認為現價還有空間</td></tr>
-          <tr><td>③ 題材補漲</td><td>同題材龍頭漲了，它還沒動</td></tr>
+          <tr><td>① 專家評估基本面</td><td>現價低於<b>全體分析師最低目標</b>——連最保守的一份報告都還沒看到這個價位</td></tr>
+          <tr><td>② 相信護國神山</td><td>台積電跌破 5／10／20 日線（✓＝已跌破）。信它終究會回來，這是相對便宜的時點</td></tr>
+          <tr><td>③ 相信整體族群</td><td>同題材龍頭已漲、它還沒動，且<b>落後 8–12 個百分點</b></td></tr>
         </table>
-        <div class="tip">底下的 <b>交集圖（Venn）</b> 最有價值 —— 三個條件同時成立的股票很少，但那些才值得花時間深入研究。</div>
+        <div class="tip"><b>為什麼不取交集？</b>回測兩次證明在這個儀表板上「交集＝更強」是錯的——
+          「突破均線＋題材補漲」勝率只有 52.1%，反而<b>低於</b>單獨任一項的 54.9%。
+          而且①和③在設計上會互相打架：目標價是跟著股價事後調整的，題材補漲挑的卻是還沒漲的，
+          兩者交集常常是空的。所以並列讓你自己選要信哪一套。</div>
+        <div class="tip" style="margin-top:8px">③ 為什麼是 <b>8–12 個百分點</b>而不是「落後越多越好」？
+          5 年回測分桶：落後 8–12pt 勝率 <b>61.9%</b>、12–16pt 59.2%、16–20pt 50.5%、
+          20–30pt 只剩 <b>41.9%</b>（中位數轉負），而且六年每一年都成立。
+          落後太多通常不是「還沒輪到它」，是這檔自己有問題。</div>
       </div>
     </div>
 
     <div class="step">
       <span class="step-n">5</span>
+      <div class="step-body">
+        <h3>機會點交集圖 — 兩個條件同時成立時</h3>
+        <p>再往下是交集圖，只剩<b>兩圈</b>：① 目標價上漲空間、② 題材補漲。</p>
+        <div class="tip">原本有第三圈「突破均線」，2026/08 移除了——
+          5 年回測逐年檢查，它只有 <b>1/6 年</b>勝過對照組，是所有候選指標裡最差的，
+          總表看起來贏基準純粹是因為多頭年份「站上均線」的日子本來就多。
+          測過的替代品（60MA方向、貼近新高、量能、相對強弱）逐年檢查也全部崩潰，所以是移除而不是替換。</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-n">6</span>
       <div class="step-body">
         <h3>個股展開面板 — 一檔股票該知道的都在裡面</h3>
         <p>點個股表格任一列的 <span class="demo" style="display:inline;white-space:normal;padding:1px 6px;border-left:none;border-radius:4px">▶</span> 展開，會看到核心產品、營收拆解、法人目標、估價、年度／季 EPS、風險、走勢圖。</p>
@@ -193,15 +222,18 @@ td .mono{font-family:var(--mono);font-size:12px}
 
   <!-- ── 限制 ── -->
   <div class="warn-card">
-    <h2>⚠️ 三個一定要知道的限制</h2>
+    <h2>⚠️ 四個一定要知道的限制</h2>
     <p>不知道這些的話，很容易把數字當成它其實沒有的意思。</p>
 
     <div class="limit">
       <h3>① 分數高 ≠ 未來會漲</h3>
-      <p>用一年資料回測過，五個等級對<b>未來 20 日報酬並非單調遞增</b>：</p>
-      <div class="demo">大熊 +0.4%   小熊 -0.1%   <span class="hi">橫盤 +2.9%</span>   小牛 +2.1%   大牛 +2.4%
-                          <span class="warn">↑ 反而最高</span></div>
-      <p>「橫盤」的平均報酬比「大牛」還好 —— 因為大跌後的反彈，常發生在分數還很低的時候。<b>這個分數描述現在的狀態，不預測未來。</b></p>
+      <p>5 年回測（1,148 個交易日），買加權指數後<b>持有 20 日</b>的勝率：</p>
+      <div class="demo">大牛 66.5%   小牛 66.0%   <span class="hi">橫盤 66.9%</span>   小熊 54.5%   大熊 47.6%
+                      <span class="warn">↑ 前三名幾乎沒差</span></div>
+      <p>可用的結論是<b>避開小熊／大熊</b>，不是「等大牛才進場」——前三個等級在雜訊範圍內，
+        等大牛才買只是少買很多天。持有拉長到 60 日才拉開差距（大牛 +8.1%、大熊 +2.7%）。</p>
+      <div class="tip">逐年檢查「大牛 vs 空頭」只有 <b>2/4 年</b>成立，而且這 5 年台股整體是多頭
+        （大牛佔了 44% 的日子）。樣本偏斜，別當成穩定規律。<b>這個分數描述現在的狀態，不預測未來。</b></div>
     </div>
 
     <div class="limit">
@@ -211,7 +243,17 @@ td .mono{font-family:var(--mono);font-size:12px}
     </div>
 
     <div class="limit">
-      <h3>③ 看到「⚠️ 分歧大」就別太相信目標價</h3>
+      <h3>③ 分數是「位置」，不是「有沒有在前進」</h3>
+      <p>八項指標全都在量位置與斜率（站上均線、均線方向），<b>沒有一項在問指數到底有沒有走出去</b>。
+        均線落後於價格，所以一波大漲後就算橫向震盪一整個月，分數還是可以停在大牛。</p>
+      <div class="demo">2026/08/19　分數 9.2（大牛）
+但近 20 日淨變動 <span class="dn">−2.04%</span>、效率比 0.05　（1＝單向直線，0＝完全來回）</div>
+      <p>遇到這種狀況，日評的等級旁邊會出現 <span class="warn">⚠️ 位置偏多但近 20 日原地震盪</span> 的提示。
+        看到它就知道：<b>位置在多方，但這個月其實沒走出去</b>——體感接近橫盤是正常的，不是你看錯。</p>
+    </div>
+
+    <div class="limit">
+      <h3>④ 看到「⚠️ 分歧大」就別太相信目標價</h3>
       <p>例如聯亞的分析師目標價區間是 <span class="mono">586 ~ 4307</span>（差 7.3 倍）。這種時候不管取平均還是中位數，都只是把兩派完全相反的看法平均掉而已，沒有參考意義。</p>
       <div class="tip">目標價一律採<b>中位數</b>而非平均，就是為了減少極端值影響。但區間過寬時，系統會直接標出來提醒你。</div>
     </div>
