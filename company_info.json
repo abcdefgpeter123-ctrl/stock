@@ -308,8 +308,8 @@
     "industry": "光學業",
     "major_clients": "Apple、Samsung",
     "generated": "2026/05/22",
-    "pe": 28.9,
-    "eps": 188.1,
+    "pe": 29.6,
+    "eps": 187.8,
     "quarterly_eps": [
       {
         "q": "2024Q4",
@@ -632,7 +632,7 @@
     "industry": "半導體業",
     "major_clients": "光模組廠、VCSEL 廠",
     "generated": "2026/05/22",
-    "pe": 96.7,
+    "pe": 96.0,
     "eps": 4.13,
     "quarterly_eps": [
       {
@@ -1415,7 +1415,7 @@
     "industry": "石化業",
     "major_clients": "下游化工廠",
     "generated": "2026/05/22",
-    "pe": 34.9,
+    "pe": 34.6,
     "eps": 1.64,
     "quarterly_eps": [
       {
@@ -1829,8 +1829,8 @@
     "industry": "半導體業",
     "major_clients": "Google、Amazon、Meta、台積電",
     "generated": "2026/05/31",
-    "pe": 143.4,
-    "eps": 38.61,
+    "pe": 136.6,
+    "eps": 38.75,
     "quarterly_eps": [
       {
         "q": "2024Q4",
@@ -2696,7 +2696,7 @@
   },
   "6223": {
     "generated": "2026/06/05",
-    "pe": 114.0,
+    "pe": 110.8,
     "eps": 47.43,
     "quarterly_eps": [
       {
@@ -2950,8 +2950,8 @@
   },
   "2472": {
     "generated": "2026/06/05",
-    "pe": 26.5,
-    "eps": 8.63,
+    "pe": 23.9,
+    "eps": 9.8,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -3100,7 +3100,7 @@
   },
   "6505": {
     "generated": "2026/06/05",
-    "pe": 12.3,
+    "pe": 12.2,
     "eps": 5.77,
     "quarterly_eps": [
       {
@@ -3505,7 +3505,7 @@
   },
   "2884": {
     "generated": "2026/07/30",
-    "pe": 17.9,
+    "pe": 17.8,
     "eps": 2.12,
     "quarterly_eps": [
       {
@@ -3831,7 +3831,7 @@
   },
   "4904": {
     "generated": "2026/07/30",
-    "pe": 24.6,
+    "pe": 24.7,
     "eps": 4.11,
     "quarterly_eps": [
       {
@@ -3881,8 +3881,8 @@
   },
   "4906": {
     "generated": "2026/07/30",
-    "pe": null,
-    "eps": -0.72,
+    "pe": 242.5,
+    "eps": 0.14,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -3985,7 +3985,7 @@
   },
   "6789": {
     "generated": "2026/07/30",
-    "pe": 80.6,
+    "pe": 80.4,
     "eps": 5.24,
     "quarterly_eps": [
       {
