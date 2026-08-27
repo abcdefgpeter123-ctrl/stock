@@ -4,3 +4,10 @@ targets_local.json
 
 # 主動型 ETF 每日增減（來源整理自 CMoney，禁止再散布）
 active_etf_local.json
+
+# Python 位元組碼快取。這些**已經被 commit 進 repo 了**（6 個 .pyc），
+# 每次本機執行都會產生假的變更、也會參與 merge 衝突。
+# 要真正移出版控，除了這行還得跑一次：
+#   git rm -r --cached __pycache__
+__pycache__/
+*.pyc

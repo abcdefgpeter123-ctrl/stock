@@ -47,6 +47,10 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 60px;max-width:
 .vix-tooltip:hover .vix-tip{display:block}
 .vix-tip-title{font-weight:600;color:var(--text);margin-bottom:6px;font-size:13px}
 .up{color:var(--up)}.dn{color:var(--dn)}.neu{color:var(--text2)}
+/* 漲跌不能只靠紅綠（紅綠色盲約佔男性 8%）。.sig 標出「帶正負號的變動量」，
+   只有它長 ▲▼——價格本身也套 .up/.dn，全加會變成兩個三角形。與 index.html 同步。 */
+.up.sig::before{content:"\25B2";font-size:.8em;margin-right:.15em;vertical-align:.05em}
+.dn.sig::before{content:"\25BC";font-size:.8em;margin-right:.15em;vertical-align:.05em}
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .pill{font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:transparent;font-family:var(--font)}
 .pill:hover{border-color:var(--border2);color:var(--text)}
@@ -739,7 +743,7 @@ function renderThemeRecap(){
         <span style="color:var(--text3);font-family:var(--mono);font-size:10px;width:40px">${s.code}</span>
         <span style="flex:1;color:var(--text2)">${s.name}</span>
         ${priceStr}
-        <span style="width:52px;text-align:right;color:${sc}">${v>=0?"+":""}${v.toFixed(1)}%</span>
+        <span class="sig ${v>=0?'up':'dn'}" style="width:52px;text-align:right;color:${sc}">${v>=0?"+":""}${v.toFixed(1)}%</span>
       </div>`;
     }).join("");
     return `<div class="theme-card ${cls}${isOpen?" tc-open":""}" onclick="toggleThemeCard('${theme}')">
@@ -901,7 +905,7 @@ function renderMaBreakoutOpps() {
     `<span style="font-size:12px;color:#4ade80;white-space:nowrap;font-weight:500">① 突破所有均線：</span>` +
     hits.slice(0, 8).map(h => {
       const d = priceCache[h.code];
-      const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
+      const chgTxt = d ? `<span class="sig ${d.changeP>=0?'up':'dn'}" style="font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
       return `<span class="opp-chip" style="border-color:rgba(74,222,128,0.4)" onclick="toggleStockDetail('${h.code}','fav')">
         <span style="color:var(--text)">${h.name}</span>${chgTxt}
         <span style="color:#4ade80">站上20MA+${h.above20Pct.toFixed(1)}%</span>
@@ -934,7 +938,7 @@ function renderTargetUpsideOpps() {
     `<span style="font-size:12px;color:#a78bfa;white-space:nowrap;font-weight:500">② 目標價上漲空間為正：</span>` +
     hits.slice(0, 8).map(h => {
       const d = priceCache[h.code];
-      const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
+      const chgTxt = d ? `<span class="sig ${d.changeP>=0?'up':'dn'}" style="font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
       return `<span class="opp-chip" style="border-color:rgba(167,139,250,0.4)" onclick="toggleStockDetail('${h.code}','fav')">
         <span style="color:var(--text)">${h.name}</span>${chgTxt}
         <span style="color:#a78bfa">↑${h.upside.toFixed(0)}%</span>
@@ -956,7 +960,7 @@ function renderThemeLagOpps() {
     `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲，該個股屬於此題材但股價尚未反應">③ 題材補漲：</span>` +
     opps.slice(0, 8).map(o => {
       const d = priceCache[o.code];
-      const chgTxt = d ? `<span style="color:${d.changeP>=0?'var(--up)':'var(--dn)'};font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
+      const chgTxt = d ? `<span class="sig ${d.changeP>=0?'up':'dn'}" style="font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
       return `<span class="opp-chip" onclick="toggleStockDetail('${o.code}','fav')">
         <span style="color:var(--text)">${o.name}</span>${chgTxt}
         <span style="color:var(--text3)">落差${o.gap}%</span>
@@ -1079,13 +1083,13 @@ function favBtn(code){
 function pct(v){
   if(v==null) return '<span class="neu">—</span>';
   const cls = v>0?'up':v<0?'dn':'neu';
-  return `<span class="${cls}">${v>0?'+':''}${v.toFixed(1)}%</span>`;
+  return `<span class="${cls} sig">${v>0?'+':''}${v.toFixed(1)}%</span>`;
 }
 function fmtPrice(code){
   const pd = priceCache[code];
   if(!pd) return '<span class="neu">—</span>';
   const cls = pd.changeP>0?'up':pd.changeP<0?'dn':'neu';
-  return `<span class="${cls}" style="font-family:var(--mono);font-weight:500">$${pd.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span> <span class="${cls}" style="font-size:11px">${pd.changeP>0?'+':''}${pd.changeP.toFixed(2)}%</span>`;
+  return `<span class="${cls}" style="font-family:var(--mono);font-weight:500">$${pd.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span> <span class="${cls} sig" style="font-size:11px">${pd.changeP>0?'+':''}${pd.changeP.toFixed(2)}%</span>`;
 }
 
 // ── 訊號 ─────────────────────────────────────────────────
@@ -1161,7 +1165,7 @@ function renderETFs(){
     const pd = priceCache[etf.code];
     const priceHtml = pd
       ? `<div class="etf-price-val ${pd.changeP>=0?'up':'dn'}">$${pd.price.toFixed(2)}</div>
-         <div class="etf-price-chg ${pd.changeP>=0?'up':'dn'}">${pd.changeP>=0?'+':''}${pd.changeP.toFixed(2)}%</div>`
+         <div class="etf-price-chg sig ${pd.changeP>=0?'up':'dn'}">${pd.changeP>=0?'+':''}${pd.changeP.toFixed(2)}%</div>`
       : `<div class="etf-price-val neu">—</div>`;
     const typeClass = etf.type==="市值型"?"etf-type-market":"etf-type-sector";
     return `<div class="etf-card ${expandedEtf===etf.code?'expanded':''}" onclick="toggleEtf('${etf.code}')">
@@ -1694,7 +1698,7 @@ function updateMarket(data){
     document.getElementById(`m-${id}`).textContent = m.price.toLocaleString("en-US");
     const chgEl = document.getElementById(`m-${id}-chg`);
     const cls = m.chgP>=0?"up":"dn";
-    chgEl.innerHTML = `<span class="${cls}">${m.chgP>=0?"+":""}${m.chgP.toFixed(2)}% (${m.chg>=0?"+":""}${m.chg.toFixed(2)})</span>`;
+    chgEl.innerHTML = `<span class="${cls} sig">${m.chgP>=0?"+":""}${m.chgP.toFixed(2)}% (${m.chg>=0?"+":""}${m.chg.toFixed(2)})</span>`;
   }
   const vix = data.vix;
   if(vix){

@@ -142,6 +142,10 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 .sc-price{font-family:var(--mono);font-size:13px}
 .sc-price.up{color:var(--up)}
 .sc-price.dn{color:var(--dn)}
+/* 漲跌不能只靠紅綠。.sig 標出「帶正負號的變動量」，只有它長 ▲▼
+   （價格本身用 .sc-price.up/.dn 上色，不加符號）。與 index.html 同步。 */
+.up.sig::before{content:"\25B2";font-size:.8em;margin-right:.15em;vertical-align:.05em}
+.dn.sig::before{content:"\25BC";font-size:.8em;margin-right:.15em;vertical-align:.05em}
 
 .ind{width:22px;height:22px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
 .ind-y{background:rgba(34,197,94,0.15);color:var(--dn)}
@@ -779,7 +783,7 @@ function renderScanTable() {
     const inWl  = !!state.watchlist.find(w => w.code === r.code);
     const priceTxt = r.price ? r.price.toLocaleString() : '—';
     const chgTxt   = r.changeP != null
-      ? `<span style="font-size:11px;color:${r.changeP>=0?'var(--up)':'var(--dn)'}">${r.changeP>=0?'+':''}${r.changeP.toFixed(2)}%</span>`
+      ? `<span class="sig ${r.changeP>=0?'up':'dn'}" style="font-size:11px">${r.changeP>=0?'+':''}${r.changeP.toFixed(2)}%</span>`
       : '';
     const fillPct  = Math.round(r.score / MAX_SCORE * 100);
     const fillColor = scoreColor(r.score, MAX_SCORE);

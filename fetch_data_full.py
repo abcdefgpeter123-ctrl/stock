@@ -2542,7 +2542,14 @@ def fetch_inst_stocks(all_prices, target_days=5):
 # ── 主程式 ────────────────────────────────────────────────
 
 # ── histories 壓縮（縮短首頁載入）───────────────────────────
-RECENT_DAYS = 280   # data.json 只留最近約 280 個交易日（足夠算到「一年」漲幅 252 天）
+# data.json 的 histories 只留這麼多個交易日。
+# 曾經是 280，因為前端要自己算「一年」漲幅（回看 252 天）。改成由
+# precompute_returns() 在後端算好之後，首屏只剩均線需要歷史：
+# MA60 的方向判斷是 ma(c,60) vs ma(c.slice(0,-10),60)，也就是 60+10 = 70，
+# 取 80 留一點餘裕（剛好 70 是刀鋒，任何多回看一天的指標都會靜靜失效）。
+# 更早的資料在 history_5y.json，前端要畫的期間超出手上資料時才載入
+# （loadFullHistory，見 index.html 的 NEED 表）。
+RECENT_DAYS = 80
 
 
 def record_target_snapshots(merged, all_prices):
@@ -2725,6 +2732,46 @@ def split_heavy_payloads(data):
                              if h.get("ratio") is not None]
         print(f"   📦 margin.history {len(full)} 筆 → 保留 30 筆 + "
               f"{len(margin['ratios'])} 個 ratio（完整版存 margin_history.json）")
+
+
+def precompute_returns(data):
+    """
+    把 p5 / p30 / p180 / p365（各期漲跌幅 %）算好寫進 prices，供前端直接用。
+
+    【為什麼要搬到後端】
+    這四個數字原本是前端 computeReturns() 從 histories 現算的，其中 p365 要回看
+    252 個交易日、p180 要 126 天——**這是 RECENT_DAYS 必須是 280 的唯一理由**
+    （見該常數的註解）。也就是說，每個人每次開頁都要下載 103 支 × 280 天的收盤價，
+    只為了算出 4 個數字，而完整序列本身只有展開個股面板時才畫得到。
+
+    算好之後 RECENT_DAYS 就能降到只要滿足均線（MA60 加上回看 10 天 = 70）的長度，
+    histories 從 377K 降到約 95K。更早的資料本來就已經有延後載入的路徑
+    （history_5y.json ＋ 前端 loadFullHistory()），那段完全不用改：
+    它是「把舊資料接回 histories 前面」，不在意近期留了幾天。
+
+    ⚠️ 一定要在 compact_histories() **之前**呼叫，否則序列已經被截短了。
+    """
+    histories = data.get("histories") or {}
+    prices    = data.get("prices") or {}
+    # 交易日數：5 日、30 日、半年（126）、一年（252）
+    SPANS = {"p5": 5, "p30": 30, "p180": 126, "p365": 252}
+
+    filled = 0
+    for code, h in histories.items():
+        closes = h.get("closes") or []
+        pd = prices.get(code)
+        if not pd or len(closes) < 2:
+            continue
+        cur = closes[-1]
+        for key, n in SPANS.items():
+            n = min(n, len(closes) - 1)
+            base = closes[-1 - n]
+            if base and base > 0:
+                # 與前端原本的算法一致：四捨五入到小數 1 位
+                pd[key] = round((cur - base) / base * 100, 1)
+        filled += 1
+
+    print(f"   📐 各期漲跌幅預先算好 {filled} 支（p5/p30/p180/p365）")
 
 
 def compact_histories(data):
@@ -3161,6 +3208,7 @@ def main():
     track_etf_holdings(data, all_prices)
 
     # 8. 壓縮 histories、抽出首屏用不到的大塊資料，縮短載入時間
+    precompute_returns(data)   # ⚠️ 必須在 compact_histories 之前（它會截短序列）
     compact_histories(data)
     split_heavy_payloads(data)
 

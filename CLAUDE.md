@@ -85,7 +85,7 @@ update-data.yml 每天執行前也會跑一次同步。
 
 ## ETF 設定
 
-定義在 `index.html` 約第 573 行 `const ETFS = [...]`。
+定義在 `index.html` 的 `const ETFS = [...]`（目前約第 1429 行，行號會漂，用 grep 找）。
 
 **watchlist ETF**（持股納入監控）：
 
@@ -105,7 +105,7 @@ update-data.yml 每天執行前也會跑一次同步。
 ## fetch_data_full.py 重要設定
 
 ```python
-FALLBACK_CODES   # 監控股票清單（約 40 支）
+FALLBACK_CODES   # 監控 62 檔 ＋ tw_fetch_extra 14 檔 = 76 個代號，來自 stocks.json
 THEME_GROUPS     # 題材分組，用於機會點演算法
 ETF_TRACK_CODES  # 要追蹤的 ETF 代號
 ETF_ETFINFO_CODES = ["0050", "0056", "00929", "00891"]  # etfinfo.tw 自動抓取
@@ -331,6 +331,20 @@ robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散
 （`stock_trades_v1`、`stock_trade_notes_v1`），誰打開就看誰自己的。
 移除了 `isGuest()`、`renderGuest()`、`AuthUI` 掛載與保險庫讀寫。
 
+### 持股會自動進「我的最愛」
+
+`index.html` 的 `syncHoldingFavs()`（載入時跑一次）讀同源的 `stock_trades_v1`，
+把買賣淨額 > 0 且在監控名單內的代號塞進 `tw_stock_favorites`。
+
+會這樣做的三個規則，改動時別破壞：
+
+* **只自動移除自己加的。** `tw_fav_auto_v1.auto` 記錄哪些是自動加入的，
+  出清時只退場這些；手動點星星加的永遠不動。
+* **手動取消要被尊重。** 取消一檔自動加入的會進 `dropped`，之後不再自動加回，
+  直到那檔部位歸零才重置（下次重新買進會再出現）。
+* **只收監控名單內的。** 我的最愛的表格是拿 `STOCKS` 查資料的，
+  清單外或美股加進去只會是一列查不到東西的空白。
+
 **一次性搬遷**：偵測到舊的 `pj_vault_v1` 且本機還沒有資料時，頁面頂端會出現
 提示，輸入一次舊密碼就把 `trades` / `notes` 倒回明碼 localStorage
 （`offerVaultMigration` / `doVaultMigration`，完成後記 `trades_migrated_v1`）。
@@ -348,23 +362,31 @@ robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散
 
 ---
 
-## GitHub Token（「立即更新資料」按鈕）
+## 「立即更新資料」按鈕已移除（2026/08）
 
-Token 存在 `auth.js` 的加密保險庫裡（`pj_vault_v1`），**與交易紀錄共用同一把金鑰**。
-按下按鈕的流程：未設定管理密碼 → 引導去交易紀錄頁設定；已設定未解鎖 → 要求輸入密碼；
-解鎖後沒有 token → 開 modal 輸入，存入時一併加密。收到 401 會自動把 token 從保險庫移除。
+index.html 曾有一顆按鈕，用一組 `actions:write` 的 GitHub PAT 直接打
+`POST /actions/workflows/update-data.yml/dispatches` 手動觸發抓取。
 
-開站時會檢查並清除舊版明碼殘留（`localStorage["gh_actions_token"]`），
-並提醒去 GitHub 撤銷那一組——它曾以明碼形式存在過。
+**已整個拿掉**：按鈕、`gh-token-modal`、`_getGhToken()` / `triggerActions()` /
+`saveGhToken()` / `_doTriggerActions()`，以及這頁對 `auth.js` 的 `<script>` 依賴
+（`trades.html` 仍需要 auth.js 做一次性保險庫搬遷，那邊不動）。
 
-> **為什麼要改**：舊版直接 `localStorage.setItem` 明碼存放一組有 `actions:write`
-> 權限的 PAT。威脅模型是反的——「我的最愛」用 PBKDF2 25 萬輪加密，
-> 能改整個 repo 的憑證卻是明碼，而這個頁面是公開 origin。
+**為什麼是移除而不是繼續加固。** 中間版本已經把 token 從明碼 localStorage 搬進
+PBKDF2 25 萬輪的加密保險庫，但那只降低「被隨手讀走」的機率，改變不了根本的取捨：
+為了省幾小時的等待，讓一組能對整個 repo 觸發任意 workflow 的憑證，常駐在一個
+**public origin** 的瀏覽器裡。這個頁面沒有任何後端，任何 XSS 或惡意相依都能拿到它。
+排程本來就每天跑，這顆按鈕的價值遠低於它的風險面。
 
-建議用 **Fine-grained token**：只授權這個 repo、權限只給 `Actions: Read and write`、
-有效期 30～90 天。classic token 對你所有 repo 都有效，風險大得多。
+要手動觸發，在本機下就好，憑證留在自己機器上：
 
----
+```bash
+gh workflow run update-data.yml
+```
+
+`purgeGhToken()`（`loadData()` 之前）只跑一次：刪掉舊版明碼殘留的
+`localStorage["gh_actions_token"]`，並提醒去 GitHub 撤銷。
+⚠️ 保險庫裡那份 `pj_vault_v1.gh_token` **沒有密碼解不開、程式也刪不掉**——
+它是加密的所以還好，但那組 token 在 GitHub 上仍然有效，**該做的是去撤銷它**。
 
 ## 資料過期警示（freshness.js）
 
@@ -464,8 +486,30 @@ sudo pmset repeat wake MTWRFSU 07:20:00
 
 前端的 `margin.ratios` 若不存在會退回舊算法，舊格式 `data.json` 仍能正常運作。
 
-`histories`（317K）**沒有**拆——它在首屏就要用（均線指標、Venn、機會點 v2 的 60MA），
-拆了得先解決載入順序，風險大於收益。5 年份早就另存 `history_5y.json` 延後載入了。
+### 第二輪（2026/08）：histories 從 280 天降到 80 天
+
+`histories` 一度判斷「不能拆」，因為首屏要算均線。重看之後發現真正的癥結不是均線
+（MA60 只要 70 天），而是**前端自己算 p180／p365**——回看 126 與 252 個交易日，
+那是 `RECENT_DAYS` 必須是 280 的**唯一**理由。等於每個人每次開頁都下載
+103 支 × 280 天的收盤價，只為了算出 4 個數字。
+
+`precompute_returns()` 在 `compact_histories()` **之前**把 p5/p30/p180/p365
+算好寫進 `prices`，`RECENT_DAYS` 就降到 80（MA60 需要 70，多 10 天餘裕）。
+
+實測 **gzip 238K → 151K（−36%）**，`histories` 320K → 96K。
+與現行前端算法逐一對照過 103 支 × 4 期 = **412 個值，完全一致**。
+
+⚠️ **`precompute_returns()` 必須排在 `compact_histories()` 之前**，否則序列已被截短。
+
+⚠️ 前端 `computeReturns()` 保留現算當 fallback：舊版 data.json（沒有 p5/p30/…）
+仍能顯示，只是長區間會退化成「有多少算多少」。寧可舊資料不準也不要整欄空白。
+
+⚠️ **個股面板的期間切換改成看「要幾根 K、手上夠不夠」**（`NEED` 表），
+不再寫死「只有五年才載入」。舊寫法在 280 天時剛好夠用，降到 80 之後
+六月(126)、一年(252) 會**安靜地只畫 80 天卻仍標著「一年」**——比畫不出來更糟。
+
+> `histories` 的第一版判斷是錯的，但錯在沒問「首屏到底為什麼需要 280 天」。
+> 「這塊首屏要用」和「這塊首屏需要這麼長」是兩個問題。
 
 ---
 
@@ -672,3 +716,105 @@ python3 market_temp_lib.py      # 完整回測報告
 - 讀取本機 `data.json`
 - 顯示大盤、三大法人、個股漲跌、機會點
 - 安裝：複製到 `~/Library/Application Support/xbar/plugins/` 並 `chmod +x`
+
+## 待辦：交易紀錄接上桌面小工具（2026-08-23）
+
+`trades.html` 的交易紀錄目前只存在瀏覽器 localStorage（`stock_trades_v1`），
+沒有落地檔案，本機 repo 讀不到，所以「Claude 專案總覽」桌面小工具目前只做
+GitHub Actions 四支 workflow 的健康度檢查（見 `update_stock_health.sh`，
+放在 Übersicht widget 資料夾裡，不在這個 repo 內），沒有接交易紀錄。
+
+之後想做的：改成手動匯出備份（trades.html 既有的「匯出備份」按鈕）存到固定
+路徑，小工具讀那個匯出檔案，顯示未平倉部位/最近操作。屆時再回來接。
+
+---
+
+## 監控名單只有 62 檔 — 別直接遍歷 `analyst_targets`
+
+`stocks.js` 是唯一來源，`index.html` 的 `STOCKS` 與 `health_check.html` 的
+`WATCH_STOCKS` 都是 62 檔，這部分本來就一致。**問題出在「列出個股」的區塊
+不是從 STOCKS 走，而是從 `analyst_targets` 的鍵走**——那份有 **79 個鍵**：
+
+| 多出來的 17 個 | 來自 |
+|---------------|------|
+| 2880 2884 2886 2887 | `tw_fetch_extra`（金融股，一併抓取但刻意不列入清單）|
+| 3026 3090 6173 | `theme_groups` 專用，只給機會點偵測用 |
+| 0050 0056 00662 00713 00757 00878 00891 00919 00929 00940 | ETF |
+
+結果：法人目標價卡片牆是 **63 張**（不是 62），懶人包①的「共 N 檔有分析師
+覆蓋」算成 **63**（正確是 58——62 檔裡有 4 檔沒有分析師覆蓋），
+health_check 的掃描表卻是 62 → 兩頁對不起來。
+
+修法是加一道共用關卡（`index.html`，緊接在 `STOCKS` 定義之後）：
+
+```js
+const WATCH_CODES = new Set(STOCKS.map(s => s.code));
+const watchedTargets = () =>
+  Object.entries(analystTargets).filter(([code]) => WATCH_CODES.has(code));
+```
+
+四處改用它：`renderCheatSheet()` 的 belowLow、同函式的覆蓋檔數、
+`computeOppSets()` 的 B 集合、`renderAnalystTargets()` 的 `allCodes`。
+
+⚠️ `renderAnalystTargets()` 的**手動記錄（`manualTargets`）不過濾**——
+那是你自己敲進去的，在不在清單裡都該顯示。
+
+⚠️ **ETF 加減碼區（`etfflow-grid`）刻意不過濾。** 它顯示的是「ETF 今天買賣了
+什麼」，本來就會出現清單外的個股（1216 統一、2347 聯強…），過濾掉反而是錯的。
+
+> 教訓：「清單統一」不等於「來源統一」。來源早就統一了，漏的是**消費端**——
+> 任何 `Object.keys(analystTargets)` / `Object.entries(analystTargets)` 都要先問
+> 「這個區塊是在列監控名單，還是在列別的東西」。
+
+
+---
+
+## 純函式測試（test_pure.py）
+
+```bash
+python3 test_pure.py     # 失敗會列出項目並 exit 1
+```
+
+`update-data.yml` 在**抓取之前**跑它。順序是刻意的：這些函式壞掉時不會拋例外，
+只會安靜地把錯的數字寫進 `data.json`，所以要在寫檔之前擋，而不是事後看報表覺得怪。
+
+範圍刻意很窄——只測「同輸入必得同輸出」的純函式，而且優先測**真的出過事**的：
+
+| 測的東西 | 曾經的事故 |
+|---------|-----------|
+| `roc_to_ad_date()` | 認不得 `20260731`，把 07/31 的法人資料標成 08/03 |
+| `merge_eps_history()` | Yahoo 視窗滑動，直接覆蓋讓早期 EPS 一去不回 |
+| `split_heavy_payloads()` | 讀錯來源會把 5000 筆融資歷史砍成 30 筆 |
+| `weekdays_between()` | 用「幾天」而非「幾個平日」，週末必誤報 |
+| `stocks.json` 完整性 | 清單手改，錯字沒有任何機制會擋 |
+
+不 mock HTTP、不測抓取——那些本來就會因為外部網站改版而壞，維護成本高於價值。
+不依賴 pytest，Actions runner 不用多裝套件。
+
+寫完有做突變測試確認它抓得到迴歸（拿掉西元 8 碼那條 → 測試確實失敗）。
+
+---
+
+## 漲跌不只用顏色（.sig）
+
+紅漲綠跌原本是**唯一**的語意載體，紅綠色盲約佔男性 8%，分不出來等於整頁漲跌資訊全失。
+
+```css
+.up.sig::before{content:"▲"} .dn.sig::before{content:"▼"}
+```
+
+`.sig` 標的是「**帶正負號的變動量**」，不是「所有紅綠字」——
+`fmtPrice()` 的股價與漲跌幅是兩個 span 都套 `.up`，全加會變成「▲2415.0 ▲+0.6%」。
+index / us / health_check 三頁同步。
+
+⚠️ `_colorSummary()` 的**買超／賣超那條刻意不加**：那兩個字本身就帶方向，
+顏色不是唯一載體，加了變成「▲買超 366 億」反而怪。
+
+> 順帶查證：`✓`／`✕`／`👍` 那些原本就是真的字元不是純色塊，那半邊的疑慮不成立。
+
+---
+
+## 已從版控移除的東西
+
+- `__pycache__/*.pyc` — 六個 .pyc 曾被 commit，每次本機執行都製造假變更、還會參與
+  merge 衝突。`.gitignore` 已加，但**還要跑一次 `git rm -r --cached __pycache__`** 才真的移出。

@@ -10,6 +10,8 @@ on:
     paths:
       - 'fetch_data_full.py'
       - 'generate_report.py'
+      - 'test_pure.py'
+      - 'stocks.json'
   workflow_dispatch:  # 允許手動觸發
 
 permissions:
@@ -25,6 +27,12 @@ jobs:
 
       - name: Install dependencies
         run: pip3 install requests yfinance anthropic beautifulsoup4 --break-system-packages --quiet
+
+      # 純函式的回歸測試。放在抓取之前——這些函式（日期轉換、EPS 合併、
+      # 融資歷史切分）壞掉時不會拋例外，只會安靜地寫出錯的數字進 data.json，
+      # 所以要在寫檔之前擋下來，而不是事後看報表發現數字怪怪的。
+      - name: Run pure-function tests
+        run: python3 test_pure.py
 
       # stocks.json 是監控清單的唯一來源，stocks.js 由它產生給網頁用。
       # 有人只改了 json 沒重跑同步時，這一步會補上，避免網頁清單落後。
