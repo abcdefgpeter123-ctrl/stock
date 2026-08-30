@@ -202,6 +202,11 @@ window.STOCK_DATA = {
    "theme": "液冷散熱"
   },
   {
+   "code": "3653",
+   "name": "健策",
+   "theme": "液冷散熱"
+  },
+  {
    "code": "2345",
    "name": "智邦",
    "theme": "網通"
@@ -437,7 +442,8 @@ window.STOCK_DATA = {
     "3017"
    ],
    "members": [
-    "8996"
+    "8996",
+    "3653"
    ]
   },
   "網通": {

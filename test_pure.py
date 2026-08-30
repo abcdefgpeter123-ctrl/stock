@@ -149,7 +149,7 @@ def test_stocks_json():
     d = json.load(open(os.path.join(D, "stocks.json"), encoding="utf-8"))
     wl = d["tw_watchlist"]
 
-    eq(len(wl), 62, "監控清單 62 檔")
+    eq(len(wl), 63, "監控清單 63 檔")
     codes = [s["code"] for s in wl]
     eq(len(set(codes)), len(codes), "沒有重複代號")
     eq([c for c in codes if not c[:4].isdigit()], [], "代號前四碼都是數字")

@@ -68,7 +68,7 @@ stocks.json          ← 唯一來源（手改這個）
 
 | 欄位 | 說明 |
 |------|------|
-| `tw_watchlist` | 監控個股 `{code, name, theme}`，目前 62 檔 |
+| `tw_watchlist` | 監控個股 `{code, name, theme}`，目前 63 檔 |
 | `tw_fetch_extra` | 一併抓取但不列入清單的代號（ETF、部分金融股），14 筆 |
 | `us_names` | 美股代號→中文名，供大盤日評顯示 |
 | `theme_parent` | 子題材→父題材（半導體、AI伺服器的一鍵篩選） |
@@ -105,7 +105,7 @@ update-data.yml 每天執行前也會跑一次同步。
 ## fetch_data_full.py 重要設定
 
 ```python
-FALLBACK_CODES   # 監控 62 檔 ＋ tw_fetch_extra 14 檔 = 76 個代號，來自 stocks.json
+FALLBACK_CODES   # 監控 63 檔 ＋ tw_fetch_extra 14 檔 = 77 個代號，來自 stocks.json
 THEME_GROUPS     # 題材分組，用於機會點演算法
 ETF_TRACK_CODES  # 要追蹤的 ETF 代號
 ETF_ETFINFO_CODES = ["0050", "0056", "00929", "00891"]  # etfinfo.tw 自動抓取
@@ -729,10 +729,10 @@ GitHub Actions 四支 workflow 的健康度檢查（見 `update_stock_health.sh`
 
 ---
 
-## 監控名單只有 62 檔 — 別直接遍歷 `analyst_targets`
+## 監控名單只有 63 檔 — 別直接遍歷 `analyst_targets`
 
 `stocks.js` 是唯一來源，`index.html` 的 `STOCKS` 與 `health_check.html` 的
-`WATCH_STOCKS` 都是 62 檔，這部分本來就一致。**問題出在「列出個股」的區塊
+`WATCH_STOCKS` 都是 63 檔，這部分本來就一致。**問題出在「列出個股」的區塊
 不是從 STOCKS 走，而是從 `analyst_targets` 的鍵走**——那份有 **79 個鍵**：
 
 | 多出來的 17 個 | 來自 |
