@@ -85,12 +85,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .fav-section{margin-bottom:24px}
 .fav-empty{padding:20px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg2);border:1px dashed var(--border);border-radius:var(--r)}
 
-/* ── 機會點快覽列 ── */
-.opp-section{margin-bottom:24px}
-.mkt-opp-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
-.opp-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;color:var(--text2);transition:background .12s}
-.opp-chip:hover{background:rgba(167,139,250,.22);color:var(--text)}
-
 /* ── 機會懶人包（與台股頁同一套樣式）── */
 .cheat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-top:4px}
 .cheat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
@@ -393,14 +387,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <button class="pill" onclick="setThemePeriod('p365',this)">一年</button>
     </div>
     <div id="theme-recap-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
-  </div>
-
-  <!-- 機會點快覽 -->
-  <div class="opp-section">
-    <div class="sec-hd" style="margin-top:4px">🎯 機會點快覽<span class="src-tag">點擊直接展開個股詳情</span></div>
-    <div class="mkt-opp-row" id="opp-row-ma"></div>
-    <div class="mkt-opp-row" id="opp-row-target" style="margin-top:8px"></div>
-    <div class="mkt-opp-row" id="mkt-opp-row" style="margin-top:8px"></div>
   </div>
 
   <!-- 法人目標價追蹤 -->
@@ -943,132 +929,18 @@ function renderTrend(sp) {
     <tbody>${body}<tr class="trend-raw"><td>當日分數</td>${rawRow}</tr><tr class="trend-score"><td>判定（3日均）</td>${avgRow}</tr></tbody>`;
 }
 
-// 題材補漲：同題材內龍頭已大漲、其他成員尚未反應
-function computeUsThemeLagOpps() {
-  const LEADER_THRESHOLD = 8;   // 龍頭近30日漲幅需 >= 8%
-  const GAP_THRESHOLD    = 6;   // 落後龍頭 >= 6 個百分點
-  const MAX_MEMBER_P30   = 5;   // 該股近30日漲幅 <= 5% 才算「尚未反應」
-  const MIN_MEMBER_P30   = -5;  // 跌幅別太誇張（避免抓到基本面有問題的股票）
-
-  const themeMap = {};
-  STOCKS.forEach(s => { (themeMap[s.theme] ||= []).push(s); });
-
-  const results = [];
-  Object.values(themeMap).forEach(group => {
-    const valid = group.filter(s => s.p30 != null);
-    if (valid.length < 2) return;
-    const leader = valid.reduce((a, b) => (b.p30 > a.p30 ? b : a));
-    if (leader.p30 < LEADER_THRESHOLD) return;
-    valid.forEach(s => {
-      if (s.code === leader.code) return;
-      const gap = leader.p30 - s.p30;
-      if (gap >= GAP_THRESHOLD && s.p30 <= MAX_MEMBER_P30 && s.p30 >= MIN_MEMBER_P30) {
-        results.push({ code: s.code, name: s.name, gap: Math.round(gap * 10) / 10, leader: leader.code, leader_p30: leader.p30 });
-      }
-    });
-  });
-  return results.sort((a, b) => b.gap - a.gap);
-}
-
-// 階段① 突破所有均線（5/20/60）
-function renderMaBreakoutOpps() {
-  const row = document.getElementById("opp-row-ma");
-  if (!row) return;
-
-  const hits = [];
-  STOCKS.forEach(s => {
-    const p = priceCache[s.code];
-    const h = histories[s.code];
-    const closes = h?.closes;
-    if (!p || !p.price || !closes || closes.length < 60) return;
-    const price = p.price;
-    const ma5 = _maOf(closes, 5), ma20 = _maOf(closes, 20), ma60 = _maOf(closes, 60);
-    if (ma5 == null || ma20 == null || ma60 == null) return;
-    if (price <= ma5 || price <= ma20 || price <= ma60) return;
-    hits.push({ code: s.code, name: s.name, above20Pct: (price / ma20 - 1) * 100 });
-  });
-  hits.sort((a, b) => b.above20Pct - a.above20Pct);
-
-  if (!hits.length) {
-    row.innerHTML = `<span style="color:var(--text3);font-size:12px">① 突破所有均線（5/20/60）：目前無符合個股</span>`;
-    return;
-  }
-  row.innerHTML =
-    `<span style="font-size:12px;color:#4ade80;white-space:nowrap;font-weight:500">① 突破所有均線：</span>` +
-    hits.slice(0, 8).map(h => {
-      const d = priceCache[h.code];
-      const chgTxt = d ? `<span class="sig ${d.changeP>=0?'up':'dn'}" style="font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" style="border-color:rgba(74,222,128,0.4)" onclick="toggleStockDetail('${h.code}','fav')">
-        <span style="color:var(--text)">${h.name}</span>${chgTxt}
-        <span style="color:#4ade80">站上20MA+${h.above20Pct.toFixed(1)}%</span>
-      </span>`;
-    }).join("") +
-    (hits.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${hits.length - 8} 支</span>` : "");
-}
-
-// 階段② 券商目標價，上漲空間為正
-function renderTargetUpsideOpps() {
-  const row = document.getElementById("opp-row-target");
-  if (!row) return;
-
-  const hits = [];
-  Object.entries(analystTargets).forEach(([code, at]) => {
-    if (!at.mean) return;
-    const p = priceCache[code];
-    if (!p || !p.price) return;
-    const upside = (at.mean - p.price) / p.price * 100;
-    if (upside <= 0) return;
-    hits.push({ code, name: (priceCache[code]||{}).name || nameMap[code] || code, upside });
-  });
-  hits.sort((a, b) => b.upside - a.upside);
-
-  if (!hits.length) {
-    row.innerHTML = `<span style="color:var(--text3);font-size:12px">② 券商目標價上漲空間為正：目前無符合個股</span>`;
-    return;
-  }
-  row.innerHTML =
-    `<span style="font-size:12px;color:#a78bfa;white-space:nowrap;font-weight:500">② 目標價上漲空間為正：</span>` +
-    hits.slice(0, 8).map(h => {
-      const d = priceCache[h.code];
-      const chgTxt = d ? `<span class="sig ${d.changeP>=0?'up':'dn'}" style="font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" style="border-color:rgba(167,139,250,0.4)" onclick="toggleStockDetail('${h.code}','fav')">
-        <span style="color:var(--text)">${h.name}</span>${chgTxt}
-        <span style="color:#a78bfa">↑${h.upside.toFixed(0)}%</span>
-      </span>`;
-    }).join("") +
-    (hits.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${hits.length - 8} 支</span>` : "");
-}
-
-// 階段③ 題材補漲快覽
-function renderThemeLagOpps() {
-  const row = document.getElementById("mkt-opp-row");
-  if (!row) return;
-  const opps = computeUsThemeLagOpps();
-  if (!opps.length) {
-    row.innerHTML = `<span style="color:var(--text3);font-size:12px" title="整體題材已漲，該個股屬於此題材但股價尚未反應">③ 題材補漲：目前無符合個股</span>`;
-    return;
-  }
-  row.innerHTML =
-    `<span style="font-size:12px;color:var(--text3);white-space:nowrap;cursor:help" title="整體題材已漲，該個股屬於此題材但股價尚未反應">③ 題材補漲：</span>` +
-    opps.slice(0, 8).map(o => {
-      const d = priceCache[o.code];
-      const chgTxt = d ? `<span class="sig ${d.changeP>=0?'up':'dn'}" style="font-size:11px">${d.changeP>=0?"+":""}${d.changeP.toFixed(1)}%</span>` : "";
-      return `<span class="opp-chip" onclick="toggleStockDetail('${o.code}','fav')">
-        <span style="color:var(--text)">${o.name}</span>${chgTxt}
-        <span style="color:var(--text3)">落差${o.gap}%</span>
-      </span>`;
-    }).join("") +
-    (opps.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${opps.length - 8} 支</span>` : "");
-}
-
 /*
  * 機會懶人包 —— 兩種「為什麼現在可以買」的理由各佔一格，彼此獨立不取交集。
  *
- * 台股頁有三格（第三格是題材補漲），美股這裡刻意只留兩格：
- * 題材補漲已經有「🎯 機會點快覽」的第三列在講同一件事，再放一格是重複。
+ * 台股頁有三格，美股只有兩格——第三格「相信整體族群」（題材補漲）沒有搬過來。
  *
- * 註：原本這個位置是「🔵 機會點交集圖」，2026/08 移除。交集圖的問題是
- * 三個集合幾乎不相交，格子長期是 0，佔了一大塊版面卻沒給出可行動的資訊。
+ * 2026/08 這一頁連續拆掉三塊：🔵 機會點交集圖（三個集合幾乎不相交，格子長期是 0）、
+ * 🎯 機會點快覽（三列的內容與這裡重疊），以及快覽專用的
+ * renderMaBreakoutOpps / renderTargetUpsideOpps / renderThemeLagOpps
+ * 與它們唯一的資料來源 computeUsThemeLagOpps()。
+ *
+ * 所以現在美股頁沒有任何地方在算題材補漲。要補回第三格的話，
+ * computeUsThemeLagOpps() 在 git 記錄裡（見移除快覽那一次的 commit）。
  */
 function renderCheatSheet() {
   const el = document.getElementById("cheat-grid");
@@ -1135,13 +1007,6 @@ function renderCheatSheet() {
       <div class="cheat-empty" style="margin-top:7px">✓ = 已跌破（符合這個理由）　✕ = 仍站在線上。${
         ndx ? "" : "<br>⚠️ 目前用綜合指數代替，明早資料更新後會換成 NASDAQ 100。"}</div>
     </div>`;
-}
-
-function renderOpportunities() {
-  renderMaBreakoutOpps();
-  renderTargetUpsideOpps();
-  renderThemeLagOpps();
-  renderCheatSheet();
 }
 
 // ETF 持股反查表 (code → ETF代號陣列)
@@ -1906,7 +1771,7 @@ async function loadData(){
     updateMarket(data);
     renderETFs();
     renderAnalystTargets();
-    renderOpportunities();
+    renderCheatSheet();
     renderFavorites();
     render();
 

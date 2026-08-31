@@ -584,11 +584,14 @@ python3 backtest_belowlow.py
 `computeOppSets()` 仍然回傳 A（站上 5/20/60 均線），但只給機會點 v2 當補充標籤用，
 不再進交集圖；機會點快覽的均線列（`renderMaBreakoutOpps`）一併移除。
 
-### 美股頁（2026/08）：交集圖整個拿掉
+### 美股頁（2026/08）：交集圖與機會點快覽都拿掉了
 
-`us.html` 原本有三圈版的交集圖，已完全移除（HTML、CSS、`computeOppSets()`、
-`renderOppVenn()` 全刪）。理由同上再加一條：美股觀察名單只有 20 幾檔有分析師覆蓋，
-三個集合幾乎不相交，格子長期是 0，佔一大塊版面卻沒給出可行動的資訊。
+`us.html` 這一輪連續拆掉兩塊，換上一塊：
+
+| 移除 | 為什麼 | 一起刪掉的程式 |
+|------|--------|---------------|
+| 🔵 機會點交集圖（三圈版）| 美股只有 20 幾檔有分析師覆蓋，三個集合幾乎不相交，格子長期是 0 | `computeOppSets()`、`renderOppVenn()`、venn CSS |
+| 🎯 機會點快覽（三列）| 三列的內容與機會懶人包重疊 | `renderMaBreakoutOpps()`、`renderTargetUpsideOpps()`、`renderThemeLagOpps()`、`renderOpportunities()`、`computeUsThemeLagOpps()`、`.opp-*` CSS |
 
 補上的是**機會懶人包**（`renderCheatSheet()`），比照台股但只有兩格：
 
@@ -596,7 +599,13 @@ python3 backtest_belowlow.py
 |---|---|---|
 | ① 專家評估基本面 | 現價 < 分析師最低目標 | 同左 |
 | ② | 相信護國神山（台積電均線） | 相信巨頭（NASDAQ 100 均線）|
-| ③ 相信整體族群 | 題材補漲 8–12pt | **沒有**——「🎯 機會點快覽」第三列已在講同一件事 |
+| ③ 相信整體族群 | 題材補漲 8–12pt | **沒有** |
+
+⚠️ `computeUsThemeLagOpps()` 一起刪了，所以**美股頁現在沒有任何地方在算題材補漲**。
+要補回第三格的話，那段邏輯在 git 記錄裡（移除機會點快覽那一次的 commit）。
+
+法人目標價卡片也補上台股那個「↓ 現價低於最低目標 $X（差 N%）」標籤，
+含只有 1 位分析師時退成灰階、文案改「唯一目標」的那條規則。
 
 ②用的是 `market_history.ndx`（`^NDX`，那斯達克 100），不是 `nasdaq`（`^IXIC`，
 三千多檔的綜合指數）——後者會被小型股稀釋，而「相信巨頭」要看的正是前 100 大權值股。
