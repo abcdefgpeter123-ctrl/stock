@@ -120,6 +120,17 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .tp-period.active{background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,.35)}
 .target-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s}
 .target-card:hover{border-color:var(--border2)}
+/* ── 現價跌破全體分析師最低目標（與台股頁同一套呈現）── */
+.target-card.below-low{background:rgba(96,165,250,.07);border-color:rgba(96,165,250,.45);
+  box-shadow:0 0 0 1px rgba(96,165,250,.18)}
+.tgt-below-tag{display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;
+  font-size:10px;font-weight:600;color:var(--blue);background:rgba(96,165,250,.12);
+  border:1px solid rgba(96,165,250,.35);border-radius:4px;padding:2px 7px;font-family:var(--mono)}
+/* 只有 1 位分析師：訊號份量差很多，整張卡不上藍色，標籤也退成灰階。
+   深色底上真正的黑字會看不見，所以用最暗的中性灰。 */
+.target-card.below-low.solo{background:var(--bg2);border-color:var(--border);box-shadow:none}
+.tgt-below-tag.solo{color:var(--text3);background:rgba(255,255,255,.04);
+  border-color:var(--border2);font-weight:400}
 .etf-section{margin-bottom:24px}
 .etf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:10px}
 .etf-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:all .15s}
@@ -1102,7 +1113,9 @@ function renderCheatSheet() {
         ? `／共 ${covered} 檔有分析師覆蓋` : ""}</div>
       ${belowLow.length
         ? `<div class="cheat-chips">${belowLow.map(i =>
-             chip(i.code, i.name, `+${i.diff.toFixed(0)}%·${i.count}位`, i.count <= 1)).join("")}</div>
+             // 差距不到 1% 時 toFixed(0) 會印成「+0%」，看起來像沒差——與卡片同規則補到小數一位
+             chip(i.code, i.name, `+${i.diff < 1 ? i.diff.toFixed(1) : i.diff.toFixed(0)}%·${i.count}位`,
+                  i.count <= 1)).join("")}</div>
            <div class="cheat-empty" style="margin-top:7px">淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
         : `<div class="cheat-empty">目前沒有個股跌破分析師的最低目標。</div>`}
     </div>
@@ -1404,7 +1417,19 @@ function renderAnalystTargets(){
         </div>`
       : "";
 
-    return `<div class="target-card" onclick="toggleStockDetail('${code}','fav')">
+    // 現價低於「所有分析師裡最低的那個目標」——連最保守的一份報告都還沒看到這個價位，
+    // 是相對難得的狀態，值得一眼看見（不代表就該買，只代表值得去查為什麼）
+    const belowLow = at.low != null && price > 0 && price < at.low;
+    // 只有 1 位分析師時，「最低」＝「唯一」，講成最低會高估這個訊號的份量
+    const solo = belowLow && at.count === 1;
+    const belowDiff = belowLow ? (at.low - price) / price * 100 : 0;
+    const lowStr = belowLow ? (at.low >= 100 ? at.low.toFixed(0) : at.low.toFixed(2)) : "";
+    const belowTag = belowLow
+      ? `<div class="tgt-below-tag${solo ? " solo" : ""}">↓ 現價低於${solo ? "唯一" : "最低"}目標 $${lowStr}（差 ${belowDiff < 1 ? belowDiff.toFixed(1) : belowDiff.toFixed(0)}%）</div>`
+      : "";
+
+    return `<div class="target-card${belowLow ? " below-low" : ""}${solo ? " solo" : ""}" onclick="toggleStockDetail('${code}','fav')">
+      ${belowTag}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${code}</span>
         <span style="font-size:11px;color:${recColor};background:${recColor}22;padding:1px 7px;border-radius:10px">${recLabel}</span>

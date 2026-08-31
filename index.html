@@ -1234,7 +1234,9 @@ function renderCheatSheet() {
         ? `／共 ${watchedTargets().filter(([, a]) => a.mean).length} 檔有分析師覆蓋` : ""}</div>
       ${belowLow.length
         ? `<div class="cheat-chips">${belowLow.map(i =>
-             chip(i.code, i.name, `+${i.diff.toFixed(0)}%·${i.count}位`, i.count <= 1)).join("")}</div>
+             // 差距不到 1% 時 toFixed(0) 會印成「+0%」，看起來像沒差——與卡片同規則補到小數一位
+             chip(i.code, i.name, `+${i.diff < 1 ? i.diff.toFixed(1) : i.diff.toFixed(0)}%·${i.count}位`,
+                  i.count <= 1)).join("")}</div>
            <div class="cheat-empty" style="margin-top:7px">淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
         : `<div class="cheat-empty">目前沒有個股跌破分析師的最低目標。</div>`}
       ${_snapshotProgress()}
