@@ -91,21 +91,28 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .opp-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;color:var(--text2);transition:background .12s}
 .opp-chip:hover{background:rgba(167,139,250,.22);color:var(--text)}
 
-/* ── 機會點交集 Venn 圖 ── */
-.venn-section{margin-bottom:24px}
-.venn-container{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
-.venn-svg{width:280px;height:250px;flex-shrink:0}
-.venn-circle{fill-opacity:.32;stroke-width:1.5}
-.venn-a{fill:#4ade80;stroke:#4ade80}
-.venn-b{fill:#a78bfa;stroke:#a78bfa}
-.venn-c{fill:#60a5fa;stroke:#60a5fa}
-.venn-set-label{font-size:10.5px;fill:var(--text2);text-anchor:middle;font-weight:600;letter-spacing:.02em}
-.venn-count{font-size:17px;fill:var(--text);text-anchor:middle;font-weight:700;font-family:var(--mono)}
-.venn-count-strong{font-size:21px;fill:#fbbf24}
-.venn-detail{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
-.venn-bucket-hd{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
-.venn-bucket-chips{display:flex;flex-wrap:wrap;gap:6px}
-.venn-empty{color:var(--text3);font-size:12px;padding:6px 0}
+/* ── 機會懶人包（與台股頁同一套樣式）── */
+.cheat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-top:4px}
+.cheat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.cheat-card.c1{border-left:3px solid var(--purple)}
+.cheat-card.c2{border-left:3px solid var(--teal)}
+.cheat-hd{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.cheat-sub{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:9px}
+.cheat-n{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:7px}
+.cheat-chips{display:flex;flex-wrap:wrap;gap:5px}
+.cheat-chip{font-size:11.5px;padding:2px 8px;border-radius:12px;cursor:pointer;
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap}
+.cheat-chip:hover{border-color:var(--purple);color:var(--text)}
+.cheat-chip .q{font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-left:3px}
+.cheat-chip.dim{opacity:.55}
+.cheat-empty{font-size:11.5px;color:var(--text3);padding:4px 0;line-height:1.7}
+.cheat-ma{display:flex;flex-direction:column;gap:5px;margin-top:2px}
+.cheat-ma-row{display:flex;align-items:center;gap:8px;font-size:12px;font-family:var(--mono)}
+.cheat-ma-row .lbl{color:var(--text2);font-family:var(--font);min-width:66px}
+.cheat-ma-row .val{color:var(--text3);margin-left:auto}
+.cheat-mark{font-weight:700;font-size:13px;width:14px;text-align:center}
+.cheat-mark.yes{color:var(--dn)}
+.cheat-mark.no{color:var(--up)}
 
 .targets-section{margin-bottom:24px}
 .tp-period{font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;font-family:var(--font)}
@@ -332,6 +339,15 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <div id="market-summary-bar" style="display:none;margin:0 0 16px;padding:14px 18px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-left:3px solid var(--blue);border-radius:8px">
     <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:6px">📝 <span id="market-summary-date">今日</span>大盤日評</div>
     <div id="market-summary-text" style="font-size:13px;line-height:1.8;color:var(--text2)"></div>
+
+    <!-- 近一週逐日指標：看轉變有沒有持續（與台股頁、每日健檢同一份呈現） -->
+    <div class="trend-wrap" id="trend-wrap" style="display:none">
+      <div class="trend-hd">📅 近一週逐日變化
+        <span class="trend-sub">連續成立才算轉變，單日成立多半是雜訊</span>
+        <span class="trend-sub"><span class="trend-streak s-new">連2日</span> 剛翻正 · <span class="trend-streak s-mid">連3日</span> 成形 · <span class="trend-streak s-firm">連5日 👍</span> 站穩</span>
+      </div>
+      <div class="trend-scroll"><table class="trend-tbl" id="trend-tbl"></table></div>
+    </div>
   </div>
 
   <!-- 現在市場狀態（牛熊燈號） -->
@@ -349,19 +365,14 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
       </div>
     </div>
     <div id="market-status-desc" style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6"></div>
-
-    <!-- 近一週逐日指標：看轉變有沒有持續 -->
-    <div class="trend-wrap" id="trend-wrap" style="display:none">
-      <div class="trend-hd">📅 近一週逐日變化
-        <span class="trend-sub">連續成立才算轉變，單日成立多半是雜訊</span>
-        <span class="trend-sub"><span class="trend-streak s-new">連2日</span> 剛翻正 · <span class="trend-streak s-mid">連3日</span> 成形 · <span class="trend-streak s-firm">連5日 👍</span> 站穩</span>
-      </div>
-      <div class="trend-scroll"><table class="trend-tbl" id="trend-tbl"></table></div>
-    </div>
   </div>
 
+  <!-- 機會懶人包：兩種不同的進場理由各佔一格，彼此獨立不取交集 -->
+  <div class="sec-hd" style="margin-top:18px">🧺 機會懶人包<span class="src-tag">兩種進場理由，各看各的</span></div>
+  <div class="cheat-grid" id="cheat-grid"></div>
+
   <!-- 近期題材回顧 -->
-  <div style="margin-bottom:24px">
+  <div style="margin-bottom:24px;margin-top:24px">
     <div class="sec-hd">📊 近期大盤題材回顧</div>
     <div style="display:flex;gap:6px;margin-bottom:12px" id="theme-period-btns">
       <button class="pill active" onclick="setThemePeriod('p1',this)">一天</button>
@@ -379,29 +390,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <div class="mkt-opp-row" id="opp-row-ma"></div>
     <div class="mkt-opp-row" id="opp-row-target" style="margin-top:8px"></div>
     <div class="mkt-opp-row" id="mkt-opp-row" style="margin-top:8px"></div>
-  </div>
-
-  <!-- 機會點交集圖 -->
-  <div class="venn-section">
-    <div class="sec-hd" style="margin-top:18px">🔵 機會點交集圖<span class="src-tag">同時符合越多條件訊號越強</span></div>
-    <div class="venn-container">
-      <svg viewBox="0 0 300 270" class="venn-svg">
-        <circle cx="150" cy="95"  r="90" class="venn-circle venn-a"/>
-        <circle cx="110" cy="170" r="90" class="venn-circle venn-b"/>
-        <circle cx="190" cy="170" r="90" class="venn-circle venn-c"/>
-        <text x="150" y="30" class="venn-set-label">① 突破均線</text>
-        <text x="55"  y="252" class="venn-set-label">② 目標價上漲</text>
-        <text x="245" y="252" class="venn-set-label" style="cursor:help">③ 題材補漲<title>整體題材已漲，該個股屬於此題材但股價尚未反應</title></text>
-        <text id="venn-count-a"   x="150" y="55"  class="venn-count">0</text>
-        <text id="venn-count-b"   x="88"  y="205" class="venn-count">0</text>
-        <text id="venn-count-c"   x="212" y="205" class="venn-count">0</text>
-        <text id="venn-count-ab"  x="112" y="130" class="venn-count">0</text>
-        <text id="venn-count-ac"  x="188" y="130" class="venn-count">0</text>
-        <text id="venn-count-bc"  x="150" y="205" class="venn-count">0</text>
-        <text id="venn-count-abc" x="150" y="170" class="venn-count venn-count-strong">0</text>
-      </svg>
-      <div id="venn-detail" class="venn-detail"></div>
-    </div>
   </div>
 
   <!-- 法人目標價追蹤 -->
@@ -756,11 +744,104 @@ function renderThemeRecap(){
   }).join("");
 }
 
-// ── 機會點快覽 + 機會點交集圖 ──────────────────────────────
+// ── 機會點快覽 ────────────────────────────────────────────
 function _maOf(closes, n) {
   if (!closes || closes.length < n) return null;
   const slice = closes.slice(-n);
   return slice.reduce((a, b) => a + b, 0) / n;
+}
+
+// ── 大盤日評（排版與上色比照台股頁）───────────────────────
+let _themeNamesCache = null;
+function _themeNames() {
+  if (_themeNamesCache) return _themeNamesCache;
+  return (_themeNamesCache = [...new Set(STOCKS.map(s => s.theme).filter(Boolean))]);
+}
+
+/*
+ * 日評上色：正數紅、負數綠（沿用本站台股慣例，兩頁一致）。
+ *
+ * 「網路安全（+16.7%）」要整組變色，不能只有數字有顏色——一眼掃過去時看的是
+ * 「哪個題材強」，不是「+16.7 這個數字」。
+ *
+ * 用單一 master regex 一次掃完，不做多輪 replace：多輪的話第二輪會再匹配到
+ * 第一輪插進去的 HTML，造成巢狀 span。
+ *
+ * 與台股版的差別：美股日評裡個股寫成「輝達（+8.7%）」，跟題材同一種寫法，
+ * 沒有台股那種「名稱(2330) +2.1%」的格式；也沒有買超／賣超那一條。
+ */
+function _colorSummary(escaped) {
+  const cls = v => String(v).trim().startsWith("-") ? "dn" : "up";
+  const RE = new RegExp(
+    // ① 個股／題材：名稱（±x.x%）
+    "([\\u4e00-\\u9fff\\w.&\\- ]+)（([+-][\\d.]+%)）" +
+    // ② 括號內的點數：（+55）
+    "|（([+-][\\d,.]+)）" +
+    // ③ 其餘單獨的百分比
+    "|([+-][\\d.]+%)", "g");
+
+  return escaped.replace(RE, (m, name, npct, pts, solo) => {
+    if (npct) {
+      // 貪婪匹配會把前面的連接詞一起吃掉（「題材面以網路安全」整串變色），
+      // 所以先用已知題材名取最長的後綴；取不到（多半是個股名）才退回
+      // 只保留最後一段中文／英文詞。
+      const known = _themeNames().filter(n => name.endsWith(n))
+                                 .sort((a, b) => b.length - a.length)[0];
+      let head = "", body = name;
+      if (known) { head = name.slice(0, name.length - known.length); body = known; }
+      else {
+        const mm = name.match(/([一-鿿]{2,}|[A-Za-z][A-Za-z.&\- ]*)$/);
+        if (mm) { body = mm[1].trim(); head = name.slice(0, name.length - mm[1].length); }
+      }
+      return `${head}<span class="${cls(npct)} sig">${body}（${npct}）</span>`;
+    }
+    if (pts)  return `（<span class="${cls(pts)} sig">${pts}</span>）`;
+    if (solo) return `<span class="${cls(solo)} sig">${solo}</span>`;
+    return m;
+  });
+}
+
+function renderMarketSummaryText(text) {
+  const el = document.getElementById("market-summary-text");
+  if (!el) return;
+
+  const esc = t => String(t ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // 句號斷句，保留句號本身；分號後不斷（同一句的並列關係）
+  const paras = String(text).split("。")
+    .map(t => t.trim()).filter(Boolean)
+    .map(t => t + "。");
+
+  const ev = marketStatusEval;
+  const smooth = ev && ev.rawScore !== ev.score
+    ? `（3日均，今日 ${ev.rawScore}）` : "（3日均）";
+  const status = ev ? `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+                padding-bottom:9px;margin-bottom:11px;
+                border-bottom:1px solid rgba(96,165,250,0.18)">
+      <span style="font-size:17px;line-height:1">${ev.level.emoji}</span>
+      <span style="font-size:15px;font-weight:700;color:${ev.level.color}">${ev.level.label}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--text3)">
+        ${ev.score} / ${ev.max} 分${smooth}</span>
+      <span style="color:var(--text3);font-size:12px">·</span>
+      <span style="font-size:12px;color:var(--text3)">${esc(ev.level.desc)}</span>
+      ${ev.chop ? `<span style="font-size:11.5px;color:var(--yellow);
+          background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);
+          border-radius:4px;padding:1px 7px" title="八項指標量的都是位置與斜率，均線落後於價格，所以一波大漲後就算橫向震盪一個月分數也可能停在大牛。這條用效率比（淨移動÷每日變動總和）補上「有沒有真的在前進」。">
+          ⚠️ ${esc(ev.chop.text)}</span>` : ""}
+      <a href="health_check.html" style="margin-left:auto;font-size:11px;color:var(--blue);
+         text-decoration:none;white-space:nowrap">完整每日健檢 →</a>
+    </div>` : "";
+
+  el.innerHTML = status +
+    paras.map(t => `<p style="margin:0 0 7px">${_colorSummary(esc(t))}</p>`).join("");
+
+  // 狀態已經在日評裡了，收起獨立那張避免重複
+  if (ev) {
+    const bar = document.getElementById("market-status-bar");
+    if (bar) bar.style.display = "none";
+  }
 }
 
 // ── 現在市場狀態 ─────────────────────────────────────────
@@ -969,97 +1050,85 @@ function renderThemeLagOpps() {
     (opps.length > 8 ? `<span style="font-size:11px;color:var(--text3)">…還有 ${opps.length - 8} 支</span>` : "");
 }
 
-// 三大條件集合（供 Venn 圖使用）
-function computeOppSets() {
-  const A = new Map();
-  STOCKS.forEach(s => {
-    const p = priceCache[s.code];
-    const h = histories[s.code];
-    const closes = h?.closes;
-    if (!p || !p.price || !closes || closes.length < 60) return;
-    const price = p.price;
-    const ma5 = _maOf(closes, 5), ma20 = _maOf(closes, 20), ma60 = _maOf(closes, 60);
-    if (ma5 == null || ma20 == null || ma60 == null) return;
-    if (price <= ma5 || price <= ma20 || price <= ma60) return;
-    A.set(s.code, { code: s.code, name: s.name });
-  });
+/*
+ * 機會懶人包 —— 兩種「為什麼現在可以買」的理由各佔一格，彼此獨立不取交集。
+ *
+ * 台股頁有三格（第三格是題材補漲），美股這裡刻意只留兩格：
+ * 題材補漲已經有「🎯 機會點快覽」的第三列在講同一件事，再放一格是重複。
+ *
+ * 註：原本這個位置是「🔵 機會點交集圖」，2026/08 移除。交集圖的問題是
+ * 三個集合幾乎不相交，格子長期是 0，佔了一大塊版面卻沒給出可行動的資訊。
+ */
+function renderCheatSheet() {
+  const el = document.getElementById("cheat-grid");
+  if (!el) return;
 
-  const B = new Map();
+  // ① 專家評估基本面：現價低於全體分析師最低目標
+  const belowLow = [];
   Object.entries(analystTargets).forEach(([code, at]) => {
-    if (!at.mean) return;
-    const p = priceCache[code];
-    if (!p || !p.price) return;
-    const upside = (at.mean - p.price) / p.price * 100;
-    if (upside <= 0) return;
-    B.set(code, { code, name: (priceCache[code]||{}).name || nameMap[code] || code, upside });
+    const p = (priceCache[code] || {}).price;
+    if (!at.low || !p || p >= at.low) return;
+    belowLow.push({ code, name: (priceCache[code] || {}).name || nameMap[code] || code,
+                    count: at.count || 0, diff: (at.low - p) / p * 100 });
   });
+  belowLow.sort((a, b) => b.count - a.count);
+  const covered = Object.values(analystTargets).filter(a => a.mean).length;
 
-  const C = new Map();
-  computeUsThemeLagOpps().forEach(o => { C.set(o.code, { code: o.code, name: o.name, gap: o.gap }); });
-
-  return { A, B, C };
-}
-
-function renderOppVenn() {
-  const detailEl = document.getElementById("venn-detail");
-  if (!detailEl) return;
-
-  const { A, B, C } = computeOppSets();
-  const allCodes = new Set([...A.keys(), ...B.keys(), ...C.keys()]);
-
-  const buckets = { abc: [], ab: [], ac: [], bc: [], a: [], b: [], c: [] };
-  allCodes.forEach(code => {
-    const inA = A.has(code), inB = B.has(code), inC = C.has(code);
-    const src = A.get(code) || B.get(code) || C.get(code);
-    const item = { code, name: src.name };
-    if (inA && inB && inC) buckets.abc.push(item);
-    else if (inA && inB)   buckets.ab.push(item);
-    else if (inA && inC)   buckets.ac.push(item);
-    else if (inB && inC)   buckets.bc.push(item);
-    else if (inA)          buckets.a.push(item);
-    else if (inB)          buckets.b.push(item);
-    else                   buckets.c.push(item);
+  // ② 相信巨頭：那斯達克 100 跌破 5/10/20 日線
+  //
+  // 用 ndx(^NDX) 而不是 nasdaq(^IXIC)：後者含三千多檔，小型股會稀釋掉權值股的訊號，
+  // 而「相信巨頭」要看的正是那 100 檔權值股。ndx 是 2026/08 才加進抓取的，
+  // 舊的 us_data.json 還沒有，所以退回綜合指數並在標題註明用的是哪一個。
+  const ndx = marketHistoryData?.ndx;
+  const idx = ndx || marketHistoryData?.nasdaq;
+  const idxName = ndx ? "NASDAQ 100" : "那斯達克綜合";
+  const closes = idx?.closes;
+  const cur = closes?.length ? closes[closes.length - 1] : null;
+  const maRows = [5, 10, 20].map(n => {
+    const m = _maOf(closes, n);
+    return { n, ma: m, broken: (m != null && cur) ? cur < m : null };
   });
+  const brokenCount = maRows.filter(r => r.broken === true).length;
 
-  Object.entries(buckets).forEach(([k, arr]) => {
-    const el = document.getElementById("venn-count-" + k);
-    if (el) el.textContent = arr.length;
-  });
+  const chip = (code, name, extra, dim) =>
+    `<span class="cheat-chip${dim ? " dim" : ""}" onclick="toggleStockDetail('${code}','fav')">${name}` +
+    (extra ? `<span class="q">${extra}</span>` : "") + `</span>`;
 
-  const LABELS = {
-    abc: "🏆 三項全中（強力訊號）",
-    ab:  "① 突破均線 ＋ ② 目標價上漲",
-    ac:  "① 突破均線 ＋ ③ 題材補漲",
-    bc:  "② 目標價上漲 ＋ ③ 題材補漲",
-    a:   "僅 ① 突破均線",
-    b:   "僅 ② 目標價上漲空間",
-    c:   "僅 ③ 題材補漲",
-  };
-  const order = ["abc", "ab", "ac", "bc", "a", "b", "c"];
-  const nonEmpty = order.filter(k => buckets[k].length);
-  if (!nonEmpty.length) {
-    detailEl.innerHTML = `<div class="venn-empty">目前尚無符合任何條件的個股</div>`;
-    return;
-  }
+  el.innerHTML = `
+    <div class="cheat-card c1">
+      <div class="cheat-hd">① 專家評估基本面</div>
+      <div class="cheat-sub">現價低於<b>全體分析師最低目標</b>——連最保守的一份報告都還沒看到這個價位。</div>
+      <div class="cheat-n">${belowLow.length} 檔${belowLow.length
+        ? `／共 ${covered} 檔有分析師覆蓋` : ""}</div>
+      ${belowLow.length
+        ? `<div class="cheat-chips">${belowLow.map(i =>
+             chip(i.code, i.name, `+${i.diff.toFixed(0)}%·${i.count}位`, i.count <= 1)).join("")}</div>
+           <div class="cheat-empty" style="margin-top:7px">淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
+        : `<div class="cheat-empty">目前沒有個股跌破分析師的最低目標。</div>`}
+    </div>
 
-  detailEl.innerHTML = nonEmpty.map(k => {
-    const chips = buckets[k].map(it =>
-      `<span class="opp-chip" onclick="toggleStockDetail('${it.code}','fav')"><span style="color:var(--text)">${it.name}</span></span>`
-    ).join("");
-    const hasC = k.includes("c") || k === "abc";
-    const titleAttr = hasC ? ` title="③ 題材補漲：整體題材已漲，該個股屬於此題材但股價尚未反應" style="cursor:help"` : "";
-    return `<div>
-      <div class="venn-bucket-hd"${titleAttr}>${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
-      <div class="venn-bucket-chips">${chips}</div>
+    <div class="cheat-card c2">
+      <div class="cheat-hd">② 相信巨頭（NASDAQ100）</div>
+      <div class="cheat-sub">${idxName}跌破均線 = 權值股整體回檔，若你相信它終究會回來，這是相對便宜的時點。</div>
+      <div class="cheat-n">${idxName} ${cur ? cur.toLocaleString() : "—"}　跌破 ${brokenCount}/3 條</div>
+      <div class="cheat-ma">
+        ${maRows.map(r => `
+          <div class="cheat-ma-row">
+            <span class="cheat-mark ${r.broken ? "yes" : "no"}">${r.broken == null ? "—" : r.broken ? "✓" : "✕"}</span>
+            <span class="lbl">跌破 ${r.n} 日線</span>
+            <span class="val">${r.ma != null ? r.ma.toLocaleString(undefined, {maximumFractionDigits: 0}) : "—"}</span>
+          </div>`).join("")}
+      </div>
+      <div class="cheat-empty" style="margin-top:7px">✓ = 已跌破（符合這個理由）　✕ = 仍站在線上。${
+        ndx ? "" : "<br>⚠️ 目前用綜合指數代替，明早資料更新後會換成 NASDAQ 100。"}</div>
     </div>`;
-  }).join("");
 }
 
 function renderOpportunities() {
   renderMaBreakoutOpps();
   renderTargetUpsideOpps();
   renderThemeLagOpps();
-  renderOppVenn();
+  renderCheatSheet();
 }
 
 // ETF 持股反查表 (code → ETF代號陣列)
@@ -1771,16 +1840,19 @@ async function loadData(){
     analystTargets = data.analyst_targets||{};
     marketHistoryData = data.market_history||{};
 
+    // 順序不能顛倒：日評的表頭要引用 renderMarketStatus() 算出的 marketStatusEval，
+    // 而且它算完才會有牛熊分數可以併進日評、把獨立那張狀態卡收起來。
+    renderMarketStatus();
+
     // 每日大盤日評
     if(data.market_summary){
-      document.getElementById("market-summary-text").textContent = data.market_summary;
+      renderMarketSummaryText(data.market_summary);
       document.getElementById("market-summary-bar").style.display = "block";
       const dateEl = document.getElementById("market-summary-date");
       checkFreshness(data.updated_at, "美股",
                      "可到 GitHub Actions 查 update-us-data.yml 是否失敗。");
       if(dateEl && data.updated_at) dateEl.textContent = data.updated_at.split(" ")[0];
     }
-    renderMarketStatus();
 
     // 更新 ETF 持股（若有動態資料）
     if(data.etf_holdings){

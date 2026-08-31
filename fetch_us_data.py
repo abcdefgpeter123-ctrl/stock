@@ -130,11 +130,17 @@ def fetch_history(code, period="5y"):
         h = t.history(period=period, interval="1d")
         if h.empty:
             return [], [], []
+        # 盤前／收盤前抓，yfinance 常會多給一列當天的空白 K（Close 是 NaN）。
+        # 不濾掉的話 json.dump 會寫出字面量 NaN——那不是合法 JSON，
+        # 前端 JSON.parse 直接拋例外，整頁掛掉。而且均線會算出 NaN。
+        h = h[h["Close"].notna()]
+        if h.empty:
+            return [], [], []
         closes  = [round(float(c), 2) for c in h["Close"]]
         opens   = [round(float(c), 2) for c in h["Open"]]
         highs   = [round(float(c), 2) for c in h["High"]]
         lows    = [round(float(c), 2) for c in h["Low"]]
-        volumes = [int(v) for v in h["Volume"]]
+        volumes = [int(v) if v == v else 0 for v in h["Volume"]]
         labels  = [d.strftime("%Y/%m/%d") for d in h.index]
         return closes, labels, volumes, opens, highs, lows
     except Exception as e:
@@ -393,7 +399,9 @@ def main():
 
     # 1b. 三大指數歷史走勢（供前端點開看大盤走勢圖）
     print("📊 大盤指數歷史走勢...")
-    index_symbols = {"sp500": "^GSPC", "nasdaq": "^IXIC", "dow": "^DJI"}
+    # ndx(^NDX) 是那斯達克 100，不是 nasdaq(^IXIC) 那個三千多檔的綜合指數。
+    # 懶人包②「相信巨頭」看的是前 100 大權值股的均線，用綜合指數會被小型股稀釋。
+    index_symbols = {"sp500": "^GSPC", "nasdaq": "^IXIC", "dow": "^DJI", "ndx": "^NDX"}
     market_history = data.get("market_history", {})
     for key, symbol in index_symbols.items():
         closes, labels, *_ = fetch_history(symbol, period="1y")

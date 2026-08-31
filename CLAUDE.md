@@ -584,6 +584,32 @@ python3 backtest_belowlow.py
 `computeOppSets()` 仍然回傳 A（站上 5/20/60 均線），但只給機會點 v2 當補充標籤用，
 不再進交集圖；機會點快覽的均線列（`renderMaBreakoutOpps`）一併移除。
 
+### 美股頁（2026/08）：交集圖整個拿掉
+
+`us.html` 原本有三圈版的交集圖，已完全移除（HTML、CSS、`computeOppSets()`、
+`renderOppVenn()` 全刪）。理由同上再加一條：美股觀察名單只有 20 幾檔有分析師覆蓋，
+三個集合幾乎不相交，格子長期是 0，佔一大塊版面卻沒給出可行動的資訊。
+
+補上的是**機會懶人包**（`renderCheatSheet()`），比照台股但只有兩格：
+
+| | 台股 index.html | 美股 us.html |
+|---|---|---|
+| ① 專家評估基本面 | 現價 < 分析師最低目標 | 同左 |
+| ② | 相信護國神山（台積電均線） | 相信巨頭（NASDAQ 100 均線）|
+| ③ 相信整體族群 | 題材補漲 8–12pt | **沒有**——「🎯 機會點快覽」第三列已在講同一件事 |
+
+②用的是 `market_history.ndx`（`^NDX`，那斯達克 100），不是 `nasdaq`（`^IXIC`，
+三千多檔的綜合指數）——後者會被小型股稀釋，而「相信巨頭」要看的正是前 100 大權值股。
+`^NDX` 是 2026/08 才加進 `fetch_us_data.py` 的，舊資料沒有時會退回綜合指數並在卡片上註明。
+
+大盤日評也改成與台股同一套排版：`renderMarketSummaryText()` ＋ `_colorSummary()`，
+句號斷段、漲跌上色（含 ▲▼）、表頭併入牛熊分數、逐日變化表移進日評框內。
+`_colorSummary()` 的正則與台股版不同——美股日評把個股寫成「輝達（+8.7%）」，
+跟題材同一種格式，沒有台股那種「名稱(2330) +2.1%」，也沒有買超／賣超那一條。
+
+> ⚠️ **順序**：`loadData()` 必須先 `renderMarketStatus()` 再 `renderMarketSummaryText()`。
+> 日評表頭要引用前者算出的 `marketStatusEval`，反過來會少一整條狀態列。
+
 ---
 
 ## 盤整偵測（chopWarning）— 為什麼大牛體感像橫盤
