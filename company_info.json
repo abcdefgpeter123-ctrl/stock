@@ -444,7 +444,7 @@
     "industry": "半導體業",
     "major_clients": "伺服器廠、PC 廠",
     "generated": "2026/05/22",
-    "pe": 18.8,
+    "pe": 18.9,
     "eps": 28.67,
     "quarterly_eps": [
       {
@@ -573,12 +573,12 @@
     "industry": "半導體業",
     "major_clients": "光模組廠、AI 資料中心設備廠",
     "generated": "2026/05/22",
-    "pe": 316.3,
-    "eps": 10.45,
+    "pe": 333.6,
+    "eps": 10.58,
     "quarterly_eps": [
       {
         "q": "2024Q4",
-        "eps": 0.08,
+        "eps": 0.09,
         "date": "2024-12-31"
       },
       {
@@ -598,7 +598,7 @@
       },
       {
         "q": "2025Q4",
-        "eps": 1.87,
+        "eps": 2.06,
         "date": "2025-12-31"
       },
       {
@@ -770,7 +770,7 @@
     "industry": "電子零組件業",
     "major_clients": "Apple、車廠、AI 伺服器廠",
     "generated": "2026/05/22",
-    "pe": 40.1,
+    "pe": 36.7,
     "eps": 14.87,
     "quarterly_eps": [
       {
@@ -878,7 +878,7 @@
     "industry": "半導體業",
     "major_clients": "Samsung、LG、BOE",
     "generated": "2026/05/22",
-    "pe": 19.0,
+    "pe": 18.9,
     "eps": 28.61,
     "quarterly_eps": [
       {
@@ -1039,7 +1039,7 @@
     "industry": "航運業",
     "major_clients": "全球貿易商",
     "generated": "2026/05/22",
-    "pe": 9.2,
+    "pe": 9.3,
     "eps": 25.19,
     "quarterly_eps": [
       {
@@ -1584,7 +1584,7 @@
     "industry": "電信業",
     "major_clients": "一般消費者、企業用戶",
     "generated": "2026/05/22",
-    "pe": 26.7,
+    "pe": 26.8,
     "eps": 5.08,
     "quarterly_eps": [
       {
@@ -1771,7 +1771,7 @@
     "industry": "半導體業",
     "major_clients": "三星、小米、OPPO、vivo",
     "generated": "2026/05/31",
-    "pe": 65.8,
+    "pe": 64.8,
     "eps": 60.57,
     "quarterly_eps": [
       {
@@ -3000,7 +3000,7 @@
   },
   "2324": {
     "generated": "2026/06/05",
-    "pe": 20.6,
+    "pe": 20.9,
     "eps": 1.93,
     "quarterly_eps": [
       {
@@ -3200,7 +3200,7 @@
   },
   "2303": {
     "generated": "2026/06/05",
-    "pe": 19.7,
+    "pe": 19.6,
     "eps": 6.59,
     "quarterly_eps": [
       {
@@ -3722,7 +3722,7 @@
   },
   "3484": {
     "generated": "2026/07/30",
-    "pe": 15.2,
+    "pe": 15.0,
     "eps": 3.31,
     "quarterly_eps": [
       {
@@ -3985,8 +3985,8 @@
   },
   "6789": {
     "generated": "2026/07/30",
-    "pe": 88.1,
-    "eps": 5.23,
+    "pe": 88.9,
+    "eps": 5.26,
     "quarterly_eps": [
       {
         "q": "2024Q4",
