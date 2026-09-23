@@ -189,7 +189,6 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
   <a href="health_check.html" class="back-link">📋 健檢</a>
   <a href="weekly_report.html" class="back-link">📰 週報</a>
   <a href="anatomy.html" class="back-link">🔬 晶片圖</a>
-  <a href="podcast.html" class="back-link">🎙️ Podcast精華</a>
   <a href="trades.html" class="back-link active">📒 交易紀錄</a>
   <a href="guide.html" class="back-link">📖 快速上手</a>
 </nav>
@@ -324,7 +323,7 @@ let usPrices = {};
 let editingId = null;
 let side = 'buy';
 let filterMode = 'all';
-let openCode = null;
+let openCode = null;   // 展開中的卡片 uid（代號:held / 代號:closed）
 // 這兩個原本只在 loadPrices() 裡直接賦值（隱含全域），
 // 但 renderMarket() 在 loadPrices 之前就會先跑一次 → ReferenceError，
 // 錯誤被 async IIFE 吞掉，畫面看起來正常但大盤對照圖那段其實中斷了。
@@ -349,7 +348,7 @@ const cur  = m => m === 'TW' ? 'NT$' : 'US$';
  * 名稱 → 代號的反查。
  *
  * 代號欄位如果被打成公司名（例如直接輸入「國巨」而不是 2327），
- * 原本會被當成另一檔股票：computePositions() 用 t.code 分組，
+ * 原本會被當成另一檔股票：持股計算用 t.code 分組，
  * 於是同一檔會裂成兩張卡片；更糟的是 isTW() 判斷「開頭是不是數字」，
  * 中文名不是數字 → 被當成美股 → 查不到報價、手續費也用美股規則算。
  * 使用者實際踩到過（國巨、辛耘各出現兩格，其中一格無報價）。
@@ -537,29 +536,63 @@ function todayStr() {
 }
 
 // ══════════════════════════════════════════════════════
-//  持股計算（加權平均成本法）
-//  賣出時以「當下的平均成本」認列已實現損益，剩餘股數的均價不變
+//  持股計算（先進先出 FIFO，逐批配對）
+//
+//  為什麼不是加權平均：加權平均算得出「還剩幾股、均價多少」，但答不出
+//  「剩下的是哪幾筆買進」。而「現有持股只顯示現在真的還握著的股數、
+//  賣掉的那部分移到已出清」這件事，必須知道每一股的來歷才做得到——
+//  京元電買 3000 賣 2000 剩 1000，那 2000 股是一趟完整的買賣，
+//  該放到已出清回顧，不該繼續佔著現有持股的版面。
+//
+//  FIFO 把每筆賣出往前配對最早還沒賣掉的買進，產生一筆筆「round trip」
+//  （買進 → 賣出 → 損益）。沒配到的剩餘買進批次就是現在的持股。
+//
+//  ⚠️ 換算方法會改變「已實現 / 未實現」的分配，但兩者相加的總損益不變
+//  （總損益 = 全部賣出收入 − 全部買進成本 + 現有持股市值，與成本法無關）。
 // ══════════════════════════════════════════════════════
-function computePositions() {
-  const pos = {};   // code → {qty, cost, realized, soldCost, market, name, txs[]}
+function computeLots() {
+  const pos = {};
   [...trades].sort((a,b) => a.date.localeCompare(b.date) || a.id - b.id).forEach(t => {
-    const p = pos[t.code] || (pos[t.code] =
-      { code:t.code, name:t.name, market:t.market, qty:0, cost:0,
-        realized:0, soldCost:0, txs:[] });
+    const p = pos[t.code] || (pos[t.code] = {
+      code: t.code, name: t.name, market: t.market,
+      lots: [],        // 還沒賣掉的買進批次（FIFO 佇列）
+      trips: [],       // 已完成配對的買賣
+      qty: 0, cost: 0,           // 現有持股
+      realized: 0, soldCost: 0,  // 已出清部分
+    });
     p.name = t.name || p.name;
-    p.txs.push(t);
+    const feePer = t.qty ? t.fee / t.qty : 0;   // 手續費攤到每股
+
     if (t.side === 'buy') {
-      p.qty  += t.qty;
-      p.cost += t.qty * t.price + t.fee;      // 買進手續費計入成本
-    } else {
-      const avg = p.qty > 0 ? p.cost / p.qty : 0;
-      const sellQty = Math.min(t.qty, p.qty);
-      p.realized += (t.price * t.qty - t.fee) - avg * sellQty;   // 賣出費用直接扣損益
-      p.soldCost += avg * sellQty;            // 已賣出部分的成本，用來算已實現報酬率
-      p.qty  -= t.qty;
-      p.cost -= avg * sellQty;
-      if (p.qty <= 0) { p.qty = 0; p.cost = 0; }
+      p.lots.push({ tx: t, left: t.qty, price: t.price, feePer });
+      return;
     }
+
+    let need = t.qty;
+    while (need > 0 && p.lots.length) {
+      const lot = p.lots[0];
+      const q = Math.min(need, lot.left);
+      const buyCost  = q * (lot.price + lot.feePer);   // 買進手續費計入成本
+      const proceeds = q * (t.price - feePer);         // 賣出費用直接從收入扣
+      p.trips.push({ buyTx: lot.tx, sellTx: t, qty: q,
+                     buyCost, proceeds, realized: proceeds - buyCost });
+      lot.left -= q; need -= q;
+      if (lot.left <= 0) p.lots.shift();
+    }
+    if (need > 0) {
+      // 賣得比買的多（漏記買進，或股數打錯）。當成零成本賣出並標記出來，
+      // 不能默默吞掉——吞掉的話總損益會憑空多出一筆說不清來歷的獲利。
+      const proceeds = need * (t.price - feePer);
+      p.trips.push({ buyTx: null, sellTx: t, qty: need,
+                     buyCost: 0, proceeds, realized: proceeds, orphan: true });
+    }
+  });
+
+  Object.values(pos).forEach(p => {
+    p.qty  = p.lots.reduce((a, l) => a + l.left, 0);
+    p.cost = p.lots.reduce((a, l) => a + l.left * (l.price + l.feePer), 0);
+    p.realized = p.trips.reduce((a, r) => a + r.realized, 0);
+    p.soldCost = p.trips.reduce((a, r) => a + r.buyCost, 0);
   });
   return pos;
 }
@@ -702,7 +735,7 @@ function setMktMarket(m) { mktMarket = m; renderMarket(); }
 function setMktPeriod(p) { mktPeriod = p; renderMarket(); }
 
 function renderSummary() {
-  const pos = computePositions();
+  const pos = computeLots();
   let mv = 0, cost = 0, realized = 0, unknown = 0;
   Object.values(pos).forEach(p => {
     realized += p.realized;
@@ -738,7 +771,7 @@ function renderSummary() {
 }
 
 function renderHoldings() {
-  const all = Object.values(computePositions());
+  const all = Object.values(computeLots());
   const bd  = document.getElementById('holdings-bd');
   if (!all.length) {
     bd.innerHTML = `<div class="empty">目前沒有任何紀錄<br><span style="font-size:12px">新增一筆買進紀錄後會出現在這裡</span></div>`;
@@ -748,26 +781,30 @@ function renderHoldings() {
   // 現有持股與已出清分開放。兩者關心的事情不同——
   // 持有中看未實現損益與該不該續抱，已出清是回顧當初判斷對不對，
   // 混在同一個清單裡會互相干擾。
-  const held   = all.filter(p => p.qty > 0)
+  //
+  // 同一檔可以同時出現在兩邊：買 3000 賣 2000 剩 1000，
+  // 現有持股只放那 1000 股，賣掉的 2000 股是完整的一趟，歸到已出清。
+  const held = all.filter(p => p.qty > 0)
     .sort((a,b) => (priceOf(b.code)||0)*b.qty - (priceOf(a.code)||0)*a.qty);
-  const closed = all.filter(p => p.qty <= 0)
-    .sort((a,b) => (b.txs.at(-1)?.date || '').localeCompare(a.txs.at(-1)?.date || ''));
+
+  // 已出清再分賺賠兩邊，各自依金額大小排序——回顧時想看的是
+  //「最賺的是哪幾檔」和「最賠的是哪幾檔」，混在一起按時間排反而要自己找。
+  const done   = all.filter(p => p.trips.length);
+  const wins   = done.filter(p => p.realized >= 0).sort((a,b) => b.realized - a.realized);
+  const losses = done.filter(p => p.realized <  0).sort((a,b) => a.realized - b.realized);
 
   const sg = v => v > 0 ? '+' : '';
   const cls = v => v > 0 ? 'up' : v < 0 ? 'dn' : 'neu';
 
   // 未實現損益（只算持有中、且有報價的）
-  let unreal = 0, mkt = null, unknown = 0;
+  let unreal = 0, unknown = 0;
   held.forEach(p => {
     const pr = priceOf(p.code);
     if (pr == null) { unknown++; return; }
     unreal += pr * p.qty - p.cost;
-    mkt = mkt || p.market;
   });
-  // 已實現損益（含仍持有部位的已賣出部分）
-  const realized = all.reduce((a, p) => a + (p.realized || 0), 0);
 
-  const section = (title, list, hint, plLabel, plVal, emptyMsg) => `
+  const section = (title, list, hint, plLabel, plVal, emptyMsg, card) => `
     <div class="pos-sec">
       <div class="pos-sec-hd">
         <h3>${title}</h3>
@@ -776,65 +813,130 @@ function renderHoldings() {
           `<span class="pl ${cls(plVal)}">${plLabel} ${sg(plVal)}${fmt(plVal)}</span>`}
       </div>
       ${list.length
-        ? `<div class="pos-grid">${list.map(posCard).join('')}</div>`
+        ? `<div class="pos-grid">${list.map(card).join('')}</div>`
         : `<div class="pos-sec-empty">${emptyMsg}</div>`}
     </div>`;
+
+  const sum = list => list.reduce((a, p) => a + p.realized, 0);
 
   bd.innerHTML =
     section('現有持股', held,
             unknown ? `${unknown} 檔無報價` : '',
             '未實現', held.length ? unreal : null,
-            '目前沒有持股，新增一筆買進紀錄後會出現在這裡') +
-    section('已出清', closed, '',
-            '已實現', all.some(p => p.realized) ? realized : null,
-            '還沒有完成買賣的個股');
+            '目前沒有持股，新增一筆買進紀錄後會出現在這裡', heldCard) +
+    (done.length
+      ? section('已出清 · 正報酬', wins, '', '合計', wins.length ? sum(wins) : null,
+                '還沒有賺錢出場的紀錄', closedCard) +
+        section('已出清 · 負報酬', losses, '', '合計', losses.length ? sum(losses) : null,
+                '還沒有賠錢出場的紀錄', closedCard)
+      : section('已出清', [], '', '已實現', null,
+                '還沒有完成買賣的個股', closedCard));
 }
 
+const _sg = v => v > 0 ? '+' : '';
+
 /**
- * 單檔股票的小卡，版型比照大盤題材回顧：
- * 收合時只看報酬率，點擊展開才顯示成本與每一筆買賣（含當初寫的理由）。
- * 顏色沿用台股習慣：賺＝紅、賠＝綠。
+ * 卡片外框。同一檔可能同時出現在現有持股與已出清，所以展開狀態、
+ * 備註編輯都要用 uid（代號＋區塊）當鍵，只用代號會兩張一起展開。
  */
-function posCard(p) {
-  const isHeld = p.qty > 0;
-  const pr  = priceOf(p.code);
-  const avg = isHeld ? p.cost / p.qty : 0;
-
-  // 持有中看未實現，已出清看已實現
-  const pl   = isHeld ? (pr != null ? pr * p.qty - p.cost : null) : p.realized;
-  const base = isHeld ? p.cost : p.soldCost;
-  const pct  = (pl != null && base > 0) ? pl / base * 100 : null;
-
-  const c    = pl == null ? 'neu' : pl > 0 ? 'up' : pl < 0 ? 'dn' : 'neu';
-  const sg   = v => v > 0 ? '+' : '';
-  const open = openCode === p.code;
-  const edge = pl == null || pl === 0 ? '' : (pl > 0 ? ' win' : ' lose');
+function posShell(p, uid, pl, pct, sub, rows, body) {
+  const c     = pl == null ? 'neu' : pl > 0 ? 'up' : pl < 0 ? 'dn' : 'neu';
+  const open  = openCode === uid;
+  const edge  = pl == null || pl === 0 ? '' : (pl > 0 ? ' win' : ' lose');
   const arrow = pct == null ? '' : pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+  const isHeld = uid.endsWith(':held');
 
-  const rows = isHeld
-    ? [['股數', fmt(p.qty)], ['均價', fmt(avg,2)],
-       ['現價', pr != null ? fmt(pr,2) : '—'],
-       ['成本', cur(p.market)+fmt(p.cost)],
-       ['市值', pr != null ? cur(p.market)+fmt(pr*p.qty) : '—'],
-       ...(p.realized ? [['已實現', `<span class="${p.realized>0?'up':'dn'}">${sg(p.realized)}${fmt(p.realized)}</span>`]] : [])]
-    : [['買進成本', cur(p.market)+fmt(p.soldCost)],
-       ['已實現損益', `<span class="${c}">${sg(p.realized)}${fmt(p.realized)}</span>`],
-       ['交易筆數', p.txs.length + ' 筆']];
-
-  return `<div class="pos-card${edge}${open ? ' open' : ''}" onclick="toggleCode('${p.code}')">
+  return `<div class="pos-card${edge}${open ? ' open' : ''}" onclick="toggleCode('${uid}')">
     <div class="pos-name">
       <b>${esc(p.name)}</b><span>${esc(p.code)}</span>
       ${isHeld ? '' : '<span style="color:var(--text3)">已出清</span>'}
       <span class="caret">${open ? '▲' : '▼'}</span>
     </div>
-    <div class="pos-pct ${c}">${arrow} ${pct == null ? '—' : sg(pct)+pct.toFixed(2)+'%'}</div>
-    <div class="pos-sub">${isHeld ? `${fmt(p.qty)} 股 · 均價 ${fmt(avg,2)}` : `${p.txs.length} 筆交易`}</div>
-    <div class="pos-pl ${c}">${pl == null ? '' : (isHeld ? '未實現 ' : '已實現 ') + sg(pl) + cur(p.market) + fmt(pl)}</div>
+    <div class="pos-pct ${c}">${arrow} ${pct == null ? '—' : _sg(pct)+pct.toFixed(2)+'%'}</div>
+    <div class="pos-sub">${sub}</div>
+    <div class="pos-pl ${c}">${pl == null ? '' : (isHeld ? '未實現 ' : '已實現 ') + _sg(pl) + cur(p.market) + fmt(pl)}</div>
 
     <div class="pos-detail">
       ${rows.map(([k,v]) => `<div class="pos-row"><span>${k}</span><span>${v}</span></div>`).join('')}
-      ${noteBlock(p.code)}
-      <div class="pos-txs">${p.txs.map(posTx).join('')}</div>
+      ${noteBlock(p.code, uid)}
+      ${body}
+    </div>
+  </div>`;
+}
+
+/**
+ * 現有持股：只放現在真的還握著的股數。
+ * 展開後列出的買進批次也只剩「還沒賣掉的那部分」——賣掉的已經歸到已出清了。
+ */
+function heldCard(p) {
+  const pr  = priceOf(p.code);
+  const avg = p.cost / p.qty;
+  const pl  = pr != null ? pr * p.qty - p.cost : null;
+  const pct = (pl != null && p.cost > 0) ? pl / p.cost * 100 : null;
+
+  const rows = [
+    ['股數', fmt(p.qty)], ['均價', fmt(avg,2)],
+    ['現價', pr != null ? fmt(pr,2) : '—'],
+    ['成本', cur(p.market)+fmt(p.cost)],
+    ['市值', pr != null ? cur(p.market)+fmt(pr*p.qty) : '—'],
+  ];
+
+  const txs = p.lots.map(l => posTx(l.tx, l.left < l.tx.qty
+    ? `本批 ${fmt(l.tx.qty)} 股已賣出 ${fmt(l.tx.qty - l.left)} 股，這裡只算剩下的 ${fmt(l.left)} 股`
+    : '')).join('');
+
+  return posShell(p, p.code + ':held', pl, pct,
+                  `${fmt(p.qty)} 股 · 均價 ${fmt(avg,2)}`, rows,
+                  `<div class="pos-txs">${txs}</div>`);
+}
+
+/**
+ * 已出清：一筆買進配一筆賣出，看的是「這趟做對了沒有」。
+ * 一檔股票分批賣就會有多趟，每趟各自算損益。
+ */
+function closedCard(p) {
+  const pct  = p.soldCost > 0 ? p.realized / p.soldCost * 100 : null;
+  const soldQty = p.trips.reduce((a, r) => a + r.qty, 0);
+  const proceeds = p.trips.reduce((a, r) => a + r.proceeds, 0);
+
+  const rows = [
+    ['賣出股數', fmt(soldQty)],
+    ['買進成本', cur(p.market)+fmt(p.soldCost)],
+    ['賣出收入', cur(p.market)+fmt(proceeds)],
+    ['已實現損益', `<span class="${p.realized>0?'up':p.realized<0?'dn':'neu'}">${_sg(p.realized)}${fmt(p.realized)}</span>`],
+    ...(p.qty > 0 ? [['目前仍持有', `${fmt(p.qty)} 股（見上方現有持股）`]] : []),
+  ];
+
+  return posShell(p, p.code + ':closed', p.realized, pct,
+                  `${p.trips.length} 趟買賣 · ${fmt(soldQty)} 股`, rows,
+                  `<div class="pos-txs">${p.trips.map(t => tripRow(t, p.market)).join('')}</div>`);
+}
+
+/** 一趟完整的買賣：買進 → 賣出 → 損益，兩邊的理由都帶出來一起看 */
+function tripRow(r, market) {
+  const c = r.realized > 0 ? 'up' : r.realized < 0 ? 'dn' : 'neu';
+  const pct = r.buyCost > 0 ? r.realized / r.buyCost * 100 : null;
+  const b = r.buyTx, s = r.sellTx;
+  const why = [b && b.why ? `買：${esc(b.why)}` : '', s.why ? `賣：${esc(s.why)}` : '']
+    .filter(Boolean).join('<br>');
+
+  return `<div class="pos-tx" onclick="event.stopPropagation()">
+    <div class="pos-tx-hd">
+      <span class="tag tag-buy">買進</span>
+      <span class="tx-date">${b ? esc(b.date) : '無紀錄'}</span>
+      <span style="color:var(--text3)">→</span>
+      <span class="tag tag-sell">賣出</span>
+      <span class="tx-date">${esc(s.date)}</span>
+    </div>
+    <div class="pos-tx-num">${fmt(r.qty)} 股　${b ? fmt(b.price,2) : '—'} → ${fmt(s.price,2)}
+      <span class="${c}">　${_sg(r.realized)}${cur(market)}${fmt(r.realized)}${
+        pct == null ? '' : `（${_sg(pct)}${pct.toFixed(2)}%）`}</span>
+    </div>
+    ${r.orphan ? `<div class="pos-tx-why" style="color:var(--dn)">⚠️ 這 ${fmt(r.qty)} 股找不到對應的買進紀錄，成本以 0 計。可能是漏記買進或股數打錯。</div>`
+               : `<div class="pos-tx-why ${why ? '' : 'empty'}">${why || '（未填寫理由）'}</div>`}
+    <div class="pos-acts">
+      ${b ? `<button class="lnk" onclick="editTx(${b.id})">編輯買進</button>` : ''}
+      <button class="lnk" onclick="editTx(${s.id})">編輯賣出</button>
     </div>
   </div>`;
 }
@@ -843,31 +945,33 @@ function posCard(p) {
  * 檢討備註：跟每筆交易的「買賣理由」分開。
  * 買賣理由記的是當下怎麼想，這裡記的是事後回頭看——成功或失敗的原因。
  */
-function noteBlock(code) {
+// 備註是存在代號底下的（同一檔只有一則），但編輯狀態要用 uid，
+// 否則同一檔在現有持股與已出清各有一張卡時會同時跳出兩個輸入框。
+function noteBlock(code, uid) {
   const val = notes[code] || '';
-  if (editingNote === code) {
+  if (editingNote === uid) {
     return `<div class="note-box editing" onclick="event.stopPropagation()">
       <div class="note-hd">📝 檢討備註</div>
-      <textarea id="note-input-${code}" class="note-input"
+      <textarea id="note-input-${uid}" class="note-input"
         placeholder="這筆為什麼賺 / 為什麼賠？&#10;例：進場點對但太早停利，少賺一段；下次遇到題材剛發酵不要急著跑">${esc(val)}</textarea>
       <div class="note-acts">
-        <button class="btn btn-primary btn-sm" onclick="saveNote('${code}')">儲存</button>
+        <button class="btn btn-primary btn-sm" onclick="saveNote('${code}','${uid}')">儲存</button>
         <button class="btn btn-ghost btn-sm" onclick="cancelNote()">取消</button>
       </div>
     </div>`;
   }
   return `<div class="note-box" onclick="event.stopPropagation()">
     <div class="note-hd">📝 檢討備註
-      <button class="lnk" style="margin-left:auto" onclick="startNote('${code}')">${val ? '編輯' : '新增'}</button>
+      <button class="lnk" style="margin-left:auto" onclick="startNote('${uid}')">${val ? '編輯' : '新增'}</button>
     </div>
     <div class="note-text ${val ? '' : 'empty'}">${val ? esc(val) : '尚未填寫。點「新增」記下這檔成功或失敗的原因。'}</div>
   </div>`;
 }
 
-function startNote(code) {
-  editingNote = code;
+function startNote(uid) {
+  editingNote = uid;
   renderHoldings();
-  const el = document.getElementById(`note-input-${code}`);
+  const el = document.getElementById(`note-input-${uid}`);
   if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
 }
 
@@ -876,8 +980,8 @@ function cancelNote() {
   renderHoldings();
 }
 
-async function saveNote(code) {
-  const el = document.getElementById(`note-input-${code}`);
+async function saveNote(code, uid) {
+  const el = document.getElementById(`note-input-${uid}`);
   if (!el) return;
   const val = el.value.trim();
   if (val) notes[code] = val; else delete notes[code];
@@ -887,7 +991,7 @@ async function saveNote(code) {
 }
 
 /** 展開後的單筆買賣（點擊不要冒泡回卡片，否則會把卡片收起來） */
-function posTx(t) {
+function posTx(t, note) {
   const amt = t.qty * t.price;
   const net = t.side === 'buy' ? amt + t.fee : amt - t.fee;
   return `<div class="pos-tx" onclick="event.stopPropagation()">
@@ -898,6 +1002,7 @@ function posTx(t) {
     <div class="pos-tx-num">${fmt(t.qty)} 股 × ${fmt(t.price,2)}
       <span style="color:var(--text3)">・費用 ${fmt(t.fee)}・${t.side==='buy'?'支出':'實收'} ${cur(t.market)}${fmt(net)}</span>
     </div>
+    ${note ? `<div class="pos-tx-why" style="color:var(--text3)">↳ ${note}</div>` : ''}
     <div class="pos-tx-why ${t.why ? '' : 'empty'}">${t.why ? esc(t.why) : '（未填寫理由）'}</div>
     <div class="pos-acts">
       <button class="lnk" onclick="editTx(${t.id})">編輯</button>
@@ -906,8 +1011,8 @@ function posTx(t) {
   </div>`;
 }
 
-function toggleCode(code) {
-  openCode = openCode === code ? null : code;
+function toggleCode(uid) {
+  openCode = openCode === uid ? null : uid;
   renderHoldings();
 }
 

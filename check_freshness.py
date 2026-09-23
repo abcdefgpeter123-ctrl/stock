@@ -3,9 +3,10 @@
 資料新鮮度守門員 — 由 watchdog.yml 每天執行。
 
 【為什麼需要，明明已經有 if: failure() 了】
-`if: failure()` 只在「job 有跑起來但失敗」時觸發。Podcast 那支跑在自架 Mac 上，
-電腦沒醒著時 job 根本不會開始執行，狀態是 cancelled——沒有任何一個 step 會跑到，
-自然也不會有人通知。實際紀錄是最近 8 次有 4 次 cancelled，而且完全無聲。
+`if: failure()` 只在「job 有跑起來但失敗」時觸發。job 根本沒開始的情況
+（排程被跳過、runner 拿不到工作）狀態是 cancelled——沒有任何一個 step 會跑到，
+自然也不會有人通知。當初就是自架 Mac 那支 Podcast workflow 踩到：
+最近 8 次有 4 次 cancelled，而且完全無聲。
 
 所以這支從結果面檢查：不管中間發生什麼事，只要輸出檔案太舊就報。
 跑在 ubuntu-latest 上，不依賴任何自架機器。
@@ -26,7 +27,6 @@ D = os.path.dirname(os.path.abspath(__file__))
 CHECKS = [
     ("data.json",            "台股資料",      "prices_date", 2),
     ("us_data.json",         "美股資料",      "updated_at",  2),
-    ("podcast_summary.json", "Podcast 摘要",  "updated_at",  4),
 ]
 
 

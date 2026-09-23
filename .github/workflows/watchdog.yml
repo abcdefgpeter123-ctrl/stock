@@ -1,13 +1,12 @@
 name: Data Freshness Watchdog
 
-# 為什麼另外開一支：其他三支的 `if: failure()` 只在「job 跑起來但失敗」時觸發。
-# Podcast 那支跑在自架 Mac 上，電腦沒醒著時 job 根本不會開始，狀態是 cancelled，
-# 沒有任何 step 會執行，也就沒有人通知（實際紀錄：最近 8 次有 4 次 cancelled）。
-# 這支從結果面檢查輸出檔案的時間戳，跑在 ubuntu-latest，不依賴任何自架機器。
+# 為什麼另外開一支：其他兩支的 `if: failure()` 只在「job 跑起來但失敗」時觸發。
+# job 根本沒開始的情況（排程被跳過、runner 拿不到工作）狀態是 cancelled，
+# 沒有任何 step 會執行，也就沒有人通知。這支從結果面檢查輸出檔案的時間戳。
 
 on:
   schedule:
-    # 每天台灣時間 20:00（UTC 12:00）——三支排程都該跑完了
+    # 每天台灣時間 20:00（UTC 12:00）——兩支排程都該跑完了
     - cron: '0 12 * * *'
   workflow_dispatch:
 

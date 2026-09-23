@@ -7,9 +7,8 @@
 - **主要檔案**：`index.html`（單頁 SPA）、`fetch_data_full.py`（資料抓取）、`data.json`（日更資料）、`company_info.json`（公司基本資料 + PE/EPS）
 - **部署**：**Vercel** — https://stock-pi-rose.vercel.app（接 GitHub repo，push 後自動部署）。
   GitHub Pages 是關閉的（`gh api .../pages` 回 404），別再誤記成 Pages。
-- **資料更新**：GitHub Actions 每天 18:30 TWN（台股）／07:00（美股），皆為 ubuntu-latest；
-  只有 Podcast 那支跑在自架 Mac runner
-- **Runner**：本機 Mac（台灣 IP），以 launchd service 方式常駐，確保 TWSE 不擋 IP
+- **資料更新**：GitHub Actions 每天 18:30 TWN（台股）／07:00（美股），皆為 ubuntu-latest
+- **Runner**：全部跑 GitHub-hosted。2026/09 移除 Podcast 後已**不再需要自架 runner**
 
 ---
 
@@ -147,16 +146,9 @@ ETF_ETFINFO_CODES = ["0050", "0056", "00929", "00891"]  # etfinfo.tw 自動抓�
 
 ### Runner 管理
 
-```bash
-# 查看狀態
-cd ~/actions-runner && ./svc.sh status
-
-# 重啟
-./svc.sh stop && ./svc.sh start
-
-# 安裝為 launchd service（已完成）
-./svc.sh install && ./svc.sh start
-```
+兩支都跑 GitHub-hosted，**沒有自架 runner 要顧**。
+唯一用到自架 Mac 的是已移除的 Podcast workflow；`~/actions-runner` 的
+launchd service 現在可以停掉（`cd ~/actions-runner && ./svc.sh stop && ./svc.sh uninstall`）。
 
 ---
 
@@ -331,6 +323,30 @@ robots.txt 沒有擋 `/twstock/board/`，所以「本機自用、低頻、不散
 （`stock_trades_v1`、`stock_trade_notes_v1`），誰打開就看誰自己的。
 移除了 `isGuest()`、`renderGuest()`、`AuthUI` 掛載與保險庫讀寫。
 
+### 持股計算用 FIFO，不是加權平均（2026/09 改）
+
+`computeLots()` 取代了原本的 `computePositions()`。
+
+**為什麼換**：加權平均算得出「還剩幾股、均價多少」，但答不出「剩下的是**哪幾筆**買進」。
+而「現有持股只放現在真的還握著的股數、賣掉的那部分移到已出清」這個需求，
+必須知道每一股的來歷才做得到——京元電買 3000 賣 2000 剩 1000，
+那 2000 股是一趟完整的買賣，該放到已出清回顧，不該繼續佔著現有持股的版面。
+
+FIFO 把每筆賣出往前配對最早還沒賣掉的買進，產生一筆筆 round trip
+（`trips[]`：買進 → 賣出 → 損益）。沒配到的剩餘批次（`lots[]`）就是現在的持股。
+
+> ⚠️ 換算方法**改變了「已實現／未實現」的分配**，但兩者相加的總損益不變
+> （總損益 = 全部賣出收入 − 全部買進成本 + 現有持股市值，與成本法無關）。
+> 這條不變式有實測驗過，差額為 0。
+
+版面因此變成三區：**現有持股** / **已出清·正報酬** / **已出清·負報酬**，
+後兩區各自依金額大小排序。同一檔可以同時出現在現有持股與已出清（部分賣出的情況），
+所以展開狀態與備註編輯都改用 `uid`（`代號:held` / `代號:closed`）當鍵——
+只用代號會讓兩張卡一起展開、跳出兩個備註輸入框。備註本身仍然存在代號底下（一檔一則）。
+
+賣得比買的多時（漏記買進或股數打錯）會產生 `orphan: true` 的 trip，
+成本以 0 計並在卡片上用紅字標出來——不能默默吞掉，吞掉的話總損益會憑空多一筆獲利。
+
 ### 持股會自動進「我的最愛」
 
 `index.html` 的 `syncHoldingFavs()`（載入時跑一次）讀同源的 `stock_trades_v1`，
@@ -411,30 +427,21 @@ gh workflow run update-data.yml
 
 兩層，因為單靠一層抓不全：
 
-**1. `if: failure()`** — 三支 workflow 都有。job 跑起來但失敗時，
+**1. `if: failure()`** — 兩支資料 workflow 都有。job 跑起來但失敗時，
 用固定標題搜尋既有 issue：有就留言、沒有才開新的（避免每天洗版）。
 
 **2. `watchdog.yml` ＋ `check_freshness.py`** — 每天 20:00 台灣時間跑在 ubuntu-latest。
-從**結果面**檢查 `data.json` / `us_data.json` / `podcast_summary.json` 的時間戳。
+從**結果面**檢查 `data.json` / `us_data.json` 的時間戳。
 
 > **為什麼要第二層**：`if: failure()` 只在「job 有跑起來但失敗」時觸發。
-> Podcast 那支跑在自架 Mac 上，電腦沒醒著時 job 根本不會開始執行，狀態是 cancelled——
-> 沒有任何 step 會跑到，自然沒人通知。實際紀錄是最近 8 次有 4 次 cancelled 且完全無聲。
+> job 根本沒開始（排程被跳過、runner 拿不到工作）狀態是 cancelled——
+> 沒有任何 step 會跑到，自然沒人通知。當初就是已移除的 Podcast workflow 踩到這個：
+> 它跑在自架 Mac 上，電腦沒醒著時最近 8 次有 4 次 cancelled 且完全無聲。
 
-容許值：台股／美股 2 個平日、Podcast 4 個平日；未滿 40 小時一律視為正常
+容許值：台股／美股各 2 個平日；未滿 40 小時一律視為正常
 （吸收時區差，美股那支的 `updated_at` 寫的是 UTC）。
 
 本機可直接跑 `python3 check_freshness.py` 檢查，exit 1 代表有東西過期。
-
-### 讓 Mac 在排程時間醒著
-
-Podcast 需要 Mac 在台灣時間 07:30 是開機且醒著的。設定每天 07:20 自動喚醒：
-
-```bash
-sudo pmset repeat wake MTWRFSU 07:20:00
-```
-
-（需要你自己輸入密碼執行。查目前設定：`pmset -g sched`）
 
 ---
 
@@ -853,3 +860,22 @@ index / us / health_check 三頁同步。
 
 - `__pycache__/*.pyc` — 六個 .pyc 曾被 commit，每次本機執行都製造假變更、還會參與
   merge 衝突。`.gitignore` 已加，但**還要跑一次 `git rm -r --cached __pycache__`** 才真的移出。
+
+---
+
+## 已移除：Podcast 精華頁（2026/09）
+
+使用者反映根本沒在看，整條 pipeline 一起拿掉：
+
+| 刪掉的東西 | 說明 |
+|-----------|------|
+| `podcast.html` | 頁面本身 |
+| `fetch_podcast_summary.py`、`podcast_sources.json`、`podcast_summary.json` | 抓取腳本與資料 |
+| `.github/workflows/update-podcast.yml` | 唯一跑在**自架 Mac runner** 的排程（07:30 TWN） |
+| 七個頁面 ＋ `generate_report.py` 裡的導覽連結 | 共 9 行 |
+| `check_freshness.py` 的 `podcast_summary.json` 檢查項 | 剩台股／美股兩項 |
+
+**連帶影響**：現在沒有任何 workflow 需要自架 runner 了。
+那台 Mac 不必再為了排程保持醒著，`sudo pmset repeat wake` 可以取消
+（`sudo pmset repeat cancel`），`~/actions-runner` 的 launchd service 也可以停掉。
+Whisper / Ollama 那些本機依賴同樣不再需要。
