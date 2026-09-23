@@ -894,6 +894,18 @@ let opps = [];
 let oppCodes = new Set();
 
 
+/*
+ * HTML 跳脫。這頁大部分內容來自 data.json（我們自己產的），但有兩處是
+ * 使用者手打、存在 localStorage 的：手動券商目標價（券商名、評等、代號）。
+ * 那些值原本直接進 innerHTML，打一段 <img src=x onerror=...> 就會執行。
+ * 引號也要跳脫，因為有些值會落在屬性裡。
+ */
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 // 我的最愛邏輯（用 localStorage 儲存）
 const FAV_KEY = "tw_stock_favorites";
 
@@ -1974,7 +1986,7 @@ function renderDetail(code) {
           ? `<span style="font-size:10px;color:var(--yellow);margin-left:6px"
                    title="最高 ${at.high} / 最低 ${at.low}，分析師分歧大">⚠️ 分歧大</span>` : "";
         const manuals4code = manualTargets.filter(t=>t.code===code).slice(-2).reverse();
-        const mRow = manuals4code.map(m=>`<span style="font-size:10px;color:var(--text3)">${m.date.slice(5)} ${m.broker} ${m.old_target}→${m.new_target}</span>`).join("　");
+        const mRow = manuals4code.map(m=>`<span style="font-size:10px;color:var(--text3)">${escHtml(String(m.date).slice(5))} ${escHtml(m.broker)} ${+m.old_target||0}→${+m.new_target||0}</span>`).join("　");
         return `<div class="tp-fund-block" style="border-left:3px solid rgba(96,165,250,0.5);padding-left:8px">
           <span class="tp-fund-lbl">法人目標</span>
           <span style="flex:1">
@@ -3372,9 +3384,31 @@ async function loadLocalTargets() {
   } catch (e) { /* 沒有檔案是正常狀態 */ }
 }
 
+/*
+ * 代號白名單。手動目標價的代號是使用者自己敲的，而且它會被放進
+ * `onclick="toggleStockDetail('${code}')"` 這種 inline handler 裡。
+ * inline handler 的屬性會先被 HTML 解碼再當 JS 解析，所以光靠實體跳脫沒用
+ * （&#39; 會解回 '），必須從源頭就不讓引號進來。真實代號只有英數字與 . -。
+ */
+function cleanCode(s) {
+  return String(s ?? "").replace(/[^A-Za-z0-9.\-]/g, "").slice(0, 12);
+}
+
 function loadManualTargets() {
   try { manualTargets = JSON.parse(localStorage.getItem(MANUAL_KEY) || "[]"); }
   catch(e) { manualTargets = []; }
+  if (!Array.isArray(manualTargets)) { manualTargets = []; return; }
+  // 舊資料也過一次，之前存進去的髒代號同樣要清掉
+  manualTargets = manualTargets.filter(t => t && typeof t === "object");
+  manualTargets.forEach(t => {
+    t.code       = cleanCode(t.code);
+    t.broker     = String(t.broker ?? "");
+    t.rating     = String(t.rating ?? "");
+    t.date       = String(t.date ?? "");
+    t.old_target = +t.old_target || 0;
+    t.new_target = +t.new_target || 0;
+  });
+  manualTargets = manualTargets.filter(t => t.code);
 }
 
 function saveManualTargetsLocal() {
@@ -3501,10 +3535,10 @@ function renderAnalystTargets() {
       ? `<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">${
           manuals.slice(-3).reverse().map(m => `
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0">
-              <span style="color:var(--text3);font-family:var(--mono)">${m.date.slice(5)}</span>
-              <span style="color:var(--text2)">${m.broker}</span>
-              <span style="color:${m.new_target>m.old_target?"#4ade80":m.new_target<m.old_target?"#f87171":"var(--text3)"}">${m.old_target}→${m.new_target}</span>
-              <span style="color:var(--text3);margin-left:auto">${m.rating}</span>
+              <span style="color:var(--text3);font-family:var(--mono)">${escHtml(String(m.date).slice(5))}</span>
+              <span style="color:var(--text2)">${escHtml(m.broker)}</span>
+              <span style="color:${m.new_target>m.old_target?"#4ade80":m.new_target<m.old_target?"#f87171":"var(--text3)"}">${+m.old_target||0}→${+m.new_target||0}</span>
+              <span style="color:var(--text3);margin-left:auto">${escHtml(m.rating)}</span>
             </div>`).join("")
         }</div>`
       : "";
@@ -3559,12 +3593,12 @@ function renderManualTable() {
     const diff = t.new_target - t.old_target;
     const name = nameCache[t.code] || t.code;
     return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:6px 8px;color:var(--text3);font-family:var(--mono)">${t.date}</td>
-      <td style="padding:6px 8px"><span style="color:#60a5fa;font-family:var(--mono)">${t.code}</span> <span style="color:var(--text2)">${name}</span></td>
-      <td style="padding:6px 8px;color:var(--text2)">${t.broker}</td>
-      <td style="padding:6px 8px;color:var(--text3)">${t.rating}</td>
-      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:var(--text2)">${t.old_target||"—"}</td>
-      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:var(--text)">${t.new_target}</td>
+      <td style="padding:6px 8px;color:var(--text3);font-family:var(--mono)">${escHtml(t.date)}</td>
+      <td style="padding:6px 8px"><span style="color:#60a5fa;font-family:var(--mono)">${escHtml(t.code)}</span> <span style="color:var(--text2)">${escHtml(name)}</span></td>
+      <td style="padding:6px 8px;color:var(--text2)">${escHtml(t.broker)}</td>
+      <td style="padding:6px 8px;color:var(--text3)">${escHtml(t.rating)}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:var(--text2)">${+t.old_target||"—"}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:var(--text)">${+t.new_target||0}</td>
       <td style="padding:6px 8px;text-align:right;font-family:var(--mono);color:${diff>0?"#4ade80":diff<0?"#f87171":"var(--text3)"}">${diff>0?"+":""}${diff||"—"}</td>
       <td style="padding:6px 8px"><button onclick="deleteManualTarget(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px">✕</button></td>
     </tr>`;
@@ -3585,7 +3619,7 @@ function openAddTargetModal() {
 
 function saveManualTarget() {
   const date   = document.getElementById("at-date").value;
-  const code   = document.getElementById("at-code").value.trim();
+  const code   = cleanCode(document.getElementById("at-code").value.trim());
   const broker = document.getElementById("at-broker").value.trim();
   const rating = document.getElementById("at-rating").value.trim();
   const oldT   = parseFloat(document.getElementById("at-old").value) || 0;

