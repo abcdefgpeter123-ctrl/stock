@@ -1,12 +1,12 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-09-24T10:47:31.834Z",
+ "generated_at": "2026-09-24T15:29:32.017Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
-  "updated_at": "2026/09/24 18:47",
+  "updated_at": "2026/09/24 23:29",
   "prices_date": "2026/09/24",
-  "market_summary": "今日加權指數小幅收黑 -0.28%，收 48,025 點（-133），外資賣超 338 億，三大法人合計賣超 439 億，籌碼略顯鬆動。 題材面以半導體設備（+2.8%）、ABF載板（+1.4%）、被動元件（+1.3%）表現較強；晶圓代工（-2.1%）、記憶體（-1.5%）、航空（-1.4%）相對落後。 監控個股漲跌幅度溫和，無明顯異常波動。 大盤量縮整理，方向未明，宜觀望等待訊號明朗化。",
-  "weekly_summary": "本週加權指數小幅波動，週收 48,025 點（-0.28%），方向不明朗。 題材面以液冷散熱（平均+19.5%）、ABF載板（平均+16.9%）、半導體（平均+8.6%）表現最佳；金融（-1.4%）、AI伺服器ODM（-0.9%）相對落後。外資本週賣超 338 億。 本週個股亮點為創意(3443)（+31.2%）、健策(3653)（+29.2%）、欣興(3037)（+26.1%）、漢唐(2404)（+24.8%）、景碩(3189)（+19.5%）；跌幅較深者有鴻勁(7769)（-7.6%）、2886（-4.4%）、2880（-4.4%）、威剛(3260)（-4.3%）、陽明(2609)（-3.9%）。",
+  "market_summary": "今日加權指數小幅收黑 -0.28%，收 48,025 點（-133），外資賣超 330 億，三大法人合計賣超 445 億，籌碼略顯鬆動。 題材面以半導體設備（+2.8%）、ABF載板（+1.4%）、被動元件（+1.3%）表現較強；晶圓代工（-2.1%）、記憶體（-1.5%）、航空（-1.4%）相對落後。 監控個股漲跌幅度溫和，無明顯異常波動。 大盤量縮整理，方向未明，宜觀望等待訊號明朗化。",
+  "weekly_summary": "本週加權指數小幅波動，週收 48,025 點（-0.28%），方向不明朗。 題材面以液冷散熱（平均+19.5%）、ABF載板（平均+16.9%）、半導體（平均+8.6%）表現最佳；金融（-1.4%）、AI伺服器ODM（-0.9%）相對落後。外資本週賣超 330 億。 本週個股亮點為創意(3443)（+31.2%）、健策(3653)（+29.2%）、欣興(3037)（+26.1%）、漢唐(2404)（+24.8%）、景碩(3189)（+19.5%）；跌幅較深者有鴻勁(7769)（-7.6%）、2886（-4.4%）、2880（-4.4%）、威剛(3260)（-4.3%）、陽明(2609)（-3.9%）。",
   "index": {
    "price": 48024.6,
    "chg": -132.69,
@@ -15,24 +15,24 @@
    "date": "2026/09/24"
   },
   "institutional": {
-   "foreign": -33802063655,
-   "trust": -11409319247,
+   "foreign": -32964613655,
+   "trust": -12823263300,
    "dealer": 1338430421,
    "date": "2026/09/24",
    "turnover": 775591428171,
-   "foreignPct": -4.36,
-   "trustPct": -1.47,
+   "foreignPct": -4.25,
+   "trustPct": -1.65,
    "dealerPct": 0.17
   },
   "vix": {
-   "price": 16.3,
-   "chg": 1.12,
-   "chgP": 7.38
+   "price": 16.05,
+   "chg": 0.87,
+   "chgP": 5.73
   },
   "usdtwd": {
-   "price": 31.809,
-   "chg": 0.129,
-   "chgP": 0.41
+   "price": 31.823,
+   "chg": 0.143,
+   "chgP": 0.45
   },
   "margin": {
    "balance_today": 9282264,
@@ -1523,12 +1523,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": 685.5,
-     "trust": -134.9,
+     "trust": -162.3,
      "dealer": 301
     },
     "foreign_holding_pct": {
      "shares": 25932370067,
-     "fh": 69.22
+     "fh": 69.2
     }
    },
    {
@@ -1550,7 +1550,7 @@
     },
     "foreign_holding_pct": {
      "shares": 12570093899,
-     "fh": 41.6
+     "fh": 41.34
     }
    },
    {
@@ -1567,7 +1567,7 @@
     "above_ma60": true,
     "inst": {
      "foreign": 991.2,
-     "trust": 304.2,
+     "trust": 319.2,
      "dealer": -65.5
     },
     "foreign_holding_pct": null
@@ -1591,7 +1591,7 @@
     },
     "foreign_holding_pct": {
      "shares": 318299119,
-     "fh": 4.43
+     "fh": 4.28
     }
    },
    {
@@ -1608,12 +1608,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": 890.8,
-     "trust": 29.2,
+     "trust": 25.9,
      "dealer": 87
     },
     "foreign_holding_pct": {
      "shares": 1604952613,
-     "fh": 56.56
+     "fh": 56.62
     }
    },
    {
@@ -1635,7 +1635,7 @@
     },
     "foreign_holding_pct": {
      "shares": 86204722,
-     "fh": 50.68
+     "fh": 50.45
     }
    },
    {
@@ -1657,7 +1657,7 @@
     },
     "foreign_holding_pct": {
      "shares": 608511469,
-     "fh": 44.95
+     "fh": 44.9
     }
    },
    {
@@ -1679,7 +1679,7 @@
     },
     "foreign_holding_pct": {
      "shares": 515512641,
-     "fh": 46.14
+     "fh": 45.96
     }
    },
    {
@@ -1696,12 +1696,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": 24.6,
-     "trust": -15,
+     "trust": -24.7,
      "dealer": 16.3
     },
     "foreign_holding_pct": {
      "shares": 134011911,
-     "fh": 27.2
+     "fh": 27.19
     }
    },
    {
@@ -1718,12 +1718,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": 2673.3,
-     "trust": -330.8,
+     "trust": -329.9,
      "dealer": 332.5
     },
     "foreign_holding_pct": {
      "shares": 4470572282,
-     "fh": 77.92
+     "fh": 77.96
     }
    },
    {
@@ -1745,7 +1745,7 @@
     },
     "foreign_holding_pct": {
      "shares": 1283882318,
-     "fh": 30.65
+     "fh": 30.73
     }
    },
    {
@@ -1786,7 +1786,7 @@
     },
     "foreign_holding_pct": {
      "shares": 759146634,
-     "fh": 32.69
+     "fh": 32.58
     }
    },
    {
@@ -1827,7 +1827,7 @@
     },
     "foreign_holding_pct": {
      "shares": 4500000193,
-     "fh": 19
+     "fh": 18.58
     }
    },
    {
@@ -1844,12 +1844,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": 1490.9,
-     "trust": 129.5,
+     "trust": 126.8,
      "dealer": 5.4
     },
     "foreign_holding_pct": {
      "shares": 3098627894,
-     "fh": 17.01
+     "fh": 16.36
     }
    },
    {
@@ -1904,7 +1904,7 @@
     "above_ma60": true,
     "inst": {
      "foreign": 1162,
-     "trust": 202.8,
+     "trust": 245.4,
      "dealer": 55.4
     },
     "foreign_holding_pct": null
@@ -1928,7 +1928,7 @@
     },
     "foreign_holding_pct": {
      "shares": 184905918,
-     "fh": 30.71
+     "fh": 30.79
     }
    },
    {
@@ -1969,7 +1969,7 @@
     },
     "foreign_holding_pct": {
      "shares": 80450155,
-     "fh": 32.52
+     "fh": 32.7
     }
    },
    {
@@ -1991,7 +1991,7 @@
     },
     "foreign_holding_pct": {
      "shares": 190586698,
-     "fh": 37.99
+     "fh": 37.89
     }
    },
    {
@@ -2013,7 +2013,7 @@
     },
     "foreign_holding_pct": {
      "shares": 80346080,
-     "fh": 21.43
+     "fh": 21.3
     }
    },
    {
@@ -2035,7 +2035,7 @@
     },
     "foreign_holding_pct": {
      "shares": 358321114,
-     "fh": 43.76
+     "fh": 43.82
     }
    },
    {
@@ -2057,7 +2057,7 @@
     },
     "foreign_holding_pct": {
      "shares": 1641291596,
-     "fh": 41.85
+     "fh": 41.95
     }
    },
    {
@@ -2079,7 +2079,7 @@
     },
     "foreign_holding_pct": {
      "shares": 4107627432,
-     "fh": 23.53
+     "fh": 23.44
     }
    },
    {
@@ -2101,7 +2101,7 @@
     },
     "foreign_holding_pct": {
      "shares": 185840791,
-     "fh": 22.27
+     "fh": 22.28
     }
    },
    {
@@ -2123,7 +2123,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3587475066,
-     "fh": 18.35
+     "fh": 18.25
     }
    },
    {
@@ -2145,7 +2145,7 @@
     },
     "foreign_holding_pct": {
      "shares": 669888886,
-     "fh": 23.49
+     "fh": 23.75
     }
    },
    {
@@ -2167,7 +2167,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3430052250,
-     "fh": 34.76
+     "fh": 34.9
     }
    },
    {
@@ -2189,7 +2189,7 @@
     },
     "foreign_holding_pct": {
      "shares": 742760280,
-     "fh": 39.27
+     "fh": 39.23
     }
    },
    {
@@ -2206,12 +2206,12 @@
     "above_ma60": false,
     "inst": {
      "foreign": -5058.4,
-     "trust": 66.6,
+     "trust": 76.6,
      "dealer": 106.9
     },
     "foreign_holding_pct": {
      "shares": 4407146625,
-     "fh": 35.13
+     "fh": 35.01
     }
    },
    {
@@ -2228,12 +2228,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": 331.5,
-     "trust": 565.5,
+     "trust": 564.5,
      "dealer": 143.8
     },
     "foreign_holding_pct": {
      "shares": 2597543329,
-     "fh": 61.63
+     "fh": 61.6
     }
    },
    {
@@ -2255,7 +2255,7 @@
     },
     "foreign_holding_pct": {
      "shares": 14028648626,
-     "fh": 40.46
+     "fh": 40.29
     }
    },
    {
@@ -2299,7 +2299,7 @@
     },
     "foreign_holding_pct": {
      "shares": 95297072,
-     "fh": 23.26
+     "fh": 23.38
     }
    },
    {
@@ -2316,12 +2316,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": -20.8,
-     "trust": 35.5,
+     "trust": 31.8,
      "dealer": 27.8
     },
     "foreign_holding_pct": {
      "shares": 392543007,
-     "fh": 54.25
+     "fh": 54.3
     }
    },
    {
@@ -2343,7 +2343,7 @@
     },
     "foreign_holding_pct": {
      "shares": 93387429,
-     "fh": 24.18
+     "fh": 23.84
     }
    },
    {
@@ -2360,12 +2360,12 @@
     "above_ma60": true,
     "inst": {
      "foreign": -45.2,
-     "trust": 14.4,
+     "trust": 34.7,
      "dealer": 2.8
     },
     "foreign_holding_pct": {
      "shares": 147203878,
-     "fh": 26.4
+     "fh": 26.15
     }
    },
    {
@@ -2409,7 +2409,7 @@
     },
     "foreign_holding_pct": {
      "shares": 451706232,
-     "fh": 7.58
+     "fh": 7.42
     }
    },
    {
@@ -2431,7 +2431,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7989197337,
-     "fh": 20.5
+     "fh": 20.47
     }
    },
    {
@@ -2453,7 +2453,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7547098972,
-     "fh": 17.87
+     "fh": 16.52
     }
    },
    {
@@ -2475,7 +2475,7 @@
     },
     "foreign_holding_pct": {
      "shares": 2165042996,
-     "fh": 25.89
+     "fh": 25.84
     }
    },
    {
@@ -2497,7 +2497,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3492104270,
-     "fh": 26
+     "fh": 25.95
     }
    },
    {
@@ -2519,7 +2519,7 @@
     },
     "foreign_holding_pct": {
      "shares": 5400444335,
-     "fh": 32.93
+     "fh": 32.74
     }
    },
    {
@@ -2541,7 +2541,7 @@
     },
     "foreign_holding_pct": {
      "shares": 6117941273,
-     "fh": 15.44
+     "fh": 15.22
     }
    },
    {
@@ -2563,7 +2563,7 @@
     },
     "foreign_holding_pct": {
      "shares": 15734860997,
-     "fh": 14.62
+     "fh": 14.64
     }
    },
    {
@@ -2607,7 +2607,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7523181742,
-     "fh": 12.94
+     "fh": 12.73
     }
    },
    {
@@ -2629,7 +2629,7 @@
     },
     "foreign_holding_pct": {
      "shares": 6365740781,
-     "fh": 34.45
+     "fh": 34.48
     }
    },
    {
@@ -2651,7 +2651,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7757446545,
-     "fh": 18.18
+     "fh": 18.22
     }
    },
    {
@@ -2673,7 +2673,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3607705357,
-     "fh": 20.22
+     "fh": 20.23
     }
    },
    {
@@ -2695,7 +2695,7 @@
     },
     "foreign_holding_pct": {
      "shares": 14007364952,
-     "fh": 18.79
+     "fh": 18.74
     }
    },
    {
@@ -2717,7 +2717,7 @@
     },
     "foreign_holding_pct": {
      "shares": 14669210128,
-     "fh": 23.16
+     "fh": 23.13
     }
    },
    {
@@ -2739,7 +2739,7 @@
     },
     "foreign_holding_pct": {
      "shares": 19675932806,
-     "fh": 35.1
+     "fh": 35.03
     }
    },
    {
@@ -2761,7 +2761,7 @@
     },
     "foreign_holding_pct": {
      "shares": 13864395944,
-     "fh": 26.98
+     "fh": 26.96
     }
    },
    {
@@ -2783,7 +2783,7 @@
     },
     "foreign_holding_pct": {
      "shares": 130798197,
-     "fh": 25.28
+     "fh": 25.12
     }
    },
    {
@@ -2824,7 +2824,7 @@
     },
     "foreign_holding_pct": {
      "shares": 2058730688,
-     "fh": 44.85
+     "fh": 44.95
     }
    },
    {
@@ -2846,7 +2846,7 @@
     },
     "foreign_holding_pct": {
      "shares": 485204774,
-     "fh": 11.51
+     "fh": 12.11
     }
    },
    {
@@ -2868,7 +2868,7 @@
     },
     "foreign_holding_pct": {
      "shares": 164735137,
-     "fh": 14.26
+     "fh": 14.16
     }
    }
   ],
@@ -2883,7 +2883,7 @@
     "leader_p30": 25.1,
     "gap": 27.2,
     "reason": "半導體龍頭【聯發科】近30日大漲+25%，【南亞科】同屬半導體供應鏈，近30日僅跌2%，落差27%，法人尚未大舉介入，具補漲潛力",
-    "eps": 28.68,
+    "eps": 28.63,
     "profit_ok": true,
     "score": 83,
     "score_grade": "⭐⭐⭐",
@@ -2904,7 +2904,7 @@
     "leader_p30": 25.1,
     "gap": 26.3,
     "reason": "半導體龍頭【聯發科】近30日大漲+25%，【瑞昱】同屬半導體供應鏈，近30日僅跌1%，落差26%，法人尚未大舉介入，具補漲潛力",
-    "eps": 27.03,
+    "eps": 27.02,
     "profit_ok": true,
     "score": 83,
     "score_grade": "⭐⭐⭐",
@@ -3300,8 +3300,8 @@
   "warnings": []
  },
  "us": {
-  "updated_at": "2026/09/24 01:16",
-  "market_summary": "今日美股 S&P500 下跌 -0.76%，收 7,706 點（-59）；那斯達克 -0.69%，道瓊 -1.03%。VIX 15.2（+0.31），恐慌情緒升溫。 題材面以網路安全（+1.8%）、醫療科技（+0.0%）、AI半導體（-0.3%）表現較強；雲端運算（-2.8%）、社群媒體（-2.6%）、企業軟體（-2.5%）相對落後。 留意 Snap（-6.0%）、Intuit（-5.3%） 等個股壓力。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
+  "updated_at": "2026/09/24 18:42",
+  "market_summary": "今日美股 S&P500 下跌 -0.76%，收 7,706 點（-59）；那斯達克 -0.69%，道瓊 -1.03%。VIX 16.4（+1.24），恐慌情緒升溫。 題材面以網路安全（+5.5%）、電動車（-0.2%）、消費電子（-0.3%）表現較強；社群媒體（-2.4%）、雲端運算（-1.8%）、AI半導體（-1.8%）相對落後。 個股表現分化，Palo Alto（+5.8%） 等強勢，Snap（-5.9%） 等承壓。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
   "indices": {
    "sp500": {
     "price": 7706.03,
@@ -3320,21 +3320,29 @@
    }
   },
   "vix": {
-   "price": 15.18,
-   "chg": 0.31,
-   "chgP": 2.08
+   "price": 16.42,
+   "chg": 1.24,
+   "chgP": 8.17
   },
   "cheat_sheet": {
    "expert_below_low": {
-    "count": 1,
+    "count": 2,
     "stocks": [
+     {
+      "code": "GOOGL",
+      "name": "Alphabet",
+      "price": 337.83,
+      "low": 340,
+      "analysts": 54,
+      "gap_pct": 0.6
+     },
      {
       "code": "INTU",
       "name": "Intuit",
-      "price": 288.11,
+      "price": 286.8,
       "low": 290,
       "analysts": 31,
-      "gap_pct": 0.7
+      "gap_pct": 1.1
      }
     ]
    },
@@ -3365,288 +3373,288 @@
    {
     "code": "AVGO",
     "name": "博通",
-    "price": 355.22,
+    "price": 354.99,
     "target_mean": 531.85,
     "high": 715,
     "low": 215.88,
     "analysts": 47,
     "rating": "strong_buy",
-    "upside_pct": 49.7
+    "upside_pct": 49.8
    },
    {
     "code": "NVDA",
     "name": "輝達",
-    "price": 225.89,
+    "price": 225.51,
     "target_mean": 327.7,
     "high": 515,
     "low": 180,
     "analysts": 59,
     "rating": "strong_buy",
-    "upside_pct": 45.1
+    "upside_pct": 45.3
    },
    {
     "code": "MU",
     "name": "美光",
-    "price": 1075.88,
-    "target_mean": 1515,
+    "price": 1071.88,
+    "target_mean": 1515.54,
     "high": 2200,
     "low": 361,
     "analysts": 46,
     "rating": "strong_buy",
-    "upside_pct": 40.8
+    "upside_pct": 41.4
    },
    {
     "code": "INTU",
     "name": "Intuit",
-    "price": 288.11,
+    "price": 286.8,
     "target_mean": 405.6,
     "high": 732,
     "low": 290,
     "analysts": 31,
     "rating": "buy",
-    "upside_pct": 40.8
+    "upside_pct": 41.4
    },
    {
     "code": "SNAP",
     "name": "Snap",
-    "price": 5.36,
+    "price": 5.29,
     "target_mean": 7.39,
     "high": 16,
     "low": 5,
     "analysts": 35,
     "rating": "hold",
-    "upside_pct": 37.9
+    "upside_pct": 39.7
    },
    {
     "code": "AMZN",
     "name": "亞馬遜",
-    "price": 248.96,
-    "target_mean": 329.29,
+    "price": 249.27,
+    "target_mean": 329.54,
     "high": 405,
     "low": 230,
-    "analysts": 58,
+    "analysts": 57,
     "rating": "strong_buy",
-    "upside_pct": 32.3
-   },
-   {
-    "code": "RIVN",
-    "name": "Rivian",
-    "price": 14.86,
-    "target_mean": 19.31,
-    "high": 25,
-    "low": 13,
-    "analysts": 26,
-    "rating": "hold",
-    "upside_pct": 29.9
+    "upside_pct": 32.2
    },
    {
     "code": "NFLX",
     "name": "Netflix",
-    "price": 72.17,
+    "price": 71.36,
     "target_mean": 92.93,
     "high": 135,
     "low": 57,
     "analysts": 45,
     "rating": "buy",
-    "upside_pct": 28.8
+    "upside_pct": 30.2
+   },
+   {
+    "code": "RIVN",
+    "name": "Rivian",
+    "price": 15.02,
+    "target_mean": 19.31,
+    "high": 25,
+    "low": 13,
+    "analysts": 26,
+    "rating": "hold",
+    "upside_pct": 28.6
    },
    {
     "code": "GOOGL",
     "name": "Alphabet",
-    "price": 341.62,
+    "price": 337.83,
     "target_mean": 429.46,
     "high": 515,
     "low": 340,
     "analysts": 54,
     "rating": "strong_buy",
-    "upside_pct": 25.7
+    "upside_pct": 27.1
    },
    {
     "code": "DIS",
     "name": "迪士尼",
-    "price": 104.18,
+    "price": 103.46,
     "target_mean": 127.22,
     "high": 144,
     "low": 88,
     "analysts": 31,
     "rating": "strong_buy",
-    "upside_pct": 22.1
-   },
-   {
-    "code": "ANET",
-    "name": "Arista網路",
-    "price": 203.15,
-    "target_mean": 241.93,
-    "high": 289,
-    "low": 190,
-    "analysts": 28,
-    "rating": "strong_buy",
-    "upside_pct": 19.1
-   },
-   {
-    "code": "COST",
-    "name": "好市多",
-    "price": 898.61,
-    "target_mean": 1069.2,
-    "high": 1315,
-    "low": 740,
-    "analysts": 35,
-    "rating": "buy",
-    "upside_pct": 19
-   },
-   {
-    "code": "CRM",
-    "name": "Salesforce",
-    "price": 236.4,
-    "target_mean": 281.08,
-    "high": 475,
-    "low": 160,
-    "analysts": 53,
-    "rating": "buy",
-    "upside_pct": 18.9
+    "upside_pct": 23
    },
    {
     "code": "ISRG",
     "name": "直覺外科",
-    "price": 401.14,
+    "price": 398.3,
     "target_mean": 476.34,
     "high": 685,
     "low": 324,
     "analysts": 29,
     "rating": "buy",
-    "upside_pct": 18.7
+    "upside_pct": 19.6
    },
    {
-    "code": "ADBE",
-    "name": "Adobe",
-    "price": 238.01,
-    "target_mean": 278.15,
-    "high": 377.07,
-    "low": 195,
-    "analysts": 33,
-    "rating": "hold",
-    "upside_pct": 16.9
-   },
-   {
-    "code": "MSFT",
-    "name": "微軟",
-    "price": 497.47,
-    "target_mean": 577.26,
-    "high": 870,
-    "low": 440,
-    "analysts": 52,
+    "code": "ANET",
+    "name": "Arista網路",
+    "price": 203.47,
+    "target_mean": 241.93,
+    "high": 289,
+    "low": 190,
+    "analysts": 28,
     "rating": "strong_buy",
-    "upside_pct": 16
+    "upside_pct": 18.9
+   },
+   {
+    "code": "CRM",
+    "name": "Salesforce",
+    "price": 237.58,
+    "target_mean": 281.08,
+    "high": 475,
+    "low": 160,
+    "analysts": 53,
+    "rating": "buy",
+    "upside_pct": 18.3
+   },
+   {
+    "code": "COST",
+    "name": "好市多",
+    "price": 904.7,
+    "target_mean": 1069.2,
+    "high": 1315,
+    "low": 740,
+    "analysts": 35,
+    "rating": "buy",
+    "upside_pct": 18.2
    },
    {
     "code": "V",
     "name": "Visa",
-    "price": 363.47,
+    "price": 361.52,
     "target_mean": 419.36,
     "high": 466,
     "low": 330,
     "analysts": 37,
     "rating": "strong_buy",
-    "upside_pct": 15.4
+    "upside_pct": 16
+   },
+   {
+    "code": "ADBE",
+    "name": "Adobe",
+    "price": 240.69,
+    "target_mean": 278.15,
+    "high": 377.07,
+    "low": 195,
+    "analysts": 33,
+    "rating": "hold",
+    "upside_pct": 15.6
+   },
+   {
+    "code": "MSFT",
+    "name": "微軟",
+    "price": 500.59,
+    "target_mean": 577.26,
+    "high": 870,
+    "low": 440,
+    "analysts": 52,
+    "rating": "strong_buy",
+    "upside_pct": 15.3
    },
    {
     "code": "LLY",
     "name": "禮來",
-    "price": 1166.73,
+    "price": 1150.99,
     "target_mean": 1325.39,
     "high": 1600,
     "low": 930,
     "analysts": 29,
     "rating": "buy",
-    "upside_pct": 13.6
-   },
-   {
-    "code": "NOW",
-    "name": "ServiceNow",
-    "price": 137.71,
-    "target_mean": 144.99,
-    "high": 248,
-    "low": 72,
-    "analysts": 46,
-    "rating": "strong_buy",
-    "upside_pct": 5.3
-   },
-   {
-    "code": "TSLA",
-    "name": "特斯拉",
-    "price": 379.42,
-    "target_mean": 396.94,
-    "high": 600,
-    "low": 125,
-    "analysts": 38,
-    "rating": "buy",
-    "upside_pct": 4.6
-   },
-   {
-    "code": "PANW",
-    "name": "Palo Alto",
-    "price": 379.77,
-    "target_mean": 395.7,
-    "high": 475,
-    "low": 190,
-    "analysts": 50,
-    "rating": "buy",
-    "upside_pct": 4.2
+    "upside_pct": 15.2
    },
    {
     "code": "DELL",
     "name": "戴爾",
-    "price": 554.61,
+    "price": 549.83,
     "target_mean": 577.36,
     "high": 735,
     "low": 480,
     "analysts": 25,
     "rating": "buy",
-    "upside_pct": 4.1
+    "upside_pct": 5
+   },
+   {
+    "code": "TSLA",
+    "name": "特斯拉",
+    "price": 380.12,
+    "target_mean": 396.94,
+    "high": 600,
+    "low": 125,
+    "analysts": 38,
+    "rating": "buy",
+    "upside_pct": 4.4
    },
    {
     "code": "META",
     "name": "Meta",
-    "price": 746.74,
-    "target_mean": 766.37,
+    "price": 744.1,
+    "target_mean": 770.21,
     "high": 1000,
     "low": 580,
     "analysts": 56,
     "rating": "strong_buy",
-    "upside_pct": 2.6
+    "upside_pct": 3.5
+   },
+   {
+    "code": "NOW",
+    "name": "ServiceNow",
+    "price": 140.78,
+    "target_mean": 144.99,
+    "high": 248,
+    "low": 72,
+    "analysts": 46,
+    "rating": "strong_buy",
+    "upside_pct": 3
+   },
+   {
+    "code": "PANW",
+    "name": "Palo Alto",
+    "price": 393.3,
+    "target_mean": 395.7,
+    "high": 475,
+    "low": 190,
+    "analysts": 50,
+    "rating": "buy",
+    "upside_pct": 0.6
    },
    {
     "code": "AMD",
     "name": "超微",
-    "price": 610.58,
+    "price": 614.61,
     "target_mean": 616.51,
     "high": 1250,
     "low": 365,
     "analysts": 50,
     "rating": "strong_buy",
-    "upside_pct": 1
+    "upside_pct": 0.3
    },
    {
     "code": "AAPL",
     "name": "蘋果",
-    "price": 337.25,
+    "price": 337.02,
     "target_mean": 328.22,
     "high": 405,
     "low": 215,
     "analysts": 39,
     "rating": "buy",
-    "upside_pct": -2.7
+    "upside_pct": -2.6
    },
    {
     "code": "CRWD",
     "name": "CrowdStrike",
-    "price": 252.96,
+    "price": 262.49,
     "target_mean": 235.67,
     "high": 300,
     "low": 132,
     "analysts": 50,
     "rating": "buy",
-    "upside_pct": -6.8
+    "upside_pct": -10.2
    }
   ]
  }
