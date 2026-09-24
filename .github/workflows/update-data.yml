@@ -12,6 +12,8 @@ on:
       - 'generate_report.py'
       - 'test_pure.py'
       - 'stocks.json'
+      - 'build_daily_summary.js'
+      - 'market_status.js'
   workflow_dispatch:  # 允許手動觸發
 
 permissions:
@@ -56,11 +58,17 @@ jobs:
             echo "今天是週${DAY}，跳過週報"
           fi
 
+      # 給排程／自動化讀的精簡摘要。必須排在抓取之後、commit 之前。
+      # 用 Node 是為了直接載入 market_status.js（牛熊燈號的唯一實作），
+      # 不另外寫一份 Python 版造成兩邊走鐘。
+      - name: Build daily summary for automations
+        run: node build_daily_summary.js
+
       - name: Commit and push if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data.json history_5y.json pe_river.json margin_history.json targets_history.json etf_holdings_history.json company_info.json weekly_report.html targets.json stocks.js
+          git add data.json history_5y.json pe_river.json margin_history.json targets_history.json etf_holdings_history.json company_info.json weekly_report.html targets.json stocks.js daily_summary.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

@@ -933,3 +933,70 @@ inline handler 的屬性值會**先被 HTML 解碼、再當 JS 解析**。
 - [ ] 有沒有把非 `data.json` 來源的值放進 `onclick=` / `onchange=`？→ 改 data-* ＋ 委派
 - [ ] 進 `innerHTML` 的使用者輸入有沒有過 `esc()` / `escHtml()`？
 - [ ] 新的匯入／貼上入口有沒有做欄位正規化？
+
+---
+
+## 給排程讀的 `daily_summary.json`（2026/09 新增）
+
+### 問題
+
+每天有個 Cowork 雲端排程要讀這個儀表板寫分析報告，做法是用無頭瀏覽器抓
+`https://stock-pi-rose.vercel.app`。從 2026/09 中旬起一直失敗：
+
+| 方式 | 失敗原因 |
+|------|---------|
+| Playwright 無頭瀏覽器 | 雲端出口代理擋掉該網域 → `ERR_TUNNEL_CONNECTION_FAILED` |
+| WebFetch | 網域存取要人工核准，無人值守排程沒人能按 → `PROVENANCE_REQUIRED` 逾時 |
+
+紀錄上 9/14、9/15、9/16、9/21、9/23 都失敗，是持續性問題。
+
+### 解法：不要抓網頁，直接讀 JSON
+
+排程要的是數字，不是畫面。`build_daily_summary.js` 在 Actions 裡把網頁上
+「要靠前端 JS 算」的東西全部先算好，寫進 `daily_summary.json`，排程直接讀：
+
+```
+https://raw.githubusercontent.com/abcdefgpeter123-ctrl/stock/main/daily_summary.json
+```
+
+`raw.githubusercontent.com` 是 GitHub 本身，雲端環境本來就要能連（不然 git
+都不能用），完全繞過 Vercel 與瀏覽器。檔案約 70 KB。
+
+### 裡面有什麼
+
+`tw` / `us` 兩塊。`tw` 底下：
+
+| 欄位 | 內容 |
+|------|------|
+| `market_status` | 牛熊分數、等級、8 項指標逐項成立與否 |
+| `cheat_sheet` | 機會懶人包三格：跌破分析師最低目標／台積電均線／題材補漲 8–12pt |
+| `opportunity_venn` | 機會點交集：`only_target_upside` / `only_theme_lag` / `both` |
+| `analyst_targets` | 法人目標價，含 `upside_pct`、`below_low` |
+| `stocks` | 逐檔的 MA5/20/60、站上與否、外資投信自營買賣超、外資持股比 |
+| `market_summary` | 當日大盤日評原文 |
+
+`cheat_sheet` / `venn` 這些原本只存在於瀏覽器 JS 裡，排程抓不到，
+現在在來源就算好了。
+
+### ⚠️ 改動時的注意事項
+
+* **牛熊燈號直接載入 `market_status.js`**，不是另外用 Python 重寫一份。
+  這是刻意的——那份邏輯已經被三個頁面共用，再多一份 Python 實作就會走鐘
+  （這個專案被「同一份邏輯兩份實作」咬過：監控清單漏廣達）。
+  所以這支是 **Node**，不是 Python。
+* 懶人包與交集圖的**門檻**（分析師最低價、8–12pt、中位數優先）在前端與這裡
+  各寫一次。兩邊都只是「篩選」，真正的計算都在 `data.json` 裡，所以不會算出
+  不同數字；但**改門檻時兩邊都要改**。
+* 兩支 workflow 都會重建（台股 18:30、美股 07:00），排程不論早晚讀到的都是最新的。
+  美股那支跑的時候 `data.json` 還是前一晚的，`tw.prices_date` 會顯示實際日期。
+* 讀不到來源檔時只印警告、**exit 0**，不讓摘要拖垮整個抓取流程。
+  資料過期本來就由 `watchdog.yml` 從 `data.json` / `us_data.json` 把關。
+
+### 驗證方式
+
+改完後比對網頁與 JSON 應完全一致（2026/09/23 實測全中）：
+
+```bash
+node build_daily_summary.js
+# 再開 index.html，主控台跑 computeOppSets() / marketStatusEval 對照
+```
