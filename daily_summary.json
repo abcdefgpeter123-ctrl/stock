@@ -1,6 +1,6 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-09-24T15:29:32.017Z",
+ "generated_at": "2026-09-25T01:20:32.242Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
   "updated_at": "2026/09/24 23:29",
@@ -3300,29 +3300,29 @@
   "warnings": []
  },
  "us": {
-  "updated_at": "2026/09/24 18:42",
-  "market_summary": "今日美股 S&P500 下跌 -0.76%，收 7,706 點（-59）；那斯達克 -0.69%，道瓊 -1.03%。VIX 16.4（+1.24），恐慌情緒升溫。 題材面以網路安全（+5.5%）、電動車（-0.2%）、消費電子（-0.3%）表現較強；社群媒體（-2.4%）、雲端運算（-1.8%）、AI半導體（-1.8%）相對落後。 個股表現分化，Palo Alto（+5.8%） 等強勢，Snap（-5.9%） 等承壓。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
+  "updated_at": "2026/09/25 01:20",
+  "market_summary": "今日美股 S&P500 小幅收黑 -0.02%，收 7,704 點（-2）；那斯達克 +0.01%，道瓊 -0.31%。VIX 15.7（+0.49），恐慌情緒升溫。 題材面以網路安全（+5.5%）、電動車（-0.2%）、消費電子（-0.3%）表現較強；社群媒體（-2.4%）、雲端運算（-1.8%）、AI半導體（-1.8%）相對落後。 個股表現分化，Palo Alto（+5.8%） 等強勢，Snap（-5.9%） 等承壓。 大盤方向未明，宜觀望等待訊號明朗化。",
   "indices": {
    "sp500": {
-    "price": 7706.03,
-    "chg": -58.67,
-    "chgP": -0.76
+    "price": 7704.13,
+    "chg": -1.9,
+    "chgP": -0.02
    },
    "nasdaq": {
-    "price": 26936.04,
-    "chg": -186.05,
-    "chgP": -0.69
+    "price": 26939.37,
+    "chg": 3.33,
+    "chgP": 0.01
    },
    "dow": {
-    "price": 51511.59,
-    "chg": -537.24,
-    "chgP": -1.03
+    "price": 51349.98,
+    "chg": -161.61,
+    "chgP": -0.31
    }
   },
   "vix": {
-   "price": 16.42,
-   "chg": 1.24,
-   "chgP": 8.17
+   "price": 15.67,
+   "chg": 0.49,
+   "chgP": 3.23
   },
   "cheat_sheet": {
    "expert_below_low": {
@@ -3348,21 +3348,21 @@
    },
    "trust_megacaps": {
     "index": "NASDAQ 100 (^NDX)",
-    "price": 30470.3,
+    "price": 30478.9,
     "ma": [
      {
       "period": 5,
-      "ma": 29797.8,
+      "ma": 30104.5,
       "broken": false
      },
      {
       "period": 10,
-      "ma": 29494.7,
+      "ma": 29600.5,
       "broken": false
      },
      {
       "period": 20,
-      "ma": 29433.4,
+      "ma": 29496.9,
       "broken": false
      }
     ],
@@ -3473,12 +3473,12 @@
     "code": "DIS",
     "name": "迪士尼",
     "price": 103.46,
-    "target_mean": 127.22,
+    "target_mean": 126.74,
     "high": 144,
     "low": 88,
-    "analysts": 31,
+    "analysts": 32,
     "rating": "strong_buy",
-    "upside_pct": 23
+    "upside_pct": 22.5
    },
    {
     "code": "ISRG",
@@ -3569,6 +3569,17 @@
     "upside_pct": 15.2
    },
    {
+    "code": "META",
+    "name": "Meta",
+    "price": 744.1,
+    "target_mean": 786.8,
+    "high": 1000,
+    "low": 580,
+    "analysts": 57,
+    "rating": "strong_buy",
+    "upside_pct": 5.7
+   },
+   {
     "code": "DELL",
     "name": "戴爾",
     "price": 549.83,
@@ -3583,23 +3594,12 @@
     "code": "TSLA",
     "name": "特斯拉",
     "price": 380.12,
-    "target_mean": 396.94,
+    "target_mean": 396.62,
     "high": 600,
     "low": 125,
     "analysts": 38,
     "rating": "buy",
-    "upside_pct": 4.4
-   },
-   {
-    "code": "META",
-    "name": "Meta",
-    "price": 744.1,
-    "target_mean": 770.21,
-    "high": 1000,
-    "low": 580,
-    "analysts": 56,
-    "rating": "strong_buy",
-    "upside_pct": 3.5
+    "upside_pct": 4.3
    },
    {
     "code": "NOW",
