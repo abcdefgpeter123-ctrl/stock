@@ -1,9 +1,9 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-09-28T01:30:18.231Z",
+ "generated_at": "2026-09-28T18:21:11.107Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
-  "updated_at": "2026/09/25 23:33",
+  "updated_at": "2026/09/29 02:21",
   "prices_date": "2026/09/24",
   "market_summary": "今日加權指數小幅收黑 -0.28%，收 48,025 點（-133），外資賣超 330 億，三大法人合計賣超 445 億，籌碼略顯鬆動。 題材面以半導體設備（+2.8%）、ABF載板（+1.4%）、被動元件（+1.3%）表現較強；晶圓代工（-2.1%）、記憶體（-1.5%）、航空（-1.4%）相對落後。 監控個股漲跌幅度溫和，無明顯異常波動。 大盤量縮整理，方向未明，宜觀望等待訊號明朗化。",
   "weekly_summary": "本週加權指數小幅波動，週收 48,025 點（-0.28%），方向不明朗。 題材面以液冷散熱（平均+19.5%）、ABF載板（平均+16.9%）、半導體（平均+8.6%）表現最佳；金融（-1.4%）、AI伺服器ODM（-0.9%）相對落後。外資本週賣超 330 億。 本週個股亮點為創意(3443)（+31.2%）、健策(3653)（+29.2%）、欣興(3037)（+26.1%）、漢唐(2404)（+24.8%）、景碩(3189)（+19.5%）；跌幅較深者有鴻勁(7769)（-7.6%）、2886（-4.4%）、2880（-4.4%）、威剛(3260)（-4.3%）、陽明(2609)（-3.9%）。",
@@ -25,28 +25,23 @@
    "dealerPct": 0.17
   },
   "vix": {
-   "price": 15.32,
-   "chg": -0.35,
-   "chgP": -2.23
+   "price": 15.92,
+   "chg": 1.05,
+   "chgP": 7.06
   },
   "usdtwd": {
-   "price": 31.756,
-   "chg": -0.033,
-   "chgP": -0.1
+   "price": 31.752,
+   "chg": -0.054,
+   "chgP": -0.17
   },
   "margin": {
    "balance_today": 9279712,
    "balance_prev": 9282262,
    "change_lots": -2550,
    "change_pct": -0.03,
-   "date": "2026/09/25",
+   "date": "2026/09/28",
    "ratio": null,
    "history": [
-    {
-     "date": "2026/08/14",
-     "balance": 8969841,
-     "ratio": null
-    },
     {
      "date": "2026/08/17",
      "balance": 8918284,
@@ -189,6 +184,11 @@
     },
     {
      "date": "2026/09/25",
+     "balance": 9279712,
+     "ratio": null
+    },
+    {
+     "date": "2026/09/28",
      "balance": 9279712,
      "ratio": null
     }
@@ -534,7 +534,7 @@
     {
      "code": "2454",
      "name": "聯發科",
-     "upside": 6
+     "upside": 7.9
     },
     {
      "code": "2492",
@@ -569,7 +569,7 @@
     {
      "code": "3017",
      "name": "奇鋐",
-     "upside": 14.8
+     "upside": 19.5
     },
     {
      "code": "3034",
@@ -760,7 +760,7 @@
     "high": 480,
     "low": 480,
     "analysts": 1,
-    "rating": "buy",
+    "rating": "none",
     "upside_pct": 54.1,
     "mean_change": 0,
     "below_low": true
@@ -802,7 +802,7 @@
     "high": 1865,
     "low": 1690,
     "analysts": 2,
-    "rating": "buy",
+    "rating": "none",
     "upside_pct": 38.3,
     "mean_change": -87.5,
     "below_low": true
@@ -830,7 +830,7 @@
     "high": 595,
     "low": 340,
     "analysts": 11,
-    "rating": "none",
+    "rating": "buy",
     "upside_pct": 34.7,
     "mean_change": 6.1,
     "below_low": false
@@ -938,13 +938,13 @@
     "name": "緯穎",
     "price": 2115,
     "target_median": 2667.8,
-    "target_mean": 2779.5,
+    "target_mean": 2779.9,
     "high": 3777,
     "low": 2234.8,
     "analysts": 18,
     "rating": "strong_buy",
     "upside_pct": 26.1,
-    "mean_change": 5.8,
+    "mean_change": 0.4,
     "below_low": true
    },
    {
@@ -984,9 +984,23 @@
     "high": 85.3,
     "low": 26,
     "analysts": 5,
-    "rating": "hold",
+    "rating": "none",
     "upside_pct": 21.1,
     "mean_change": 7.6,
+    "below_low": false
+   },
+   {
+    "code": "3017",
+    "name": "奇鋐",
+    "price": 3555,
+    "target_median": 4250,
+    "target_mean": 4129.8,
+    "high": 4600,
+    "low": 3327,
+    "analysts": 17,
+    "rating": "strong_buy",
+    "upside_pct": 19.5,
+    "mean_change": 31,
     "below_low": false
    },
    {
@@ -1008,27 +1022,13 @@
     "name": "華碩",
     "price": 953,
     "target_median": 1100,
-    "target_mean": 1050.3,
+    "target_mean": 1050.8,
     "high": 1320,
     "low": 700,
     "analysts": 12,
     "rating": "buy",
     "upside_pct": 15.4,
-    "mean_change": 30,
-    "below_low": false
-   },
-   {
-    "code": "3017",
-    "name": "奇鋐",
-    "price": 3555,
-    "target_median": 4080,
-    "target_mean": 4098.8,
-    "high": 4600,
-    "low": 3327,
-    "analysts": 17,
-    "rating": "strong_buy",
-    "upside_pct": 14.8,
-    "mean_change": 20,
+    "mean_change": 0.5,
     "below_low": false
    },
    {
@@ -1036,13 +1036,13 @@
     "name": "台塑化",
     "price": 87.2,
     "target_median": 100,
-    "target_mean": 79.2,
+    "target_mean": 92.8,
     "high": 110,
-    "low": 40,
+    "low": 46,
     "analysts": 5,
     "rating": "buy",
     "upside_pct": 14.7,
-    "mean_change": 2,
+    "mean_change": 13.6,
     "below_low": false
    },
    {
@@ -1054,7 +1054,7 @@
     "high": 130,
     "low": 84,
     "analysts": 10,
-    "rating": "buy",
+    "rating": "none",
     "upside_pct": 14,
     "mean_change": 2,
     "below_low": false
@@ -1106,13 +1106,13 @@
     "name": "仁寶",
     "price": 36.5,
     "target_median": 40,
-    "target_mean": 39.4,
+    "target_mean": 39.8,
     "high": 55,
     "low": 23,
     "analysts": 11,
     "rating": "hold",
     "upside_pct": 9.6,
-    "mean_change": 1.5,
+    "mean_change": 0.4,
     "below_low": false
    },
    {
@@ -1186,6 +1186,20 @@
     "below_low": false
    },
    {
+    "code": "2454",
+    "name": "聯發科",
+    "price": 5285,
+    "target_median": 5700,
+    "target_mean": 6002.2,
+    "high": 10369,
+    "low": 4000,
+    "analysts": 25,
+    "rating": "strong_buy",
+    "upside_pct": 7.9,
+    "mean_change": 24,
+    "below_low": false
+   },
+   {
     "code": "2891",
     "name": "中信金",
     "price": 68.5,
@@ -1211,20 +1225,6 @@
     "rating": "strong_buy",
     "upside_pct": 7.3,
     "mean_change": 19.9,
-    "below_low": false
-   },
-   {
-    "code": "2454",
-    "name": "聯發科",
-    "price": 5285,
-    "target_median": 5600,
-    "target_mean": 5978.2,
-    "high": 10369,
-    "low": 4000,
-    "analysts": 25,
-    "rating": "strong_buy",
-    "upside_pct": 6,
-    "mean_change": 38.8,
     "below_low": false
    },
    {
@@ -1418,7 +1418,7 @@
     "high": 9000,
     "low": 2330,
     "analysts": 19,
-    "rating": "buy",
+    "rating": "none",
     "upside_pct": -17.5,
     "mean_change": 56.2,
     "below_low": false
@@ -2989,7 +2989,7 @@
     "leader_p30": 16.7,
     "gap": 13.4,
     "reason": "金融龍頭【富邦金】近30日大漲+17%，【元大金】同屬金融供應鏈，近30日僅漲3%，落差13%，法人尚未大舉介入，具補漲潛力",
-    "eps": 2.62,
+    "eps": 2.64,
     "profit_ok": true,
     "score": 75,
     "score_grade": "⭐⭐⭐",
