@@ -737,9 +737,10 @@ function setMktPeriod(p) { mktPeriod = p; renderMarket(); }
 
 function renderSummary() {
   const pos = computeLots();
-  let mv = 0, cost = 0, realized = 0, unknown = 0;
+  let mv = 0, cost = 0, realized = 0, soldCost = 0, unknown = 0;
   Object.values(pos).forEach(p => {
     realized += p.realized;
+    soldCost += p.soldCost;   // 已賣出那些股數當初的買進成本（FIFO 配對）
     if (p.qty <= 0) return;
     const pr = priceOf(p.code);
     cost += p.cost;
@@ -767,7 +768,9 @@ function renderSummary() {
       <div class="sum-sub ${cls(unreal)}">${sign(pct)}${pct.toFixed(2)}%</div></div>
     <div class="sum-box"><div class="sum-lbl">已實現損益</div>
       <div class="sum-val ${cls(realized)}">${sign(realized)}${fmt(realized)}</div>
-      <div class="sum-sub">賣出已入袋</div></div>
+      <div class="sum-sub">${soldCost > 0
+        ? `<span class="${cls(realized)}">${realized > 0 ? '↑' : realized < 0 ? '↓' : '→'} ${sign(realized)}${(realized / soldCost * 100).toFixed(2)}%</span> · 賣出已入袋`
+        : '賣出已入袋'}</div></div>
     <div class="sum-box"><div class="sum-lbl">總損益</div>
       <div class="sum-val ${cls(unreal+realized)}">${sign(unreal+realized)}${fmt(unreal+realized)}</div>
       <div class="sum-sub">${trades.length} 筆交易${unknown ? ` · ${unknown} 檔無報價` : ''}</div></div>`;
