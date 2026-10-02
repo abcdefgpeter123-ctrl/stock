@@ -102,8 +102,8 @@ select{background:var(--bg2);border:1px solid var(--border);border-radius:var(--
 .refresh-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;font-size:12px;color:var(--text2);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:6px;white-space:nowrap}
 .refresh-btn:hover{border-color:var(--border2);color:var(--text)}
 .refresh-btn.spinning svg{animation:spin .8s linear infinite}
-.sec-hd{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.src-tag{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.sec-hd{font-size:14px;font-weight:600;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.src-tag{font-size:11px;font-weight:400;letter-spacing:0;color:var(--text3);font-family:var(--mono)}
 .tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead{background:var(--bg3)}
@@ -584,9 +584,13 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
   <!-- ETF 持股加減碼：用官方持股自己算，可公開 -->
   <div id="etfflow-section" style="display:none">
     <div class="sec-hd" style="margin-top:18px">📦 ETF 持股加減碼
-      <span class="src-tag" id="etfflow-meta">—</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span class="src-tag" id="etfflow-meta">—</span>
+        <button class="sec-toggle" onclick="toggleSection('etfflow-grid',this)">▶ 展開</button>
+      </span>
     </div>
-    <div class="aetf-grid" id="etfflow-grid"></div>
+    <!-- 預設收合：卡片多、佔版面，又不是每天都要看 -->
+    <div class="aetf-grid" id="etfflow-grid" style="display:none"></div>
   </div>
 
   <!-- 題材回顧 + 機會點摘要 -->

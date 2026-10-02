@@ -35,6 +35,15 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .card-bd{padding:18px}
 
 /* ── 總覽 ── */
+.rv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.rv-sec{margin-top:16px}
+.rv-sec h3{font-size:13.5px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.rv-hint{font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:8px}
+.rv-tbl{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--mono)}
+.rv-tbl th{text-align:right;font-weight:500;color:var(--text3);font-family:var(--font);font-size:11.5px;padding:5px 8px;border-bottom:1px solid var(--border)}
+.rv-tbl td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)}
+.rv-tbl th:first-child,.rv-tbl td:first-child{text-align:left;font-family:var(--font)}
+.rv-warn{font-size:12px;color:var(--yellow);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:6px;padding:8px 12px;margin-bottom:14px;line-height:1.6}
 .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .sum-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
 .sum-lbl{font-size:11px;color:var(--text3);letter-spacing:.04em;margin-bottom:6px}
@@ -285,6 +294,13 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
 <div class="card">
   <div class="card-hd"><h2>📊 持股與交易</h2><span class="sub">點卡片展開，可看該股每一筆買賣與當初的理由</span></div>
   <div class="card-bd" id="holdings-bd"></div>
+</div>
+
+<!-- ── 操作檢討：從已出清的交易回頭看自己的習慣 ── -->
+<div class="card" id="review-card">
+  <div class="card-hd"><h2>🔍 操作檢討</h2>
+    <span class="sub">只看已出清的部分，描述過去怎麼操作，不是買賣建議</span></div>
+  <div class="card-bd" id="review-bd"></div>
 </div>
 
 <!-- ── 交易紀錄（僅管理模式） ── -->
@@ -609,7 +625,7 @@ function holdingQty(code, excludeId) {
 //  Render
 // ══════════════════════════════════════════════════════
 function renderAll() {
-  renderSummary(); renderHoldings(); renderTx(); renderMarket();
+  renderSummary(); renderHoldings(); renderReview(); renderTx(); renderMarket();
 }
 
 function renderMarket() {
@@ -774,6 +790,126 @@ function renderSummary() {
     <div class="sum-box"><div class="sum-lbl">總損益</div>
       <div class="sum-val ${cls(unreal+realized)}">${sign(unreal+realized)}${fmt(unreal+realized)}</div>
       <div class="sum-sub">${trades.length} 筆交易${unknown ? ` · ${unknown} 檔無報價` : ''}</div></div>`;
+}
+
+/*
+ * 操作檢討。全部只看「已出清」的部分（FIFO 配對出來的 trips），
+ * 持有中的還沒有結果，放進來會把浮動損益當成績。
+ *
+ * 以「檔」為單位算勝率（同一檔分批買賣合成一筆），與已出清卡片一致；
+ * 持有天數用買進成本加權，否則一筆 10 股和一筆 1000 股份量一樣。
+ */
+function renderReview() {
+  const el = document.getElementById('review-bd');
+  if (!el) return;
+  const pos = Object.values(computeLots());
+  const trips  = pos.flatMap(p => p.trips.map(t => ({ ...t, code: p.code, name: p.name, market: p.market })));
+  const real   = trips.filter(t => !t.orphan);
+  const orphan = trips.filter(t => t.orphan);
+  const done   = pos.filter(p => p.trips.some(t => !t.orphan));
+
+  if (!done.length) {
+    el.innerHTML = `<div class="empty">還沒有完成買賣的個股。至少要有一檔賣出後，這裡才會有東西可以看。</div>`;
+    return;
+  }
+
+  const days = t => Math.max(0, Math.round((new Date(t.sellTx.date) - new Date(t.buyTx.date)) / 864e5));
+  const sg  = v => v > 0 ? '+' : '';
+  const cl  = v => v > 0 ? 'up' : v < 0 ? 'dn' : 'neu';
+  const pct = (pl, bc) => bc > 0 ? `<span class="${cl(pl)}">${sg(pl)}${(pl / bc * 100).toFixed(1)}%</span>` : '—';
+  const money = v => `<span class="${cl(v)}">${sg(v)}${fmt(v)}</span>`;
+
+  // 以檔彙總（只算有買進成本的配對）
+  const byCode = done.map(p => {
+    const ts = p.trips.filter(t => !t.orphan);
+    const bc = ts.reduce((a, t) => a + t.buyCost, 0);
+    const pl = ts.reduce((a, t) => a + t.realized, 0);
+    const wd = bc > 0 ? ts.reduce((a, t) => a + days(t) * t.buyCost, 0) / bc : 0;
+    return { code: p.code, name: p.name, bc, pl, wd };
+  });
+  const wins = byCode.filter(x => x.pl > 0), losses = byCode.filter(x => x.pl < 0);
+  const avg = l => l.length ? l.reduce((a, x) => a + x.pl, 0) / l.length : 0;
+  const avgW = avg(wins), avgL = avg(losses);
+  const ratio = avgL < 0 ? avgW / -avgL : null;
+  const wDays = l => { const bc = l.reduce((a, x) => a + x.bc, 0);
+                       return bc > 0 ? l.reduce((a, x) => a + x.wd * x.bc, 0) / bc : null; };
+  const dW = wDays(wins), dL = wDays(losses);
+
+  // ① 部位大小：依投入成本對半切。用中位數不用固定金額，資金規模不同的人都適用
+  const sorted = [...byCode].sort((a, b) => b.bc - a.bc);
+  const half = Math.ceil(sorted.length / 2);
+  const sizeRow = (label, l) => {
+    const bc = l.reduce((a, x) => a + x.bc, 0), pl = l.reduce((a, x) => a + x.pl, 0);
+    const w = l.filter(x => x.pl > 0).length;
+    return `<tr><td>${label}</td><td>${l.length}</td><td>${l.length ? Math.round(w / l.length * 100) : 0}%</td>
+            <td>${money(pl)}</td><td>${pct(pl, bc)}</td></tr>`;
+  };
+  const cutoff = sorted[half - 1]?.bc ?? 0;
+
+  // ② 有沒有寫買進理由（以每一趟配對的買進那筆為準）
+  const grp = (label, l) => {
+    const bc = l.reduce((a, t) => a + t.buyCost, 0), pl = l.reduce((a, t) => a + t.realized, 0);
+    return `<tr><td>${label}</td><td>${l.length}</td><td>${money(pl)}</td><td>${pct(pl, bc)}</td></tr>`;
+  };
+  const withWhy = real.filter(t => (t.buyTx.why || '').trim());
+  const noWhy   = real.filter(t => !(t.buyTx.why || '').trim());
+
+  // ③ 進場月份：虧損常集中在某一段時間連續進場，按「買進」月份分組才看得出來
+  const months = {};
+  real.forEach(t => {
+    const m = t.buyTx.date.slice(0, 7);
+    (months[m] ||= { n: 0, pl: 0, bc: 0 });
+    months[m].n++; months[m].pl += t.realized; months[m].bc += t.buyCost;
+  });
+
+  // ④ 最大的幾筆
+  const top = [...byCode].sort((a, b) => a.pl - b.pl);
+  const worst = top.filter(x => x.pl < 0).slice(0, 3), best = top.reverse().filter(x => x.pl > 0).slice(0, 3);
+  const totalWin = wins.reduce((a, x) => a + x.pl, 0);
+
+  const orphanWarn = orphan.length ? `<div class="rv-warn">⚠️ 有 ${orphan.length} 筆賣出找不到對應的買進
+      （${orphan.map(t => `${esc(t.name)} ${esc(t.sellTx.date)} ${fmt(t.qty)} 股`).join('、')}），
+      可能是漏記買進或股數打錯。這部分<b>沒有算進下面的統計</b>，但上方總覽的已實現損益會把它當成本 0 計入而虛增，建議修正那筆紀錄。</div>` : '';
+
+  el.innerHTML = `${orphanWarn}
+    <div class="rv-grid">
+      <div class="sum-box"><div class="sum-lbl">勝率（以檔計）</div>
+        <div class="sum-val">${Math.round(wins.length / byCode.length * 100)}%</div>
+        <div class="sum-sub">賺 ${wins.length} ／ 賠 ${losses.length} ／ 共 ${byCode.length} 檔</div></div>
+      <div class="sum-box"><div class="sum-lbl">賺賠比</div>
+        <div class="sum-val">${ratio == null ? '—' : ratio.toFixed(2)}</div>
+        <div class="sum-sub">平均賺 ${fmt(avgW)} ／ 平均賠 ${fmt(-avgL)}</div></div>
+      <div class="sum-box"><div class="sum-lbl">平均持有天數</div>
+        <div class="sum-val" style="font-size:18px">賺 ${dW == null ? '—' : Math.round(dW)} ／ 賠 ${dL == null ? '—' : Math.round(dL)}</div>
+        <div class="sum-sub">${dW != null && dL != null
+          ? (dL > dW ? '賠錢的抱得比較久' : '賠錢的出得比較快') : '依買進成本加權'}</div></div>
+    </div>
+
+    <div class="rv-hint">勝率 × 賺賠比一起看：勝率 60% 但賺賠比 0.6，結果大約打平；勝率 40% 但賺賠比 2，反而是賺的。</div>
+
+    <div class="rv-sec"><h3>部位大小 vs 結果</h3>
+      <div class="rv-hint">依每檔投入的買進成本對半分。如果「大部位」的勝率明顯比較低，代表越有把握時下越重、結果反而越差。</div>
+      <table class="rv-tbl"><thead><tr><th>分組</th><th>檔數</th><th>勝率</th><th>損益</th><th>報酬率</th></tr></thead>
+      <tbody>${sizeRow(`大部位（≥ ${fmt(cutoff)}）`, sorted.slice(0, half))}${sizeRow('小部位', sorted.slice(half))}</tbody></table></div>
+
+    <div class="rv-sec"><h3>有沒有寫買進理由</h3>
+      <div class="rv-hint">以每一趟買賣的「買進」那筆為準。樣本少時參考就好，但沒寫理由的交易，往往也是想得比較少的交易。</div>
+      <table class="rv-tbl"><thead><tr><th>分組</th><th>筆數</th><th>損益</th><th>報酬率</th></tr></thead>
+      <tbody>${grp('有寫理由', withWhy)}${grp('沒寫理由', noWhy)}</tbody></table></div>
+
+    <div class="rv-sec"><h3>依進場月份</h3>
+      <div class="rv-hint">按「買進」的月份分組。如果虧損集中在某個月，通常是那段時間連續追進。</div>
+      <table class="rv-tbl"><thead><tr><th>買進月份</th><th>筆數</th><th>損益</th><th>報酬率</th></tr></thead>
+      <tbody>${Object.entries(months).sort().map(([m, v]) =>
+        `<tr><td>${m}</td><td>${v.n}</td><td>${money(v.pl)}</td><td>${pct(v.pl, v.bc)}</td></tr>`).join('')}</tbody></table></div>
+
+    <div class="rv-sec"><h3>影響最大的幾檔</h3>
+      <div class="rv-hint">${best.length && totalWin > 0
+        ? `最賺的 ${esc(best[0].name)} 佔全部獲利的 ${Math.round(best[0].pl / totalWin * 100)}%。` : ''}點上方「持股與交易」的已出清卡片可以看每一趟的細節。</div>
+      <table class="rv-tbl"><thead><tr><th>個股</th><th>投入</th><th>損益</th><th>報酬率</th><th>持有</th></tr></thead>
+      <tbody>${[...best, ...worst].map(x =>
+        `<tr><td>${esc(x.name)} <span style="color:var(--text3)">${esc(x.code)}</span></td>
+         <td>${fmt(x.bc)}</td><td>${money(x.pl)}</td><td>${pct(x.pl, x.bc)}</td><td>${Math.round(x.wd)} 天</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function renderHoldings() {
