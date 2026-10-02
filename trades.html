@@ -759,7 +759,9 @@ function renderSummary() {
   document.getElementById('summary').innerHTML = `
     <div class="sum-box"><div class="sum-lbl">持股市值</div>
       <div class="sum-val">${unit}${fmt(mv)}</div>
-      <div class="sum-sub">成本 ${unit}${fmt(cost)}</div></div>
+      <div class="sum-sub">成本 ${unit}${fmt(cost)}${cost > 0
+        ? ` <span class="${cls(unreal)}">${pct > 0 ? '↑' : pct < 0 ? '↓' : '→'} ${sign(pct)}${pct.toFixed(2)}%</span>`
+        : ''}</div></div>
     <div class="sum-box"><div class="sum-lbl">未實現損益</div>
       <div class="sum-val ${cls(unreal)}">${sign(unreal)}${fmt(unreal)}</div>
       <div class="sum-sub ${cls(unreal)}">${sign(pct)}${pct.toFixed(2)}%</div></div>
