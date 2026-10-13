@@ -44,6 +44,10 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .rv-tbl td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)}
 .rv-tbl th:first-child,.rv-tbl td:first-child{text-align:left;font-family:var(--font)}
 .rv-warn{font-size:12px;color:var(--yellow);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:6px;padding:8px 12px;margin-bottom:14px;line-height:1.6}
+.why-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.why-chip{font-size:12px;padding:3px 10px;border-radius:14px;cursor:pointer;background:var(--bg3);
+  border:1px solid var(--border2);color:var(--text2);font-family:var(--font)}
+.why-chip:hover{border-color:var(--purple);color:var(--text)}
 .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .sum-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
 .sum-lbl{font-size:11px;color:var(--text3);letter-spacing:.04em;margin-bottom:6px}
@@ -262,6 +266,7 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
       <div class="fld fld-wide">
         <label>買賣理由（這頁的重點，寫下當下的判斷）</label>
         <textarea id="f-why" placeholder="例：法說會展望優於預期，AI 伺服器訂單能見度到明年 Q2，股價回測季線不破就進場"></textarea>
+        <div class="why-presets" id="why-presets"></div>
       </div>
     </div>
     <div class="btn-row">
@@ -624,6 +629,32 @@ function holdingQty(code, excludeId) {
 // ══════════════════════════════════════════════════════
 //  Render
 // ══════════════════════════════════════════════════════
+/*
+ * 常用的買賣理由，點一下就填進去，不用每次手打。
+ * 要加新的直接往陣列後面加。
+ * 填入方式是「附加」而不是覆蓋：已經寫了別的理由時接在後面，
+ * 已經有同一句就不重複加。
+ */
+const WHY_PRESETS = ['低於集體法人最低目標價'];
+
+function renderWhyPresets() {
+  const el = document.getElementById('why-presets');
+  if (!el) return;
+  // 只用陣列索引當參數，文字本身不進 onclick（見檔案中段 XSS 的說明）
+  el.innerHTML = WHY_PRESETS.map((t, i) =>
+    `<button type="button" class="why-chip" onclick="addWhyPreset(${i})">＋ ${esc(t)}</button>`).join('');
+}
+
+function addWhyPreset(i) {
+  const t = WHY_PRESETS[i];
+  const ta = document.getElementById('f-why');
+  if (!t || !ta) return;
+  const cur = ta.value.trim();
+  if (cur.includes(t)) { ta.focus(); return; }
+  ta.value = cur ? `${cur}，${t}` : t;
+  ta.focus();
+}
+
 function renderAll() {
   renderSummary(); renderHoldings(); renderReview(); renderTx(); renderMarket();
 }
@@ -1465,6 +1496,7 @@ window.__priceLookup = code => priceOf(code);
   await load();
   await offerVaultMigration();          // 舊版加密資料一次性搬回本機
   offerCodeRepair();                    // 代號被打成公司名的舊紀錄
+  renderWhyPresets();
   cancelEdit();
   renderAll();
   await loadPrices();
