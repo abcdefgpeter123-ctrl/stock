@@ -44,6 +44,10 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 24px}
 .rv-tbl td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)}
 .rv-tbl th:first-child,.rv-tbl td:first-child{text-align:left;font-family:var(--font)}
 .rv-warn{font-size:12px;color:var(--yellow);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:6px;padding:8px 12px;margin-bottom:14px;line-height:1.6}
+.code-presets{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px}
+.code-presets:empty{display:none}
+.code-presets .lbl{font-size:12px;color:var(--text3);margin-right:2px}
+.why-chip .q{font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-left:4px}
 .why-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .why-chip{font-size:12px;padding:3px 10px;border-radius:14px;cursor:pointer;background:var(--bg3);
   border:1px solid var(--border2);color:var(--text2);font-family:var(--font)}
@@ -232,6 +236,8 @@ tbody tr.clickable:hover td{background:rgba(255,255,255,0.03)}
     <span class="sub" id="form-hint"></span>
   </div>
   <div class="card-bd">
+    <!-- 現有持股快選：點一下填入代號，加碼或賣出時不用再查代號 -->
+    <div class="code-presets" id="code-presets"></div>
     <div class="form-grid">
       <div class="fld">
         <label>買 / 賣</label>
@@ -655,7 +661,29 @@ function addWhyPreset(i) {
   ta.focus();
 }
 
+// 目前持有中的代號，給快選按鈕用（按市值大到小，常動的通常是大部位）
+let _codePresets = [];
+function renderCodePresets() {
+  const el = document.getElementById('code-presets');
+  if (!el) return;
+  _codePresets = Object.values(computeLots()).filter(p => p.qty > 0)
+    .sort((a, b) => (priceOf(b.code) || 0) * b.qty - (priceOf(a.code) || 0) * a.qty);
+  el.innerHTML = _codePresets.length
+    ? `<span class="lbl">現有持股：</span>` + _codePresets.map((p, i) =>
+        `<button type="button" class="why-chip" onclick="pickCode(${i})">${esc(p.name)}<span class="q">${esc(p.code)}·${fmt(p.qty)}股</span></button>`).join('')
+    : '';
+}
+function pickCode(i) {
+  const p = _codePresets[i];
+  const el = document.getElementById('f-code');
+  if (!p || !el) return;
+  el.value = p.code;
+  onCodeInput();
+  document.getElementById('f-qty')?.focus();
+}
+
 function renderAll() {
+  renderCodePresets();
   renderSummary(); renderHoldings(); renderReview(); renderTx(); renderMarket();
 }
 
