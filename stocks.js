@@ -24,7 +24,7 @@ window.STOCK_DATA = {
   {
    "code": "6789",
    "name": "采鈺",
-   "theme": "半導體封測"
+   "theme": "光學"
   },
   {
    "code": "2454",
@@ -189,6 +189,11 @@ window.STOCK_DATA = {
   {
    "code": "2059",
    "name": "川湖",
+   "theme": "伺服器機構件"
+  },
+  {
+   "code": "8210",
+   "name": "勤誠",
    "theme": "伺服器機構件"
   },
   {
@@ -435,7 +440,9 @@ window.STOCK_DATA = {
    "leaders": [
     "2059"
    ],
-   "members": []
+   "members": [
+    "8210"
+   ]
   },
   "液冷散熱": {
    "leaders": [
