@@ -99,6 +99,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .cheat-chip:hover{border-color:var(--purple);color:var(--text)}
 .cheat-chip .q{font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-left:3px}
 .cheat-chip.dim{opacity:.55}
+/* 專家評估基本面：10 位以上分析師＝粗框粗體（共識夠多，訊號份量重）；
+   低於最低目標的幅度 >10% 綠、>20% 黃（使用者指定，不沿用漲紅跌綠） */
+.cheat-chip.strong{border:2px solid var(--text2);font-weight:700;color:var(--text)}
+.cheat-chip .pct{font-weight:inherit}
+.cheat-chip .pct.p10{color:#22c55e}
+.cheat-chip .pct.p20{color:#fbbf24}
 .cheat-empty{font-size:11.5px;color:var(--text3);padding:4px 0;line-height:1.7}
 .cheat-ma{display:flex;flex-direction:column;gap:5px;margin-top:2px}
 .cheat-ma-row{display:flex;align-items:center;gap:8px;font-size:12px;font-family:var(--mono)}
@@ -976,6 +982,17 @@ function renderCheatSheet() {
     `<span class="cheat-chip${dim ? " dim" : ""}" onclick="toggleStockDetail('${code}','fav')">${name}` +
     (extra ? `<span class="q">${extra}</span>` : "") + `</span>`;
 
+  // 跌破最低目標的 chip：人數決定外框粗細、差距決定百分比顏色
+  const lowChip = i => {
+    const pct = i.diff < 1 ? i.diff.toFixed(1) : i.diff.toFixed(0);
+    // 用「畫面上顯示的數字」判斷顏色，否則 9.6% 會顯示成 +10% 卻不變綠、看起來像錯的
+    const shown = +pct;
+    const pc  = shown > 20 ? " p20" : shown > 10 ? " p10" : "";
+    const cls = (i.count >= 10 ? " strong" : "") + (i.count <= 1 ? " dim" : "");
+    return `<span class="cheat-chip${cls}" onclick="toggleStockDetail('${i.code}','fav')">${i.name}` +
+           `<span class="q"><span class="pct${pc}">+${pct}%</span>·${i.count}位</span></span>`;
+  };
+
   el.innerHTML = `
     <div class="cheat-card c1">
       <div class="cheat-hd">① 專家評估基本面</div>
@@ -985,9 +1002,10 @@ function renderCheatSheet() {
       ${belowLow.length
         ? `<div class="cheat-chips">${belowLow.map(i =>
              // 差距不到 1% 時 toFixed(0) 會印成「+0%」，看起來像沒差——與卡片同規則補到小數一位
-             chip(i.code, i.name, `+${i.diff < 1 ? i.diff.toFixed(1) : i.diff.toFixed(0)}%·${i.count}位`,
-                  i.count <= 1)).join("")}</div>
-           <div class="cheat-empty" style="margin-top:7px">淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
+             lowChip(i)).join("")}</div>
+           <div class="cheat-empty" style="margin-top:7px">粗框 = 10 位以上分析師；
+             差距 <span style="color:#22c55e">綠 &gt;10%</span>、<span style="color:#fbbf24">黃 &gt;20%</span>；
+             淡色 = 只有 1 位分析師，「最低」其實是「唯一」。</div>`
         : `<div class="cheat-empty">目前沒有個股跌破分析師的最低目標。</div>`}
     </div>
 
