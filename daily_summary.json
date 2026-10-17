@@ -1,9 +1,9 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-10-17T14:09:55.464Z",
+ "generated_at": "2026-10-17T14:18:25.629Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
-  "updated_at": "2026/10/16 23:07",
+  "updated_at": "2026/10/17 22:18",
   "prices_date": "2026/10/16",
   "market_summary": "今日加權指數小幅收紅 +0.30%，收 47,111 點（+141），外資賣超 461 億，三大法人合計賣超 685 億，籌碼略顯鬆動。 題材面以網通（+5.7%）、液冷散熱（+5.4%）、傳產（+3.5%）表現較強；光學（-3.1%）、光通訊（-2.9%）、矽晶圓（-2.3%）相對落後。 個股亮點為 奇鋐(3017) +7.5%、正文(4906) +9.9%，漲幅顯著。 整體走勢偏向盤堅，可逢低留意具題材支撐的個股機會。",
   "weekly_summary": "本週加權指數小幅波動，週收 47,111 點（+0.30%），方向不明朗。 題材面以海運（平均+14.2%）、傳產（平均+6.8%）、金融（平均+6.8%）表現最佳；光通訊（-14.8%）、ABF載板（-14.1%）相對落後。外資本週賣超 461 億。 本週個股亮點為台表科(6278)（+20.4%）、長榮(2603)（+14.2%）、台塑化(6505)（+10.9%）、中信金(2891)（+9.4%）、2884（+9.3%）；跌幅較深者有環球晶(6488)（-20.2%）、緯穎(6669)（-17.6%）、台達電(2308)（-16.8%）、南亞科(2408)（-15.9%）、光聖(6442)（-15.7%）。",
@@ -25,28 +25,23 @@
    "dealerPct": -3.36
   },
   "vix": {
-   "price": 15.84,
-   "chg": -0.62,
-   "chgP": -3.77
+   "price": 19.99,
+   "chg": 3.53,
+   "chgP": 21.45
   },
   "usdtwd": {
-   "price": 32.388,
-   "chg": 0.198,
-   "chgP": 0.62
+   "price": 32.428,
+   "chg": 0.101,
+   "chgP": 0.31
   },
   "margin": {
-   "balance_today": 9521231,
-   "balance_prev": 9467239,
-   "change_lots": 53992,
-   "change_pct": 0.57,
-   "date": "2026/10/16",
+   "balance_today": 9538664,
+   "balance_prev": 9521230,
+   "change_lots": 17434,
+   "change_pct": 0.18,
+   "date": "2026/10/17",
    "ratio": null,
    "history": [
-    {
-     "date": "2026/09/04",
-     "balance": 8902986,
-     "ratio": null
-    },
     {
      "date": "2026/09/07",
      "balance": 8919251,
@@ -190,6 +185,11 @@
     {
      "date": "2026/10/16",
      "balance": 9521231,
+     "ratio": null
+    },
+    {
+     "date": "2026/10/17",
+     "balance": 9538664,
      "ratio": null
     }
    ],
@@ -666,7 +666,7 @@
     {
      "code": "3037",
      "name": "欣興",
-     "upside": 16.5
+     "upside": 19.3
     },
     {
      "code": "3081",
@@ -941,13 +941,13 @@
     "name": "南亞科",
     "price": 447.5,
     "target_median": 660,
-    "target_mean": 625.5,
+    "target_mean": 615.1,
     "high": 850,
     "low": 150,
-    "analysts": 13,
+    "analysts": 14,
     "rating": "buy",
     "upside_pct": 47.5,
-    "mean_change": 4.6,
+    "mean_change": -10.4,
     "below_low": false
    },
    {
@@ -997,13 +997,13 @@
     "name": "台積電",
     "price": 2420,
     "target_median": 3300,
-    "target_mean": 3374.8,
+    "target_mean": 3386.7,
     "high": 5000,
     "low": 2650,
     "analysts": 35,
     "rating": "strong_buy",
     "upside_pct": 36.4,
-    "mean_change": 32.3,
+    "mean_change": 11.9,
     "below_low": true
    },
    {
@@ -1164,14 +1164,14 @@
     "code": "3037",
     "name": "欣興",
     "price": 1090,
-    "target_median": 1270,
-    "target_mean": 1296.3,
+    "target_median": 1300,
+    "target_mean": 1317.4,
     "high": 1775,
     "low": 900,
     "analysts": 19,
     "rating": "strong_buy",
-    "upside_pct": 16.5,
-    "mean_change": 2.6,
+    "upside_pct": 19.3,
+    "mean_change": 21.1,
     "below_low": false
    },
    {
@@ -1221,13 +1221,13 @@
     "name": "日月光投控",
     "price": 671,
     "target_median": 750,
-    "target_mean": 746.9,
+    "target_mean": 751.1,
     "high": 900,
     "low": 545,
     "analysts": 17,
     "rating": "strong_buy",
     "upside_pct": 11.8,
-    "mean_change": 5.8,
+    "mean_change": 4.2,
     "below_low": false
    },
    {
@@ -1351,7 +1351,7 @@
     "high": 1800,
     "low": 473,
     "analysts": 14,
-    "rating": "none",
+    "rating": "buy",
     "upside_pct": 8.4,
     "mean_change": -17.8,
     "below_low": false
