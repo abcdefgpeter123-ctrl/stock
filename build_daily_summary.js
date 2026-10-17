@@ -147,7 +147,7 @@ function buildTW(MarketStatus) {
       idxCloses,
       histories,
       prices,
-      groupCodes: watch.filter(s => ['AI伺服器ODM', '伺服器兼營廠'].includes(s.theme)).map(s => s.code),
+      groupCodes: watch.filter(s => MarketStatus.MARKETS.TW.groupThemes.includes(s.theme)).map(s => s.code),
       watchCodes: codes,
     });
     marketStatus = {

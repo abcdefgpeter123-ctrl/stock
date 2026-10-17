@@ -432,7 +432,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 
 <script src="freshness.js?v=2"></script>
 <script src="stocks.js?v=1"></script>
-<script src="market_status.js?v=4"></script>
+<script src="market_status.js?v=5"></script>
 <script>
 // ══════════════════════════════════════════════════════
 //  Constants & state
@@ -534,7 +534,7 @@ function computeAutoIndicators() {
     idxCloses: twiiHistory?.closes,
     histories,
     prices: priceData,
-    groupCodes: WATCH_STOCKS.filter(s => ['AI伺服器ODM','伺服器兼營廠'].includes(s.theme)).map(s => s.code),
+    groupCodes: WATCH_STOCKS.filter(s => MarketStatus.MARKETS.TW.groupThemes.includes(s.theme)).map(s => s.code),
     watchCodes: WATCH_STOCKS.map(s => s.code),
   });
 
@@ -560,7 +560,7 @@ function renderTrend() {
     idxLabels: twiiHistory.labels,
     histories,
     prices: priceData,
-    groupCodes: WATCH_STOCKS.filter(s => ['AI伺服器ODM','伺服器兼營廠'].includes(s.theme)).map(s => s.code),
+    groupCodes: WATCH_STOCKS.filter(s => MarketStatus.MARKETS.TW.groupThemes.includes(s.theme)).map(s => s.code),
     watchCodes: WATCH_STOCKS.map(s => s.code),
   }, 5);
   if (series.length < 2) { wrap.style.display = 'none'; return; }
