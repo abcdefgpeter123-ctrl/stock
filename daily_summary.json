@@ -1,6 +1,6 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-10-22T15:36:35.594Z",
+ "generated_at": "2026-10-23T01:22:08.681Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
   "updated_at": "2026/10/22 23:36",
@@ -3457,29 +3457,29 @@
   "warnings": []
  },
  "us": {
-  "updated_at": "2026/10/22 01:23",
-  "market_summary": "今日美股 S&P500 上漲 +0.58%，收 7,757 點（+45）；那斯達克 +1.05%，道瓊 +0.69%。VIX 16.7（-0.63），恐慌情緒緩解。 題材面以網路安全（+3.7%）、消費電子（+3.3%）、AI半導體（+2.1%）表現較強；串流媒體（-2.6%）、醫療科技（-1.6%）、雲端運算（-0.5%）相對落後。 個股表現分化，戴爾（+5.3%） 等強勢，Netflix（-5.3%） 等承壓。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
+  "updated_at": "2026/10/23 01:22",
+  "market_summary": "今日美股 S&P500 下跌 -1.21%，收 7,663 點（-94）；那斯達克 -2.60%，道瓊 +0.02%。VIX 19.0（+2.35），恐慌情緒升溫。 題材面以網路安全（+3.6%）、消費電子（+3.3%）、AI半導體（+2.1%）表現較強；串流媒體（-2.6%）、醫療科技（-1.6%）、雲端運算（-0.5%）相對落後。 個股表現分化，戴爾（+5.3%） 等強勢，Netflix（-5.3%） 等承壓。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
   "indices": {
    "sp500": {
-    "price": 7757.17,
-    "chg": 44.6,
-    "chgP": 0.58
+    "price": 7663.43,
+    "chg": -93.74,
+    "chgP": -1.21
    },
    "nasdaq": {
-    "price": 26702.86,
-    "chg": 278.04,
-    "chgP": 1.05
+    "price": 26008.86,
+    "chg": -694,
+    "chgP": -2.6
    },
    "dow": {
-    "price": 52856.09,
-    "chg": 360.21,
-    "chgP": 0.69
+    "price": 52867.98,
+    "chg": 11.89,
+    "chgP": 0.02
    }
   },
   "vix": {
-   "price": 16.68,
-   "chg": -0.63,
-   "chgP": -3.64
+   "price": 19.03,
+   "chg": 2.35,
+   "chgP": 14.09
   },
   "cheat_sheet": {
    "expert_below_low": {
@@ -3513,25 +3513,25 @@
    },
    "trust_megacaps": {
     "index": "NASDAQ 100 (^NDX)",
-    "price": 29822.5,
+    "price": 28958.7,
     "ma": [
      {
       "period": 5,
-      "ma": 29593,
-      "broken": false
+      "ma": 29397.7,
+      "broken": true
      },
      {
       "period": 10,
-      "ma": 30075.9,
+      "ma": 29899.2,
       "broken": true
      },
      {
       "period": 20,
-      "ma": 30382.1,
+      "ma": 30306.1,
       "broken": true
      }
     ],
-    "broken_count": 2
+    "broken_count": 3
    }
   },
   "analyst_targets": [
@@ -3580,17 +3580,6 @@
     "upside_pct": 48.1
    },
    {
-    "code": "NFLX",
-    "name": "Netflix",
-    "price": 65.04,
-    "target_mean": 86.24,
-    "high": 126,
-    "low": 57,
-    "analysts": 44,
-    "rating": "buy",
-    "upside_pct": 32.6
-   },
-   {
     "code": "ANET",
     "name": "Arista網路",
     "price": 184.33,
@@ -3602,15 +3591,26 @@
     "upside_pct": 32.1
    },
    {
+    "code": "NFLX",
+    "name": "Netflix",
+    "price": 65.04,
+    "target_mean": 85.07,
+    "high": 126,
+    "low": 57,
+    "analysts": 43,
+    "rating": "buy",
+    "upside_pct": 30.8
+   },
+   {
     "code": "GOOGL",
     "name": "Alphabet",
     "price": 334.76,
-    "target_mean": 430.33,
-    "high": 515,
+    "target_mean": 429.13,
+    "high": 500,
     "low": 340,
     "analysts": 54,
     "rating": "strong_buy",
-    "upside_pct": 28.5
+    "upside_pct": 28.2
    },
    {
     "code": "AMZN",
@@ -3646,6 +3646,17 @@
     "upside_pct": 21.2
    },
    {
+    "code": "META",
+    "name": "Meta",
+    "price": 697.52,
+    "target_mean": 833.13,
+    "high": 1050,
+    "low": 600,
+    "analysts": 58,
+    "rating": "strong_buy",
+    "upside_pct": 19.4
+   },
+   {
     "code": "CRM",
     "name": "Salesforce",
     "price": 241.78,
@@ -3655,17 +3666,6 @@
     "analysts": 54,
     "rating": "buy",
     "upside_pct": 18.3
-   },
-   {
-    "code": "META",
-    "name": "Meta",
-    "price": 697.52,
-    "target_mean": 817.87,
-    "high": 1050,
-    "low": 580,
-    "analysts": 58,
-    "rating": "strong_buy",
-    "upside_pct": 17.3
    },
    {
     "code": "SNAP",
@@ -3726,12 +3726,12 @@
     "code": "ISRG",
     "name": "直覺外科",
     "price": 428.12,
-    "target_mean": 480.17,
+    "target_mean": 480.13,
     "high": 685,
     "low": 324,
     "analysts": 30,
     "rating": "buy",
-    "upside_pct": 12.2
+    "upside_pct": 12.1
    },
    {
     "code": "COST",
@@ -3781,23 +3781,23 @@
     "code": "TSLA",
     "name": "特斯拉",
     "price": 386.47,
-    "target_mean": 397.83,
+    "target_mean": 401.4,
     "high": 600,
     "low": 128.11,
-    "analysts": 38,
+    "analysts": 37,
     "rating": "buy",
-    "upside_pct": 2.9
+    "upside_pct": 3.9
    },
    {
     "code": "CRWD",
     "name": "CrowdStrike",
     "price": 239.34,
-    "target_mean": 246.15,
+    "target_mean": 246.65,
     "high": 325,
     "low": 132,
     "analysts": 50,
     "rating": "buy",
-    "upside_pct": 2.8
+    "upside_pct": 3.1
    },
    {
     "code": "NOW",
