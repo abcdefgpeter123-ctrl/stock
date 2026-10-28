@@ -1,6 +1,6 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-10-27T16:02:55.739Z",
+ "generated_at": "2026-10-28T02:06:07.322Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
   "updated_at": "2026/10/28 00:02",
@@ -3210,29 +3210,29 @@
   "warnings": []
  },
  "us": {
-  "updated_at": "2026/10/27 01:57",
-  "market_summary": "今日美股 S&P500 上漲 +0.70%，收 7,677 點（+53）；那斯達克 +0.82%，道瓊 +0.28%。VIX 18.4（-1.06），恐慌情緒緩解。 題材面以AI半導體（+2.7%）、網路安全（+2.1%）、電動車（+0.9%）表現較強；串流媒體（-2.4%）、企業軟體（-1.0%）、社群媒體（-0.9%）相對落後。 個股亮點為 特斯拉（+5.2%），漲幅顯著。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
+  "updated_at": "2026/10/28 02:06",
+  "market_summary": "今日美股 S&P500 上漲 +0.60%，收 7,723 點（+46）；那斯達克 +1.18%，道瓊 +0.03%。VIX 17.5（-0.87），恐慌情緒緩解。 題材面以消費電子（+4.2%）、AI半導體（+3.7%）、電動車（+3.7%）表現較強；企業軟體（-3.0%）、社群媒體（-2.9%）、串流媒體（-1.2%）相對落後。 個股亮點為 戴爾（+7.5%）、超微（+5.5%），漲幅顯著。 整體走勢偏向盤整，可逢低留意具題材支撐的個股機會。",
   "indices": {
    "sp500": {
-    "price": 7676.77,
-    "chg": 53.09,
-    "chgP": 0.7
+    "price": 7722.6,
+    "chg": 45.83,
+    "chgP": 0.6
    },
    "nasdaq": {
-    "price": 26169.38,
-    "chg": 214.04,
-    "chgP": 0.82
+    "price": 26477.81,
+    "chg": 308.43,
+    "chgP": 1.18
    },
    "dow": {
-    "price": 52361.58,
-    "chg": 146.42,
-    "chgP": 0.28
+    "price": 52377.57,
+    "chg": 15.99,
+    "chgP": 0.03
    }
   },
   "vix": {
-   "price": 18.39,
-   "chg": -1.06,
-   "chgP": -5.45
+   "price": 17.52,
+   "chg": -0.87,
+   "chgP": -4.73
   },
   "cheat_sheet": {
    "expert_below_low": {
@@ -3241,346 +3241,346 @@
      {
       "code": "GOOGL",
       "name": "Alphabet",
-      "price": 316.8,
+      "price": 320.58,
       "low": 340,
       "analysts": 54,
-      "gap_pct": 7.3
+      "gap_pct": 6.1
+     },
+     {
+      "code": "META",
+      "name": "Meta",
+      "price": 620.19,
+      "low": 629.06,
+      "analysts": 58,
+      "gap_pct": 1.4
      },
      {
       "code": "ANET",
       "name": "Arista網路",
-      "price": 177.24,
+      "price": 187,
       "low": 190,
       "analysts": 29,
-      "gap_pct": 7.2
-     },
-     {
-      "code": "DELL",
-      "name": "戴爾",
-      "price": 467.09,
-      "low": 480,
-      "analysts": 25,
-      "gap_pct": 2.8
+      "gap_pct": 1.6
      },
      {
       "code": "RIVN",
       "name": "Rivian",
-      "price": 11.43,
+      "price": 11.82,
       "low": 13,
       "analysts": 25,
-      "gap_pct": 13.7
+      "gap_pct": 10
      }
     ]
    },
    "trust_megacaps": {
     "index": "NASDAQ 100 (^NDX)",
-    "price": 29273.4,
+    "price": 29651.4,
     "ma": [
      {
       "period": 5,
-      "ma": 29300.5,
-      "broken": true
+      "ma": 29332.7,
+      "broken": false
      },
      {
       "period": 10,
-      "ma": 29567.5,
-      "broken": true
+      "ma": 29475.7,
+      "broken": false
      },
      {
       "period": 20,
-      "ma": 30173.4,
+      "ma": 30139,
       "broken": true
      }
     ],
-    "broken_count": 3
+    "broken_count": 1
    }
   },
   "analyst_targets": [
    {
     "code": "MU",
     "name": "美光",
-    "price": 903.7,
+    "price": 928.76,
     "target_mean": 1561.91,
     "high": 3000,
     "low": 361,
     "analysts": 45,
     "rating": "strong_buy",
-    "upside_pct": 72.8
+    "upside_pct": 68.2
    },
    {
     "code": "RIVN",
     "name": "Rivian",
-    "price": 11.43,
+    "price": 11.82,
     "target_mean": 19,
     "high": 25,
     "low": 13,
     "analysts": 25,
     "rating": "hold",
-    "upside_pct": 66.2
+    "upside_pct": 60.7
    },
    {
     "code": "AVGO",
     "name": "博通",
-    "price": 329.17,
-    "target_mean": 529.1,
+    "price": 342.33,
+    "target_mean": 530.14,
     "high": 660,
     "low": 215.88,
     "analysts": 48,
     "rating": "strong_buy",
-    "upside_pct": 60.7
+    "upside_pct": 54.9
    },
    {
     "code": "NVDA",
     "name": "輝達",
-    "price": 216,
+    "price": 217.94,
     "target_mean": 328.95,
     "high": 515,
     "low": 180,
     "analysts": 58,
     "rating": "strong_buy",
-    "upside_pct": 52.3
+    "upside_pct": 50.9
    },
    {
-    "code": "ANET",
-    "name": "Arista網路",
-    "price": 177.24,
-    "target_mean": 243.59,
-    "high": 290,
-    "low": 190,
-    "analysts": 29,
+    "code": "META",
+    "name": "Meta",
+    "price": 620.19,
+    "target_mean": 846.79,
+    "high": 1050,
+    "low": 629.06,
+    "analysts": 58,
     "rating": "strong_buy",
-    "upside_pct": 37.4
+    "upside_pct": 36.5
+   },
+   {
+    "code": "NFLX",
+    "name": "Netflix",
+    "price": 62.52,
+    "target_mean": 84.76,
+    "high": 126,
+    "low": 57,
+    "analysts": 43,
+    "rating": "buy",
+    "upside_pct": 35.6
    },
    {
     "code": "GOOGL",
     "name": "Alphabet",
-    "price": 316.8,
+    "price": 320.58,
     "target_mean": 429.12,
     "high": 500,
     "low": 340,
     "analysts": 54,
     "rating": "strong_buy",
-    "upside_pct": 35.5
-   },
-   {
-    "code": "META",
-    "name": "Meta",
-    "price": 630.56,
-    "target_mean": 845.5,
-    "high": 1050,
-    "low": 629.06,
-    "analysts": 58,
-    "rating": "strong_buy",
-    "upside_pct": 34.1
+    "upside_pct": 33.9
    },
    {
     "code": "AMZN",
     "name": "亞馬遜",
-    "price": 249.09,
+    "price": 253.1,
     "target_mean": 332.24,
     "high": 405,
     "low": 230,
     "analysts": 58,
     "rating": "strong_buy",
-    "upside_pct": 33.4
+    "upside_pct": 31.3
    },
    {
-    "code": "NFLX",
-    "name": "Netflix",
-    "price": 63.9,
-    "target_mean": 84.79,
-    "high": 126,
-    "low": 57,
-    "analysts": 43,
-    "rating": "buy",
-    "upside_pct": 32.7
-   },
-   {
-    "code": "DELL",
-    "name": "戴爾",
-    "price": 467.09,
-    "target_mean": 593,
-    "high": 735,
-    "low": 480,
-    "analysts": 25,
-    "rating": "buy",
-    "upside_pct": 27
-   },
-   {
-    "code": "AMD",
-    "name": "超微",
-    "price": 531.28,
-    "target_mean": 637.61,
-    "high": 1250,
-    "low": 365,
-    "analysts": 50,
+    "code": "ANET",
+    "name": "Arista網路",
+    "price": 187,
+    "target_mean": 243.59,
+    "high": 290,
+    "low": 190,
+    "analysts": 29,
     "rating": "strong_buy",
-    "upside_pct": 20
+    "upside_pct": 30.3
    },
    {
     "code": "INTU",
     "name": "Intuit",
-    "price": 339.89,
+    "price": 328.45,
     "target_mean": 407.76,
     "high": 732,
     "low": 290,
     "analysts": 31,
     "rating": "buy",
-    "upside_pct": 20
+    "upside_pct": 24.1
    },
    {
     "code": "SNAP",
     "name": "Snap",
-    "price": 6.34,
+    "price": 6.08,
     "target_mean": 7.44,
     "high": 16,
     "low": 5,
     "analysts": 35,
     "rating": "hold",
-    "upside_pct": 17.4
+    "upside_pct": 22.4
    },
    {
     "code": "CRM",
     "name": "Salesforce",
-    "price": 247.61,
+    "price": 240.89,
     "target_mean": 287.08,
     "high": 475,
     "low": 165,
     "analysts": 53,
     "rating": "buy",
-    "upside_pct": 15.9
+    "upside_pct": 19.2
+   },
+   {
+    "code": "DELL",
+    "name": "戴爾",
+    "price": 501.96,
+    "target_mean": 595,
+    "high": 735,
+    "low": 490,
+    "analysts": 25,
+    "rating": "buy",
+    "upside_pct": 18.5
    },
    {
     "code": "DIS",
     "name": "迪士尼",
-    "price": 110.4,
+    "price": 110.23,
     "target_mean": 126.58,
     "high": 144,
     "low": 86,
     "analysts": 32,
     "rating": "strong_buy",
-    "upside_pct": 14.7
+    "upside_pct": 14.8
    },
    {
     "code": "MSFT",
     "name": "微軟",
-    "price": 532.6,
-    "target_mean": 603.43,
+    "price": 531.33,
+    "target_mean": 605.12,
     "high": 870,
     "low": 440,
     "analysts": 53,
     "rating": "strong_buy",
-    "upside_pct": 13.3
+    "upside_pct": 13.9
    },
    {
-    "code": "COST",
-    "name": "好市多",
-    "price": 1005.16,
-    "target_mean": 1067.59,
-    "high": 1315,
-    "low": 770,
-    "analysts": 37,
-    "rating": "buy",
-    "upside_pct": 6.2
-   },
-   {
-    "code": "ISRG",
-    "name": "直覺外科",
-    "price": 451.63,
-    "target_mean": 478.3,
-    "high": 685,
-    "low": 324,
-    "analysts": 30,
-    "rating": "buy",
-    "upside_pct": 5.9
-   },
-   {
-    "code": "V",
-    "name": "Visa",
-    "price": 404.16,
-    "target_mean": 426.82,
-    "high": 480,
-    "low": 330,
-    "analysts": 37,
+    "code": "AMD",
+    "name": "超微",
+    "price": 560.26,
+    "target_mean": 637.61,
+    "high": 1250,
+    "low": 365,
+    "analysts": 50,
     "rating": "strong_buy",
-    "upside_pct": 5.6
+    "upside_pct": 13.8
    },
    {
     "code": "ADBE",
     "name": "Adobe",
-    "price": 258.62,
+    "price": 248.36,
     "target_mean": 272.31,
     "high": 373,
     "low": 195,
     "analysts": 32,
     "rating": "hold",
-    "upside_pct": 5.3
+    "upside_pct": 9.6
    },
    {
-    "code": "TSLA",
-    "name": "特斯拉",
-    "price": 391.62,
-    "target_mean": 409.27,
-    "high": 600,
-    "low": 128.11,
-    "analysts": 39,
+    "code": "ISRG",
+    "name": "直覺外科",
+    "price": 445.88,
+    "target_mean": 482.63,
+    "high": 685,
+    "low": 324,
+    "analysts": 30,
     "rating": "buy",
-    "upside_pct": 4.5
+    "upside_pct": 8.2
+   },
+   {
+    "code": "COST",
+    "name": "好市多",
+    "price": 992.13,
+    "target_mean": 1067.59,
+    "high": 1315,
+    "low": 770,
+    "analysts": 37,
+    "rating": "buy",
+    "upside_pct": 7.6
+   },
+   {
+    "code": "V",
+    "name": "Visa",
+    "price": 401.86,
+    "target_mean": 426.82,
+    "high": 480,
+    "low": 330,
+    "analysts": 37,
+    "rating": "strong_buy",
+    "upside_pct": 6.2
    },
    {
     "code": "LLY",
     "name": "禮來",
-    "price": 1279.14,
+    "price": 1281.91,
     "target_mean": 1333.72,
     "high": 1600,
     "low": 930,
     "analysts": 30,
     "rating": "buy",
-    "upside_pct": 4.3
-   },
-   {
-    "code": "PANW",
-    "name": "Palo Alto",
-    "price": 390.46,
-    "target_mean": 398.52,
-    "high": 525,
-    "low": 190,
-    "analysts": 50,
-    "rating": "buy",
-    "upside_pct": 2.1
+    "upside_pct": 4
    },
    {
     "code": "NOW",
     "name": "ServiceNow",
-    "price": 158.18,
+    "price": 154.78,
     "target_mean": 156.54,
     "high": 266,
     "low": 72,
     "analysts": 46,
     "rating": "strong_buy",
-    "upside_pct": -1
+    "upside_pct": 1.1
+   },
+   {
+    "code": "TSLA",
+    "name": "特斯拉",
+    "price": 407.46,
+    "target_mean": 410.68,
+    "high": 600,
+    "low": 128.11,
+    "analysts": 39,
+    "rating": "buy",
+    "upside_pct": 0.8
+   },
+   {
+    "code": "PANW",
+    "name": "Palo Alto",
+    "price": 401.7,
+    "target_mean": 398.52,
+    "high": 525,
+    "low": 190,
+    "analysts": 50,
+    "rating": "buy",
+    "upside_pct": -0.8
    },
    {
     "code": "AAPL",
     "name": "蘋果",
-    "price": 343.91,
-    "target_mean": 329.25,
+    "price": 347.1,
+    "target_mean": 330.02,
     "high": 405,
     "low": 240,
     "analysts": 39,
     "rating": "buy",
-    "upside_pct": -4.3
+    "upside_pct": -4.9
    },
    {
     "code": "CRWD",
     "name": "CrowdStrike",
-    "price": 261.83,
+    "price": 268.02,
     "target_mean": 247.25,
     "high": 325,
     "low": 132,
     "analysts": 50,
     "rating": "buy",
-    "upside_pct": -5.6
+    "upside_pct": -7.7
    }
   ]
  }
