@@ -1,52 +1,47 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-10-29T02:16:15.972Z",
+ "generated_at": "2026-10-29T17:09:18.187Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
-  "updated_at": "2026/10/29 00:54",
-  "prices_date": "2026/10/28",
-  "market_summary": "今日加權指數大漲 +2.04%，收 47,036 點（+939），外資買超 160 億，三大法人合計買超 325 億，資金動能偏多。 題材面以記憶體（+13.3%）、化合物半導體（+11.1%）、被動元件（+6.3%）表現較強；電信（-1.8%）、航空（-0.4%）、傳產（+0.0%）相對落後。 個股亮點為 聯發科(2454) +5.6%、世芯-KY(3661) +8.7%，漲幅顯著。 法人買盤持續，短線多方氣氛偏強，可留意強勢族群續漲機會。",
-  "weekly_summary": "本週加權指數收漲 +2.04%，收 47,036 點，多方氣氛延續。 題材面以半導體（平均+5.9%）、金融（平均+4.2%）、被動元件（平均+3.5%）表現最佳；網通（-7.9%）、伺服器電源（-1.8%）相對落後。外資本週買超 160 億。 本週個股亮點為精材(3374)（+16.8%）、穩懋(3105)（+13.7%）、南亞科(2408)（+13.0%）、華邦電(2344)（+12.8%）、信昌電(6173)（+11.8%）；跌幅較深者有智邦(2345)（-7.9%）、禾伸堂(3026)（-5.4%）、崇越(5434)（-4.2%）、健策(3653)（-4.1%）、鴻勁(7769)（-3.5%）。",
+  "updated_at": "2026/10/30 01:09",
+  "prices_date": "2026/10/29",
+  "market_summary": "今日加權指數下跌 -1.42%，收 46,368 點（-667），外資賣超 688 億，三大法人合計賣超 833 億，籌碼略顯鬆動。 題材面以化合物半導體（+21.0%）、記憶體（+6.4%）、被動元件（+6.3%）表現較強；光學（-3.1%）、晶圓代工（-2.7%）、伺服器兼營廠（-2.7%）相對落後。 個股表現分化，世芯-KY(3661) +5.3% 等強勢，聯電(2303) -5.7% 等承壓。 整體走勢偏向盤堅，可逢低留意具題材支撐的個股機會。",
+  "weekly_summary": "本週加權指數收跌 -1.42%，收 46,368 點，市場偏弱整理。 題材面以金融（平均+2.0%）、海運（平均+1.4%）、半導體（平均+0.1%）表現最佳；光通訊（-7.5%）、伺服器電源（-6.7%）相對落後。外資本週賣超 688 億。 本週個股亮點為穩懋(3105)（+16.0%）、景碩(3189)（+9.5%）、南亞科(2408)（+9.3%）、信驊(5274)（+8.8%）、威剛(3260)（+8.3%）；跌幅較深者有光聖(6442)（-13.0%）、台塑化(6505)（-10.0%）、聯電(2303)（-9.8%）、合晶科技(6182)（-9.5%）、台達電(2308)（-8.9%）。",
   "index": {
-   "price": 47035.58,
-   "chg": 939.35,
-   "chgP": 2.04,
+   "price": 46368.33,
+   "chg": -667.25,
+   "chgP": -1.42,
    "vol": 0,
-   "date": "2026/10/28"
+   "date": "2026/10/29"
   },
   "institutional": {
-   "foreign": 15956619788,
-   "trust": 14319652303,
-   "dealer": 2165284983,
-   "date": "2026/10/28",
-   "turnover": 750340536882,
-   "foreignPct": 2.13,
-   "trustPct": 1.91,
-   "dealerPct": 0.29
+   "foreign": -68815276510,
+   "trust": 7044302296,
+   "dealer": -21500018913,
+   "date": "2026/10/29",
+   "turnover": 823812748529,
+   "foreignPct": -8.35,
+   "trustPct": 0.86,
+   "dealerPct": -2.61
   },
   "vix": {
-   "price": 17.33,
-   "chg": -0.19,
-   "chgP": -1.08
+   "price": 16.29,
+   "chg": -0.62,
+   "chgP": -3.67
   },
   "usdtwd": {
-   "price": 32.419,
-   "chg": -0.116,
-   "chgP": -0.36
+   "price": 32.535,
+   "chg": 0.11,
+   "chgP": 0.34
   },
   "margin": {
-   "balance_today": 9550611,
-   "balance_prev": 9604399,
-   "change_lots": -53788,
-   "change_pct": -0.56,
-   "date": "2026/10/28",
-   "ratio": null,
+   "balance_today": 9550911,
+   "balance_prev": 9550611,
+   "change_lots": 300,
+   "change_pct": 0,
+   "date": "2026/10/29",
+   "ratio": 0,
    "history": [
-    {
-     "date": "2026/09/18",
-     "balance": 9262322,
-     "ratio": null
-    },
     {
      "date": "2026/09/21",
      "balance": 9279815,
@@ -191,21 +186,27 @@
      "date": "2026/10/28",
      "balance": 9550611,
      "ratio": null
+    },
+    {
+     "date": "2026/10/29",
+     "balance": 9550911,
+     "ratio": 0
     }
    ],
    "ratios": [
     170.6,
     162.9,
     38.6,
-    3.7
+    3.7,
+    0
    ]
   },
   "market_status": {
-   "score": 3.7,
-   "raw_score": 2,
+   "score": 3.3,
+   "raw_score": 4.5,
    "max": 10,
-   "label": "橫盤",
-   "desc": "縮小範圍，保持耐心觀望",
+   "label": "小熊",
+   "desc": "建立觀察名單，準備下一波",
    "chop_warning": null,
    "indicators": [
     {
@@ -219,7 +220,7 @@
      "id": "idx_60ma",
      "name": "加權指數站上 60MA",
      "weight": 2,
-     "ok": false,
+     "ok": true,
      "hint": "中期趨勢核心"
     },
     {
@@ -253,7 +254,7 @@
      "id": "idx_5ma",
      "name": "加權指數站上 5MA",
      "weight": 0.5,
-     "ok": false,
+     "ok": true,
      "hint": "短期動能，權重低（單日大漲就會翻正）"
     },
     {
@@ -266,216 +267,195 @@
    ]
   },
   "movers": {
-   "2327": {
-    "name": "國巨",
-    "changeP": 7.89,
-    "reason": "今日大漲 +7.9%，近30日已跌4% / 外資近5日賣超 634.2 億"
+   "2303": {
+    "name": "聯電",
+    "changeP": -5.71,
+    "reason": "今日大跌 -5.7%，近30日已跌18% / 外資近5日賣超 12755.4 億 / 下跌趨勢留意支撐"
    },
-   "2344": {
-    "name": "華邦電",
-    "changeP": 11.33,
-    "reason": "今日大漲 +11.3%，近30日已跌4% / 外資近5日買超 5827.8 億"
-   },
-   "2356": {
-    "name": "英業達",
-    "changeP": 5.45,
-    "reason": "今日大漲 +5.5%，近30日已漲2% / 外資近5日買超 4391.2 億"
+   "2383": {
+    "name": "台光電",
+    "changeP": 5.47,
+    "reason": "今日大漲 +5.5%，近30日已跌7% / 外資近5日賣超 153.6 億"
    },
    "2408": {
     "name": "南亞科",
-    "changeP": 15.22,
-    "reason": "今日大漲 +15.2%，近30日已跌7% / 外資近5日買超 1535.2 億"
-   },
-   "2449": {
-    "name": "京元電",
-    "changeP": 5.71,
-    "reason": "今日大漲 +5.7%，近30日已漲2% / 外資近5日賣超 575.0 億"
-   },
-   "2454": {
-    "name": "聯發科",
-    "changeP": 5.61,
-    "reason": "今日大漲 +5.6%，近30日已跌10% / 外資近5日賣超 718.7 億"
+    "changeP": 8.16,
+    "reason": "今日大漲 +8.2%，近30日已跌3% / 外資近5日買超 2494.9 億"
    },
    "2492": {
     "name": "華新科",
-    "changeP": 8.15,
-    "reason": "今日大漲 +8.2%，近30日已漲19% / 外資近5日賣超 1261.6 億"
-   },
-   "3026": {
-    "name": "禾伸堂",
-    "changeP": 6.37,
-    "reason": "今日大漲 +6.4%，近30日已跌6% / 外資近5日買超 191.8 億"
-   },
-   "3081": {
-    "name": "聯亞",
-    "changeP": 8.63,
-    "reason": "今日大漲 +8.6%，近30日已跌9% / 外資近5日賣超 19.6 億"
-   },
-   "3090": {
-    "name": "日電貿",
-    "changeP": 6.54,
-    "reason": "今日大漲 +6.5%，近30日已跌5% / 外資近5日賣超 17.5 億"
+    "changeP": 13.56,
+    "reason": "今日大漲 +13.6%，近30日已漲36% / 外資近5日賣超 532.8 億 / 留意高位追漲風險"
    },
    "3105": {
     "name": "穩懋",
-    "changeP": 11.11,
-    "reason": "今日大漲 +11.1%，近30日已漲17% / 外資近5日買超 1138.5 億"
+    "changeP": 20.98,
+    "reason": "今日大漲 +21.0%，近30日已漲36% / 外資近5日買超 2901.8 億 / 留意高位追漲風險"
    },
    "3374": {
     "name": "精材",
-    "changeP": 7.87,
-    "reason": "今日大漲 +7.9%，近30日已漲2% / 外資近5日買超 581.0 億"
-   },
-   "3443": {
-    "name": "創意",
-    "changeP": 7.71,
-    "reason": "今日大漲 +7.7%，近30日已漲31% / 外資近5日買超 4.5 億 / 留意高位追漲風險"
+    "changeP": 5.18,
+    "reason": "今日大漲 +5.2%，近30日已漲5% / 外資近5日買超 446.2 億"
    },
    "3653": {
     "name": "健策",
-    "changeP": 5.02,
-    "reason": "今日大漲 +5.0%，近30日已漲10% / 外資近5日買超 45.7 億"
+    "changeP": 9.3,
+    "reason": "今日大漲 +9.3%，近30日已漲11% / 外資近5日買超 2.0 億"
    },
    "3661": {
     "name": "世芯-KY",
-    "changeP": 8.73,
-    "reason": "今日大漲 +8.7%，近30日已跌6% / 外資近5日買超 29.2 億"
-   },
-   "3711": {
-    "name": "日月光投控",
-    "changeP": 6.27,
-    "reason": "今日大漲 +6.3%，近30日已漲7% / 外資近5日賣超 1250.3 億"
+    "changeP": 5.29,
+    "reason": "今日大漲 +5.3%，近30日已漲1% / 外資近5日買超 14.5 億"
    },
    "6239": {
     "name": "力成",
-    "changeP": 9.88,
-    "reason": "今日大漲 +9.9%，近30日已跌4% / 外資近5日買超 450.1 億"
+    "changeP": 6.29,
+    "reason": "今日大漲 +6.3%，近30日已跌1% / 外資近5日買超 525.7 億"
    },
-   "6669": {
-    "name": "緯穎",
-    "changeP": 5.98,
-    "reason": "今日大漲 +6.0%，近30日已跌17% / 外資近5日買超 258.7 億"
+   "6442": {
+    "name": "光聖",
+    "changeP": -5.43,
+    "reason": "今日大跌 -5.4%，近30日已跌22% / 外資近5日賣超 70.3 億 / 下跌趨勢留意支撐"
+   },
+   "6505": {
+    "name": "台塑化",
+    "changeP": -6.98,
+    "reason": "今日大跌 -7.0%，近30日已漲18% / 外資近5日買超 3668.8 億"
+   },
+   "8996": {
+    "name": "高力",
+    "changeP": 5.46,
+    "reason": "今日大漲 +5.5%，近30日已漲16% / 外資近5日賣超 62.2 億"
    }
   },
   "cheat_sheet": {
    "expert_below_low": {
-    "count": 19,
+    "count": 20,
     "stocks": [
      {
       "code": "2330",
       "name": "台積電",
-      "price": 2425,
+      "price": 2415,
       "low": 2700,
       "analysts": 35,
-      "gap_pct": 11.3,
+      "gap_pct": 11.8,
       "only_one_analyst": false
      },
      {
       "code": "2317",
       "name": "鴻海",
-      "price": 251.5,
+      "price": 248,
       "low": 260,
       "analysts": 20,
-      "gap_pct": 3.4,
+      "gap_pct": 4.8,
       "only_one_analyst": false
      },
      {
       "code": "6669",
       "name": "緯穎",
-      "price": 1950,
+      "price": 1885,
       "low": 2263,
       "analysts": 19,
-      "gap_pct": 16.1,
+      "gap_pct": 20.1,
       "only_one_analyst": false
      },
      {
       "code": "2383",
       "name": "台光電",
-      "price": 5025,
+      "price": 5010,
       "low": 6000,
       "analysts": 18,
-      "gap_pct": 19.4,
+      "gap_pct": 19.8,
       "only_one_analyst": false
      },
      {
       "code": "3017",
       "name": "奇鋐",
-      "price": 3215,
+      "price": 3105,
       "low": 3327,
       "analysts": 17,
-      "gap_pct": 3.5,
+      "gap_pct": 7.1,
       "only_one_analyst": false
      },
      {
       "code": "2449",
       "name": "京元電",
-      "price": 277.5,
+      "price": 269.5,
       "low": 300,
       "analysts": 16,
-      "gap_pct": 8.1,
+      "gap_pct": 11.3,
+      "only_one_analyst": false
+     },
+     {
+      "code": "3661",
+      "name": "世芯-KY",
+      "price": 3680,
+      "low": 3755,
+      "analysts": 16,
+      "gap_pct": 2,
       "only_one_analyst": false
      },
      {
       "code": "2327",
       "name": "國巨",
-      "price": 547,
+      "price": 543,
       "low": 600,
       "analysts": 15,
-      "gap_pct": 9.7,
+      "gap_pct": 10.5,
       "only_one_analyst": false
      },
      {
       "code": "2345",
       "name": "智邦",
-      "price": 1815,
+      "price": 1755,
       "low": 2380,
       "analysts": 14,
-      "gap_pct": 31.1,
+      "gap_pct": 35.6,
       "only_one_analyst": false
      },
      {
       "code": "6223",
       "name": "旺矽",
-      "price": 5115,
+      "price": 4840,
       "low": 5350,
       "analysts": 14,
-      "gap_pct": 4.6,
+      "gap_pct": 10.5,
       "only_one_analyst": false
      },
      {
       "code": "2059",
       "name": "川湖",
-      "price": 10150,
+      "price": 9880,
       "low": 12000,
       "analysts": 13,
-      "gap_pct": 18.2,
+      "gap_pct": 21.5,
       "only_one_analyst": false
      },
      {
       "code": "2301",
       "name": "光寶科",
-      "price": 261.5,
+      "price": 252,
       "low": 265,
       "analysts": 12,
-      "gap_pct": 1.3,
+      "gap_pct": 5.2,
       "only_one_analyst": false
      },
      {
       "code": "8210",
       "name": "勤誠",
-      "price": 781,
+      "price": 756,
       "low": 950,
       "analysts": 11,
-      "gap_pct": 21.6,
+      "gap_pct": 25.7,
       "only_one_analyst": false
      },
      {
       "code": "2344",
       "name": "華邦電",
-      "price": 172,
+      "price": 170.5,
       "low": 200,
       "analysts": 8,
-      "gap_pct": 16.3,
+      "gap_pct": 17.3,
       "only_one_analyst": false
      },
      {
@@ -490,67 +470,67 @@
      {
       "code": "2609",
       "name": "陽明",
-      "price": 62.9,
+      "price": 62,
       "low": 65,
       "analysts": 5,
-      "gap_pct": 3.3,
+      "gap_pct": 4.8,
       "only_one_analyst": false
      },
      {
       "code": "3583",
       "name": "辛耘",
-      "price": 615,
+      "price": 597,
       "low": 1100,
       "analysts": 3,
-      "gap_pct": 78.9,
+      "gap_pct": 84.3,
       "only_one_analyst": false
      },
      {
       "code": "2404",
       "name": "漢唐",
-      "price": 1100,
+      "price": 1105,
       "low": 1690,
       "analysts": 2,
-      "gap_pct": 53.6,
+      "gap_pct": 52.9,
       "only_one_analyst": false
      },
      {
       "code": "2492",
       "name": "華新科",
-      "price": 398,
+      "price": 423,
       "low": 480,
       "analysts": 1,
-      "gap_pct": 20.6,
+      "gap_pct": 13.5,
       "only_one_analyst": true
      },
      {
       "code": "6442",
       "name": "光聖",
-      "price": 1405,
+      "price": 1305,
       "low": 3333,
       "analysts": 1,
-      "gap_pct": 137.2,
+      "gap_pct": 155.4,
       "only_one_analyst": true
      }
     ],
     "note": "現價低於全體分析師最低目標；only_one_analyst 為真時「最低」其實是「唯一」，訊號份量較輕"
    },
    "trust_tsmc": {
-    "price": 2425,
+    "price": 2415,
     "ma": [
      {
       "period": 5,
-      "ma": 2403,
+      "ma": 2402,
       "broken": false
      },
      {
       "period": 10,
-      "ma": 2419,
+      "ma": 2411.5,
       "broken": false
      },
      {
       "period": 20,
-      "ma": 2474,
+      "ma": 2471,
       "broken": true
      }
     ],
@@ -567,89 +547,94 @@
   "opportunity_venn": {
    "only_target_upside": [
     {
+     "code": "1301",
+     "name": "台塑",
+     "upside": 1.5
+    },
+    {
      "code": "2002",
      "name": "中鋼",
-     "upside": 8.9
+     "upside": 10.5
     },
     {
      "code": "2059",
      "name": "川湖",
-     "upside": 47.8
+     "upside": 51.8
     },
     {
      "code": "2301",
      "name": "光寶科",
-     "upside": 13.8
+     "upside": 18.1
     },
     {
      "code": "2303",
      "name": "聯電",
-     "upside": 5.5
+     "upside": 16.9
     },
     {
      "code": "2308",
      "name": "台達電",
-     "upside": 61.3
+     "upside": 68.9
     },
     {
      "code": "2317",
      "name": "鴻海",
-     "upside": 34.6
+     "upside": 36.5
     },
     {
      "code": "2324",
      "name": "仁寶",
-     "upside": 5.4
+     "upside": 9.1
     },
     {
      "code": "2327",
      "name": "國巨",
-     "upside": 77.3
+     "upside": 78.6
     },
     {
      "code": "2330",
      "name": "台積電",
-     "upside": 36.1
+     "upside": 36.6
     },
     {
      "code": "2344",
      "name": "華邦電",
-     "upside": 32.3
+     "upside": 33.4
     },
     {
      "code": "2345",
      "name": "智邦",
-     "upside": 92.8
+     "upside": 99.4
     },
     {
      "code": "2356",
      "name": "英業達",
-     "upside": 1.9
+     "upside": 5.9
     },
     {
      "code": "2357",
      "name": "華碩",
-     "upside": 11.3
+     "upside": 15.8
     },
     {
      "code": "2376",
      "name": "技嘉",
-     "upside": 35.2
+     "upside": 42.9
     },
     {
      "code": "2382",
      "name": "廣達",
-     "upside": 30.3
+     "upside": 35.2
     },
     {
      "code": "2383",
      "name": "台光電",
-     "upside": 59.2
+     "upside": 61.8
     },
     {
      "code": "2404",
      "name": "漢唐",
-     "upside": 59.8
+     "upside": 59
     },
     {
      "code": "2408",
@@ -659,32 +644,32 @@
     {
      "code": "2449",
      "name": "京元電",
-     "upside": 23.8
+     "upside": 27.5
     },
     {
      "code": "2454",
      "name": "聯發科",
-     "upside": 36.8
+     "upside": 43.3
     },
     {
      "code": "2455",
      "name": "全新",
-     "upside": 21.6
+     "upside": 28.6
     },
     {
      "code": "2492",
      "name": "華新科",
-     "upside": 20.6
+     "upside": 13.5
     },
     {
      "code": "2603",
      "name": "長榮",
-     "upside": 3.2
+     "upside": 4
     },
     {
      "code": "2609",
      "name": "陽明",
-     "upside": 11.3
+     "upside": 12.9
     },
     {
      "code": "2610",
@@ -694,112 +679,112 @@
     {
      "code": "2618",
      "name": "長榮航",
-     "upside": 13.2
+     "upside": 12.3
     },
     {
      "code": "2882",
      "name": "國泰金",
-     "upside": 10
+     "upside": 9.1
     },
     {
      "code": "3008",
      "name": "大立光",
-     "upside": 26.3
+     "upside": 37.6
     },
     {
      "code": "3017",
      "name": "奇鋐",
-     "upside": 35
+     "upside": 39.8
     },
     {
      "code": "3037",
      "name": "欣興",
-     "upside": 27.3
+     "upside": 34.6
     },
     {
      "code": "3081",
      "name": "聯亞",
-     "upside": 32.7
+     "upside": 32.9
     },
     {
      "code": "3231",
      "name": "緯創",
-     "upside": 42.7
+     "upside": 47.2
     },
     {
      "code": "3481",
      "name": "群創",
-     "upside": 23.8
+     "upside": 30.4
     },
     {
      "code": "3583",
      "name": "辛耘",
-     "upside": 78.9
+     "upside": 84.3
     },
     {
      "code": "3653",
      "name": "健策",
-     "upside": 14.5
+     "upside": 14
     },
     {
      "code": "3661",
      "name": "世芯-KY",
-     "upside": 56.4
+     "upside": 61.5
     },
     {
      "code": "3711",
      "name": "日月光投控",
-     "upside": 10.1
+     "upside": 12
     },
     {
      "code": "5347",
      "name": "世界先進",
-     "upside": 13.7
+     "upside": 21.7
     },
     {
      "code": "6223",
      "name": "旺矽",
-     "upside": 60.5
+     "upside": 69.6
     },
     {
      "code": "6239",
      "name": "力成",
-     "upside": 13.8
+     "upside": 18.3
     },
     {
      "code": "6442",
      "name": "光聖",
-     "upside": 137.2
+     "upside": 155.4
     },
     {
      "code": "6488",
      "name": "環球晶",
-     "upside": 15.1
+     "upside": 20.1
     },
     {
      "code": "6505",
      "name": "台塑化",
-     "upside": 16.5
+     "upside": 21.7
     },
     {
      "code": "6669",
      "name": "緯穎",
-     "upside": 39.3
+     "upside": 44.1
     },
     {
      "code": "6789",
      "name": "采鈺",
-     "upside": 7.4
+     "upside": 9.5
     },
     {
      "code": "8210",
      "name": "勤誠",
-     "upside": 70.9
+     "upside": 76.6
     },
     {
      "code": "8996",
      "name": "高力",
-     "upside": 23
+     "upside": 26.2
     }
    ],
    "only_theme_lag": [],
@@ -810,183 +795,225 @@
    {
     "code": "6442",
     "name": "光聖",
-    "price": 1405,
+    "price": 1305,
     "target_median": 3333,
     "target_mean": 3333,
     "high": 3333,
     "low": 3333,
     "analysts": 1,
     "rating": "none",
-    "upside_pct": 137.2,
+    "upside_pct": 155.4,
     "mean_change": 0,
     "below_low": true
    },
    {
     "code": "2345",
     "name": "智邦",
-    "price": 1815,
+    "price": 1755,
     "target_median": 3500,
     "target_mean": 3273.9,
     "high": 3700,
     "low": 2380,
     "analysts": 14,
     "rating": "strong_buy",
-    "upside_pct": 92.8,
+    "upside_pct": 99.4,
     "mean_change": 92.3,
     "below_low": true
    },
    {
     "code": "3583",
     "name": "辛耘",
-    "price": 615,
+    "price": 597,
     "target_median": 1100,
     "target_mean": 1196.7,
     "high": 1390,
     "low": 1100,
     "analysts": 3,
     "rating": "none",
-    "upside_pct": 78.9,
+    "upside_pct": 84.3,
     "mean_change": 49.2,
     "below_low": true
    },
    {
     "code": "2327",
     "name": "國巨",
-    "price": 547,
+    "price": 543,
     "target_median": 970,
     "target_mean": 1014.8,
     "high": 1450,
     "low": 600,
     "analysts": 15,
     "rating": "strong_buy",
-    "upside_pct": 77.3,
+    "upside_pct": 78.6,
     "mean_change": -0.5,
     "below_low": true
    },
    {
     "code": "8210",
     "name": "勤誠",
-    "price": 781,
+    "price": 756,
     "target_median": 1335,
     "target_mean": 1364.1,
     "high": 1723.4,
     "low": 950,
     "analysts": 11,
     "rating": "buy",
-    "upside_pct": 70.9,
+    "upside_pct": 76.6,
     "mean_change": 0,
     "below_low": true
    },
    {
-    "code": "2308",
-    "name": "台達電",
-    "price": 1550,
-    "target_median": 2500,
-    "target_mean": 2500.1,
-    "high": 4120,
-    "low": 1330,
-    "analysts": 22,
-    "rating": "strong_buy",
-    "upside_pct": 61.3,
-    "mean_change": -2.3,
-    "below_low": false
-   },
-   {
     "code": "6223",
     "name": "旺矽",
-    "price": 5115,
+    "price": 4840,
     "target_median": 8207.5,
     "target_mean": 8423.2,
     "high": 12000,
     "low": 5350,
     "analysts": 14,
     "rating": "strong_buy",
-    "upside_pct": 60.5,
+    "upside_pct": 69.6,
     "mean_change": -236.4,
     "below_low": true
    },
    {
-    "code": "2404",
-    "name": "漢唐",
-    "price": 1100,
-    "target_median": 1757.5,
-    "target_mean": 1757.5,
-    "high": 1825,
-    "low": 1690,
-    "analysts": 2,
-    "rating": "none",
-    "upside_pct": 59.8,
-    "mean_change": -20,
-    "below_low": true
+    "code": "2308",
+    "name": "台達電",
+    "price": 1480,
+    "target_median": 2500,
+    "target_mean": 2500.1,
+    "high": 4120,
+    "low": 1330,
+    "analysts": 22,
+    "rating": "strong_buy",
+    "upside_pct": 68.9,
+    "mean_change": -2.3,
+    "below_low": false
    },
    {
     "code": "2383",
     "name": "台光電",
-    "price": 5025,
-    "target_median": 7997.5,
-    "target_mean": 7802.8,
-    "high": 10200,
+    "price": 5010,
+    "target_median": 8107.5,
+    "target_mean": 8269.4,
+    "high": 11700,
     "low": 6000,
     "analysts": 18,
     "rating": "strong_buy",
-    "upside_pct": 59.2,
-    "mean_change": 98.1,
+    "upside_pct": 61.8,
+    "mean_change": 466.6,
     "below_low": true
    },
    {
     "code": "3661",
     "name": "世芯-KY",
-    "price": 3800,
+    "price": 3680,
     "target_median": 5944,
     "target_mean": 5803.2,
     "high": 6800,
     "low": 3755,
     "analysts": 16,
     "rating": "strong_buy",
-    "upside_pct": 56.4,
+    "upside_pct": 61.5,
     "mean_change": 31.2,
-    "below_low": false
+    "below_low": true
+   },
+   {
+    "code": "2404",
+    "name": "漢唐",
+    "price": 1105,
+    "target_median": 1757.5,
+    "target_mean": 1757.5,
+    "high": 1825,
+    "low": 1690,
+    "analysts": 2,
+    "rating": "none",
+    "upside_pct": 59,
+    "mean_change": -20,
+    "below_low": true
    },
    {
     "code": "2059",
     "name": "川湖",
-    "price": 10150,
+    "price": 9880,
     "target_median": 15000,
     "target_mean": 15132.5,
     "high": 18360,
     "low": 12000,
     "analysts": 13,
     "rating": "none",
-    "upside_pct": 47.8,
+    "upside_pct": 51.8,
     "mean_change": 235.3,
     "below_low": true
    },
    {
     "code": "3231",
     "name": "緯創",
-    "price": 194.5,
+    "price": 188.5,
     "target_median": 277.5,
     "target_mean": 276.3,
     "high": 400,
     "low": 188,
     "analysts": 16,
     "rating": "strong_buy",
-    "upside_pct": 42.7,
+    "upside_pct": 47.2,
     "mean_change": -0.3,
     "below_low": false
    },
    {
     "code": "6669",
     "name": "緯穎",
-    "price": 1950,
+    "price": 1885,
     "target_median": 2715.6,
     "target_mean": 2845.7,
     "high": 4000,
     "low": 2263,
     "analysts": 19,
     "rating": "strong_buy",
-    "upside_pct": 39.3,
+    "upside_pct": 44.1,
     "mean_change": 24.9,
+    "below_low": true
+   },
+   {
+    "code": "2454",
+    "name": "聯發科",
+    "price": 4045,
+    "target_median": 5795,
+    "target_mean": 6025.2,
+    "high": 10369,
+    "low": 4000,
+    "analysts": 26,
+    "rating": "strong_buy",
+    "upside_pct": 43.3,
+    "mean_change": -7.6,
+    "below_low": false
+   },
+   {
+    "code": "2376",
+    "name": "技嘉",
+    "price": 343,
+    "target_median": 490,
+    "target_mean": 475.5,
+    "high": 595,
+    "low": 340,
+    "analysts": 11,
+    "rating": "buy",
+    "upside_pct": 42.9,
+    "mean_change": 0.5,
+    "below_low": false
+   },
+   {
+    "code": "3017",
+    "name": "奇鋐",
+    "price": 3105,
+    "target_median": 4340,
+    "target_mean": 4213.5,
+    "high": 5200,
+    "low": 3327,
+    "analysts": 17,
+    "rating": "strong_buy",
+    "upside_pct": 39.8,
+    "mean_change": 13.1,
     "below_low": true
    },
    {
@@ -1004,115 +1031,129 @@
     "below_low": false
    },
    {
-    "code": "2454",
-    "name": "聯發科",
-    "price": 4235,
-    "target_median": 5795,
-    "target_mean": 6025.2,
-    "high": 10369,
-    "low": 4000,
-    "analysts": 26,
-    "rating": "strong_buy",
-    "upside_pct": 36.8,
-    "mean_change": -7.6,
+    "code": "3008",
+    "name": "大立光",
+    "price": 5815,
+    "target_median": 8000,
+    "target_mean": 7293.5,
+    "high": 11830,
+    "low": 3250,
+    "analysts": 19,
+    "rating": "buy",
+    "upside_pct": 37.6,
+    "mean_change": 126.3,
     "below_low": false
    },
    {
     "code": "2330",
     "name": "台積電",
-    "price": 2425,
+    "price": 2415,
     "target_median": 3300,
     "target_mean": 3394.7,
     "high": 5000,
     "low": 2700,
     "analysts": 35,
     "rating": "strong_buy",
-    "upside_pct": 36.1,
+    "upside_pct": 36.6,
     "mean_change": 4.3,
-    "below_low": true
-   },
-   {
-    "code": "2376",
-    "name": "技嘉",
-    "price": 362.5,
-    "target_median": 490,
-    "target_mean": 475.5,
-    "high": 595,
-    "low": 340,
-    "analysts": 11,
-    "rating": "buy",
-    "upside_pct": 35.2,
-    "mean_change": 0.5,
-    "below_low": false
-   },
-   {
-    "code": "3017",
-    "name": "奇鋐",
-    "price": 3215,
-    "target_median": 4340,
-    "target_mean": 4213.5,
-    "high": 5200,
-    "low": 3327,
-    "analysts": 17,
-    "rating": "strong_buy",
-    "upside_pct": 35,
-    "mean_change": 13.1,
     "below_low": true
    },
    {
     "code": "2317",
     "name": "鴻海",
-    "price": 251.5,
+    "price": 248,
     "target_median": 338.5,
     "target_mean": 347.4,
     "high": 435,
     "low": 260,
     "analysts": 20,
     "rating": "buy",
-    "upside_pct": 34.6,
+    "upside_pct": 36.5,
     "mean_change": -0.5,
-    "below_low": true
-   },
-   {
-    "code": "3081",
-    "name": "聯亞",
-    "price": 2580,
-    "target_median": 3422.5,
-    "target_mean": 3142.2,
-    "high": 4500,
-    "low": 900,
-    "analysts": 10,
-    "rating": "buy",
-    "upside_pct": 32.7,
-    "mean_change": 5.8,
-    "below_low": false
-   },
-   {
-    "code": "2344",
-    "name": "華邦電",
-    "price": 172,
-    "target_median": 227.5,
-    "target_mean": 245.4,
-    "high": 360,
-    "low": 200,
-    "analysts": 8,
-    "rating": "none",
-    "upside_pct": 32.3,
-    "mean_change": -2.2,
     "below_low": true
    },
    {
     "code": "2382",
     "name": "廣達",
-    "price": 330,
+    "price": 318,
     "target_median": 430,
     "target_mean": 430,
     "high": 626,
     "low": 290,
     "analysts": 19,
     "rating": "buy",
-    "upside_pct": 30.3,
+    "upside_pct": 35.2,
     "mean_change": 2.1,
+    "below_low": false
+   },
+   {
+    "code": "3037",
+    "name": "欣興",
+    "price": 1040,
+    "target_median": 1400,
+    "target_mean": 1411.6,
+    "high": 1820,
+    "low": 900,
+    "analysts": 19,
+    "rating": "strong_buy",
+    "upside_pct": 34.6,
+    "mean_change": 40.3,
+    "below_low": false
+   },
+   {
+    "code": "2344",
+    "name": "華邦電",
+    "price": 170.5,
+    "target_median": 227.5,
+    "target_mean": 245.4,
+    "high": 360,
+    "low": 200,
+    "analysts": 8,
+    "rating": "none",
+    "upside_pct": 33.4,
+    "mean_change": -2.2,
+    "below_low": true
+   },
+   {
+    "code": "3081",
+    "name": "聯亞",
+    "price": 2575,
+    "target_median": 3422.5,
+    "target_mean": 3142.2,
+    "high": 4500,
+    "low": 900,
+    "analysts": 10,
+    "rating": "buy",
+    "upside_pct": 32.9,
+    "mean_change": 5.8,
+    "below_low": false
+   },
+   {
+    "code": "3481",
+    "name": "群創",
+    "price": 46,
+    "target_median": 60,
+    "target_mean": 55.9,
+    "high": 85.3,
+    "low": 26,
+    "analysts": 5,
+    "rating": "none",
+    "upside_pct": 30.4,
+    "mean_change": 7.6,
+    "below_low": false
+   },
+   {
+    "code": "2455",
+    "name": "全新",
+    "price": 484,
+    "target_median": 622.5,
+    "target_mean": 572.5,
+    "high": 846,
+    "low": 268,
+    "analysts": 10,
+    "rating": "none",
+    "upside_pct": 28.6,
+    "mean_change": 22,
     "below_low": false
    },
    {
@@ -1130,534 +1171,478 @@
     "below_low": true
    },
    {
-    "code": "3037",
-    "name": "欣興",
-    "price": 1100,
-    "target_median": 1400,
-    "target_mean": 1371.3,
-    "high": 1820,
-    "low": 900,
-    "analysts": 19,
-    "rating": "strong_buy",
-    "upside_pct": 27.3,
-    "mean_change": 23.4,
-    "below_low": false
-   },
-   {
-    "code": "3008",
-    "name": "大立光",
-    "price": 6335,
-    "target_median": 8000,
-    "target_mean": 7293.5,
-    "high": 11830,
-    "low": 3250,
-    "analysts": 19,
-    "rating": "buy",
-    "upside_pct": 26.3,
-    "mean_change": 126.3,
-    "below_low": false
-   },
-   {
     "code": "2449",
     "name": "京元電",
-    "price": 277.5,
+    "price": 269.5,
     "target_median": 343.5,
     "target_mean": 347,
     "high": 423,
     "low": 300,
     "analysts": 16,
     "rating": "strong_buy",
-    "upside_pct": 23.8,
+    "upside_pct": 27.5,
     "mean_change": 0.8,
     "below_low": true
    },
    {
-    "code": "3481",
-    "name": "群創",
-    "price": 48.45,
-    "target_median": 60,
-    "target_mean": 55.9,
-    "high": 85.3,
-    "low": 26,
-    "analysts": 5,
-    "rating": "none",
-    "upside_pct": 23.8,
-    "mean_change": 7.6,
-    "below_low": false
-   },
-   {
     "code": "8996",
     "name": "高力",
-    "price": 1585,
+    "price": 1545,
     "target_median": 1950,
     "target_mean": 1881.4,
     "high": 2710,
     "low": 1320,
     "analysts": 7,
     "rating": "none",
-    "upside_pct": 23,
+    "upside_pct": 26.2,
     "mean_change": 58.5,
-    "below_low": false
-   },
-   {
-    "code": "2455",
-    "name": "全新",
-    "price": 512,
-    "target_median": 622.5,
-    "target_mean": 572.5,
-    "high": 846,
-    "low": 268,
-    "analysts": 10,
-    "rating": "none",
-    "upside_pct": 21.6,
-    "mean_change": 22,
-    "below_low": false
-   },
-   {
-    "code": "2492",
-    "name": "華新科",
-    "price": 398,
-    "target_median": 480,
-    "target_mean": 480,
-    "high": 480,
-    "low": 480,
-    "analysts": 1,
-    "rating": "none",
-    "upside_pct": 20.6,
-    "mean_change": 0,
-    "below_low": true
-   },
-   {
-    "code": "6505",
-    "name": "台塑化",
-    "price": 103,
-    "target_median": 120,
-    "target_mean": 114,
-    "high": 160,
-    "low": 46,
-    "analysts": 6,
-    "rating": "buy",
-    "upside_pct": 16.5,
-    "mean_change": 5.8,
-    "below_low": false
-   },
-   {
-    "code": "6488",
-    "name": "環球晶",
-    "price": 849,
-    "target_median": 977.5,
-    "target_mean": 1039.3,
-    "high": 1800,
-    "low": 473,
-    "analysts": 14,
-    "rating": "buy",
-    "upside_pct": 15.1,
-    "mean_change": -17.8,
-    "below_low": false
-   },
-   {
-    "code": "3653",
-    "name": "健策",
-    "price": 6375,
-    "target_median": 7300,
-    "target_mean": 7204.1,
-    "high": 10000,
-    "low": 4500,
-    "analysts": 11,
-    "rating": "none",
-    "upside_pct": 14.5,
-    "mean_change": 239.6,
-    "below_low": false
-   },
-   {
-    "code": "2301",
-    "name": "光寶科",
-    "price": 261.5,
-    "target_median": 297.5,
-    "target_mean": 314.2,
-    "high": 400,
-    "low": 265,
-    "analysts": 12,
-    "rating": "none",
-    "upside_pct": 13.8,
-    "mean_change": 11.5,
-    "below_low": true
-   },
-   {
-    "code": "6239",
-    "name": "力成",
-    "price": 272.5,
-    "target_median": 310,
-    "target_mean": 334.7,
-    "high": 500,
-    "low": 265,
-    "analysts": 9,
-    "rating": "buy",
-    "upside_pct": 13.8,
-    "mean_change": -3.3,
     "below_low": false
    },
    {
     "code": "5347",
     "name": "世界先進",
-    "price": 167.5,
+    "price": 156.5,
     "target_median": 190.5,
     "target_mean": 189.6,
     "high": 250,
     "low": 89,
     "analysts": 18,
     "rating": "buy",
-    "upside_pct": 13.7,
+    "upside_pct": 21.7,
     "mean_change": 4.1,
     "below_low": false
    },
    {
-    "code": "2618",
-    "name": "長榮航",
-    "price": 42.4,
-    "target_median": 48,
-    "target_mean": 47.2,
-    "high": 52,
-    "low": 36,
-    "analysts": 8,
+    "code": "6505",
+    "name": "台塑化",
+    "price": 98.6,
+    "target_median": 120,
+    "target_mean": 114,
+    "high": 160,
+    "low": 46,
+    "analysts": 6,
     "rating": "buy",
-    "upside_pct": 13.2,
-    "mean_change": 0.4,
+    "upside_pct": 21.7,
+    "mean_change": 5.8,
     "below_low": false
    },
    {
-    "code": "2357",
-    "name": "華碩",
-    "price": 988,
-    "target_median": 1100,
-    "target_mean": 1053.3,
-    "high": 1320,
-    "low": 700,
-    "analysts": 12,
+    "code": "6488",
+    "name": "環球晶",
+    "price": 814,
+    "target_median": 977.5,
+    "target_mean": 1039.3,
+    "high": 1800,
+    "low": 473,
+    "analysts": 14,
     "rating": "buy",
-    "upside_pct": 11.3,
-    "mean_change": 2.5,
+    "upside_pct": 20.1,
+    "mean_change": -17.8,
     "below_low": false
    },
    {
-    "code": "2609",
-    "name": "陽明",
-    "price": 62.9,
-    "target_median": 70,
-    "target_mean": 68.6,
-    "high": 73,
-    "low": 65,
-    "analysts": 5,
-    "rating": "buy",
-    "upside_pct": 11.3,
-    "mean_change": -0.6,
-    "below_low": true
-   },
-   {
-    "code": "3711",
-    "name": "日月光投控",
-    "price": 695,
-    "target_median": 765,
-    "target_mean": 761.8,
-    "high": 900,
-    "low": 545,
-    "analysts": 18,
-    "rating": "strong_buy",
-    "upside_pct": 10.1,
-    "mean_change": 4.4,
-    "below_low": false
-   },
-   {
-    "code": "2882",
-    "name": "國泰金",
-    "price": 115.5,
-    "target_median": 127.1,
-    "target_mean": 120,
-    "high": 130,
-    "low": 84,
-    "analysts": 10,
-    "rating": "buy",
-    "upside_pct": 10,
-    "mean_change": 1.2,
-    "below_low": false
-   },
-   {
-    "code": "2002",
-    "name": "中鋼",
-    "price": 19.75,
-    "target_median": 21.5,
-    "target_mean": 20.6,
-    "high": 23,
-    "low": 15.7,
-    "analysts": 9,
-    "rating": "none",
-    "upside_pct": 8.9,
-    "mean_change": 0.3,
-    "below_low": false
-   },
-   {
-    "code": "6789",
-    "name": "采鈺",
-    "price": 447,
-    "target_median": 480,
-    "target_mean": 440,
+    "code": "6239",
+    "name": "力成",
+    "price": 270.5,
+    "target_median": 320,
+    "target_mean": 338,
     "high": 500,
-    "low": 300,
-    "analysts": 4,
-    "rating": "none",
-    "upside_pct": 7.4,
-    "mean_change": 20,
+    "low": 265,
+    "analysts": 9,
+    "rating": "buy",
+    "upside_pct": 18.3,
+    "mean_change": 3.3,
     "below_low": false
+   },
+   {
+    "code": "2301",
+    "name": "光寶科",
+    "price": 252,
+    "target_median": 297.5,
+    "target_mean": 314.2,
+    "high": 400,
+    "low": 265,
+    "analysts": 12,
+    "rating": "none",
+    "upside_pct": 18.1,
+    "mean_change": 11.5,
+    "below_low": true
    },
    {
     "code": "2303",
     "name": "聯電",
-    "price": 128,
+    "price": 115.5,
     "target_median": 135,
     "target_mean": 143.3,
     "high": 258,
     "low": 41,
     "analysts": 25,
     "rating": "buy",
-    "upside_pct": 5.5,
+    "upside_pct": 16.9,
     "mean_change": -2.4,
+    "below_low": false
+   },
+   {
+    "code": "2357",
+    "name": "華碩",
+    "price": 950,
+    "target_median": 1100,
+    "target_mean": 1053.3,
+    "high": 1320,
+    "low": 700,
+    "analysts": 12,
+    "rating": "buy",
+    "upside_pct": 15.8,
+    "mean_change": 2.5,
+    "below_low": false
+   },
+   {
+    "code": "3653",
+    "name": "健策",
+    "price": 6405,
+    "target_median": 7300,
+    "target_mean": 7204.1,
+    "high": 10000,
+    "low": 4500,
+    "analysts": 11,
+    "rating": "none",
+    "upside_pct": 14,
+    "mean_change": 239.6,
+    "below_low": false
+   },
+   {
+    "code": "2492",
+    "name": "華新科",
+    "price": 423,
+    "target_median": 480,
+    "target_mean": 480,
+    "high": 480,
+    "low": 480,
+    "analysts": 1,
+    "rating": "none",
+    "upside_pct": 13.5,
+    "mean_change": 0,
+    "below_low": true
+   },
+   {
+    "code": "2609",
+    "name": "陽明",
+    "price": 62,
+    "target_median": 70,
+    "target_mean": 68.6,
+    "high": 73,
+    "low": 65,
+    "analysts": 5,
+    "rating": "buy",
+    "upside_pct": 12.9,
+    "mean_change": -0.6,
+    "below_low": true
+   },
+   {
+    "code": "2618",
+    "name": "長榮航",
+    "price": 42.75,
+    "target_median": 48,
+    "target_mean": 47.2,
+    "high": 52,
+    "low": 36,
+    "analysts": 8,
+    "rating": "buy",
+    "upside_pct": 12.3,
+    "mean_change": 0.4,
+    "below_low": false
+   },
+   {
+    "code": "3711",
+    "name": "日月光投控",
+    "price": 683,
+    "target_median": 765,
+    "target_mean": 761.8,
+    "high": 900,
+    "low": 545,
+    "analysts": 18,
+    "rating": "strong_buy",
+    "upside_pct": 12,
+    "mean_change": 4.4,
+    "below_low": false
+   },
+   {
+    "code": "2002",
+    "name": "中鋼",
+    "price": 19.45,
+    "target_median": 21.5,
+    "target_mean": 20.6,
+    "high": 23,
+    "low": 15.7,
+    "analysts": 9,
+    "rating": "none",
+    "upside_pct": 10.5,
+    "mean_change": 0.3,
+    "below_low": false
+   },
+   {
+    "code": "6789",
+    "name": "采鈺",
+    "price": 438.5,
+    "target_median": 480,
+    "target_mean": 440,
+    "high": 500,
+    "low": 300,
+    "analysts": 4,
+    "rating": "none",
+    "upside_pct": 9.5,
+    "mean_change": 20,
     "below_low": false
    },
    {
     "code": "2324",
     "name": "仁寶",
-    "price": 37.95,
+    "price": 36.65,
     "target_median": 40,
     "target_mean": 39.8,
     "high": 55,
     "low": 23,
     "analysts": 11,
     "rating": "hold",
-    "upside_pct": 5.4,
+    "upside_pct": 9.1,
     "mean_change": 0.4,
     "below_low": false
    },
    {
-    "code": "2603",
-    "name": "長榮",
-    "price": 263,
-    "target_median": 271.5,
-    "target_mean": 271.6,
-    "high": 332,
-    "low": 190,
+    "code": "2882",
+    "name": "國泰金",
+    "price": 116.5,
+    "target_median": 127.1,
+    "target_mean": 120,
+    "high": 130,
+    "low": 84,
     "analysts": 10,
     "rating": "buy",
-    "upside_pct": 3.2,
-    "mean_change": 3.7,
+    "upside_pct": 9.1,
+    "mean_change": 1.2,
     "below_low": false
    },
    {
     "code": "2356",
     "name": "英業達",
-    "price": 63.8,
+    "price": 61.4,
     "target_median": 65,
     "target_mean": 67.1,
     "high": 77,
     "low": 58,
     "analysts": 9,
     "rating": "hold",
-    "upside_pct": 1.9,
+    "upside_pct": 5.9,
     "mean_change": 0.6,
     "below_low": false
    },
    {
-    "code": "2891",
-    "name": "中信金",
-    "price": 74.2,
-    "target_median": 74,
-    "target_mean": 72.6,
-    "high": 79.4,
-    "low": 63.5,
-    "analysts": 11,
-    "rating": "strong_buy",
-    "upside_pct": -0.3,
-    "mean_change": 0.6,
+    "code": "2603",
+    "name": "長榮",
+    "price": 261,
+    "target_median": 271.5,
+    "target_mean": 271.6,
+    "high": 332,
+    "low": 190,
+    "analysts": 10,
+    "rating": "buy",
+    "upside_pct": 4,
+    "mean_change": 3.7,
     "below_low": false
    },
    {
     "code": "1301",
     "name": "台塑",
-    "price": 75.4,
+    "price": 73.9,
     "target_median": 75,
     "target_mean": 72.4,
     "high": 91,
     "low": 32,
     "analysts": 7,
     "rating": "buy",
-    "upside_pct": -0.5,
+    "upside_pct": 1.5,
     "mean_change": 3.1,
+    "below_low": false
+   },
+   {
+    "code": "2891",
+    "name": "中信金",
+    "price": 75.3,
+    "target_median": 74,
+    "target_mean": 72.6,
+    "high": 79.4,
+    "low": 63.5,
+    "analysts": 11,
+    "rating": "strong_buy",
+    "upside_pct": -1.7,
+    "mean_change": 0.6,
     "below_low": false
    },
    {
     "code": "1101",
     "name": "台泥",
-    "price": 28,
+    "price": 28.2,
     "target_median": 27.5,
     "target_mean": 28,
     "high": 29,
     "low": 27.5,
     "analysts": 3,
     "rating": "none",
-    "upside_pct": -1.8,
+    "upside_pct": -2.5,
     "mean_change": 2.9,
     "below_low": false
    },
    {
     "code": "4904",
     "name": "遠傳",
-    "price": 112,
+    "price": 113,
     "target_median": 108.5,
     "target_mean": 107,
     "high": 120,
     "low": 91,
     "analysts": 4,
     "rating": "none",
-    "upside_pct": -3.1,
+    "upside_pct": -4,
     "mean_change": 2.5,
-    "below_low": false
-   },
-   {
-    "code": "2379",
-    "name": "瑞昱",
-    "price": 791,
-    "target_median": 730,
-    "target_mean": 730.5,
-    "high": 950,
-    "low": 610,
-    "analysts": 15,
-    "rating": "none",
-    "upside_pct": -7.7,
-    "mean_change": 1.4,
     "below_low": false
    },
    {
     "code": "3034",
     "name": "聯詠",
-    "price": 598,
+    "price": 596,
     "target_median": 550,
     "target_mean": 529.7,
     "high": 640,
     "low": 300,
     "analysts": 18,
     "rating": "hold",
-    "upside_pct": -8,
+    "upside_pct": -7.7,
     "mean_change": 0.5,
+    "below_low": false
+   },
+   {
+    "code": "2379",
+    "name": "瑞昱",
+    "price": 794,
+    "target_median": 730,
+    "target_mean": 730.5,
+    "high": 950,
+    "low": 610,
+    "analysts": 15,
+    "rating": "none",
+    "upside_pct": -8.1,
+    "mean_change": 1.4,
     "below_low": false
    },
    {
     "code": "2881",
     "name": "富邦金",
-    "price": 161,
+    "price": 162,
     "target_median": 145,
     "target_mean": 137.8,
     "high": 160,
     "low": 85.8,
     "analysts": 11,
     "rating": "buy",
-    "upside_pct": -9.9,
+    "upside_pct": -10.5,
     "mean_change": 0.6,
-    "below_low": false
-   },
-   {
-    "code": "2412",
-    "name": "中華電",
-    "price": 156.5,
-    "target_median": 137.5,
-    "target_mean": 136.5,
-    "high": 150,
-    "low": 118,
-    "analysts": 6,
-    "rating": "none",
-    "upside_pct": -12.1,
-    "mean_change": 0.8,
     "below_low": false
    },
    {
     "code": "3443",
     "name": "創意",
-    "price": 8170,
+    "price": 7640,
     "target_median": 6700,
     "target_mean": 6922.4,
     "high": 12000,
     "low": 3740,
     "analysts": 19,
     "rating": "strong_buy",
-    "upside_pct": -18,
+    "upside_pct": -12.3,
     "mean_change": 200,
+    "below_low": false
+   },
+   {
+    "code": "2412",
+    "name": "中華電",
+    "price": 158,
+    "target_median": 137.5,
+    "target_mean": 136.5,
+    "high": 150,
+    "low": 118,
+    "analysts": 6,
+    "rating": "none",
+    "upside_pct": -13,
+    "mean_change": 0.8,
     "below_low": false
    },
    {
     "code": "2885",
     "name": "元大金",
-    "price": 73,
+    "price": 73.4,
     "target_median": 54.8,
     "target_mean": 58.5,
     "high": 74.3,
     "low": 50,
     "analysts": 4,
     "rating": "none",
-    "upside_pct": -24.9,
+    "upside_pct": -25.3,
     "mean_change": 7.5,
-    "below_low": false
-   },
-   {
-    "code": "3105",
-    "name": "穩懋",
-    "price": 540,
-    "target_median": 395,
-    "target_mean": 432.7,
-    "high": 780,
-    "low": 142,
-    "analysts": 15,
-    "rating": "none",
-    "upside_pct": -26.9,
-    "mean_change": 20,
     "below_low": false
    },
    {
     "code": "2409",
     "name": "友達",
-    "price": 35.55,
+    "price": 34.05,
     "target_median": 23.6,
     "target_mean": 22.8,
     "high": 27,
     "low": 15,
     "analysts": 7,
     "rating": "none",
-    "upside_pct": -33.6,
+    "upside_pct": -30.7,
     "mean_change": 0.7,
     "below_low": false
    },
    {
     "code": "4906",
     "name": "正文",
-    "price": 41.45,
+    "price": 39.6,
     "target_median": 27,
     "target_mean": 27,
     "high": 27,
     "low": 27,
     "analysts": 1,
     "rating": "none",
-    "upside_pct": -34.9,
+    "upside_pct": -31.8,
     "mean_change": 0,
+    "below_low": false
+   },
+   {
+    "code": "3105",
+    "name": "穩懋",
+    "price": 594,
+    "target_median": 395,
+    "target_mean": 432.7,
+    "high": 780,
+    "low": 142,
+    "analysts": 15,
+    "rating": "none",
+    "upside_pct": -33.5,
+    "mean_change": 20,
     "below_low": false
    },
    {
     "code": "3374",
     "name": "精材",
-    "price": 500,
+    "price": 487.5,
     "target_median": 278.5,
     "target_mean": 278.5,
     "high": 357,
     "low": 200,
     "analysts": 2,
     "rating": "none",
-    "upside_pct": -44.3,
+    "upside_pct": -42.9,
     "mean_change": 74.5,
     "below_low": false
    }
@@ -1667,18 +1652,18 @@
     "code": "2330",
     "name": "台積電",
     "theme": "晶圓代工",
-    "price": 2425,
-    "change_pct": 1.68,
-    "ma5": 2403,
-    "ma20": 2474,
-    "ma60": 2432,
+    "price": 2415,
+    "change_pct": 0.62,
+    "ma5": 2402,
+    "ma20": 2471,
+    "ma60": 2431.8,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -3300.7,
-     "trust": 704.2,
-     "dealer": 228.8
+     "foreign": -2365.2,
+     "trust": 645.5,
+     "dealer": 203.6
     },
     "foreign_holding_pct": {
      "shares": 25932370067,
@@ -1689,40 +1674,40 @@
     "code": "2303",
     "name": "聯電",
     "theme": "晶圓代工",
-    "price": 128,
-    "change_pct": 1.99,
-    "ma5": 125.9,
-    "ma20": 140.5,
-    "ma60": 134.3,
-    "above_ma5": true,
+    "price": 115.5,
+    "change_pct": -5.71,
+    "ma5": 123.4,
+    "ma20": 138.6,
+    "ma60": 134.2,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -1690.2,
-     "trust": -2852.7,
-     "dealer": -245.9
+     "foreign": -12755.4,
+     "trust": -6163.1,
+     "dealer": -998.4
     },
     "foreign_holding_pct": {
      "shares": 12570093899,
-     "fh": 39.82
+     "fh": 38.84
     }
    },
    {
     "code": "5347",
     "name": "世界先進",
     "theme": "晶圓代工",
-    "price": 167.5,
-    "change_pct": 4.04,
-    "ma5": 163.5,
-    "ma20": 174.2,
-    "ma60": 162.6,
-    "above_ma5": true,
+    "price": 156.5,
+    "change_pct": -3.1,
+    "ma5": 161.5,
+    "ma20": 173.1,
+    "ma60": 162.7,
+    "above_ma5": false,
     "above_ma20": false,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": 94.1,
-     "trust": 30.1,
-     "dealer": -1.8
+     "foreign": -534.5,
+     "trust": 13.1,
+     "dealer": -7.3
     },
     "foreign_holding_pct": null
    },
@@ -1730,194 +1715,194 @@
     "code": "6789",
     "name": "采鈺",
     "theme": "光學",
-    "price": 447,
-    "change_pct": 2.05,
-    "ma5": 445.1,
-    "ma20": 462.1,
-    "ma60": 453.4,
-    "above_ma5": true,
+    "price": 438.5,
+    "change_pct": 1.15,
+    "ma5": 439,
+    "ma20": 460.1,
+    "ma60": 453.7,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 37.6,
-     "trust": -3.2,
-     "dealer": -1.1
+     "foreign": 43.8,
+     "trust": -3.1,
+     "dealer": -1
     },
     "foreign_holding_pct": {
      "shares": 318413119,
-     "fh": 4.57
+     "fh": 4.58
     }
    },
    {
     "code": "2454",
     "name": "聯發科",
     "theme": "IC設計",
-    "price": 4235,
-    "change_pct": 5.61,
-    "ma5": 4071,
-    "ma20": 4506,
-    "ma60": 4338.8,
-    "above_ma5": true,
+    "price": 4045,
+    "change_pct": 2.15,
+    "ma5": 4052,
+    "ma20": 4462.8,
+    "ma60": 4346.9,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -718.7,
-     "trust": 204.6,
-     "dealer": -20.4
+     "foreign": -730.4,
+     "trust": 211.7,
+     "dealer": -1.3
     },
     "foreign_holding_pct": {
      "shares": 1604952613,
-     "fh": 54
+     "fh": 53.88
     }
    },
    {
     "code": "3661",
     "name": "世芯-KY",
     "theme": "IC設計",
-    "price": 3800,
-    "change_pct": 8.73,
-    "ma5": 3599,
-    "ma20": 3839.8,
-    "ma60": 3809.6,
+    "price": 3680,
+    "change_pct": 5.29,
+    "ma5": 3593,
+    "ma20": 3839.5,
+    "ma60": 3819.9,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 29.2,
-     "trust": 8.9,
-     "dealer": -1
+     "foreign": 14.5,
+     "trust": 13.7,
+     "dealer": -2.1
     },
     "foreign_holding_pct": {
      "shares": 86204722,
-     "fh": 50.33
+     "fh": 50.18
     }
    },
    {
     "code": "3034",
     "name": "聯詠",
     "theme": "IC設計",
-    "price": 598,
-    "change_pct": 2.57,
-    "ma5": 590.6,
-    "ma20": 559.7,
-    "ma60": 545.8,
+    "price": 596,
+    "change_pct": -0.5,
+    "ma5": 591.8,
+    "ma20": 562.5,
+    "ma60": 547.1,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 333.9,
-     "trust": -37.1,
-     "dealer": 44.9
+     "foreign": 332.1,
+     "trust": -15.5,
+     "dealer": 35.6
     },
     "foreign_holding_pct": {
      "shares": 611511469,
-     "fh": 46.2
+     "fh": 46.22
     }
    },
    {
     "code": "2379",
     "name": "瑞昱",
     "theme": "IC設計",
-    "price": 791,
-    "change_pct": 2.46,
-    "ma5": 784,
-    "ma20": 766.7,
-    "ma60": 740.2,
+    "price": 794,
+    "change_pct": 0.13,
+    "ma5": 784.4,
+    "ma20": 768.4,
+    "ma60": 742.1,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 257.3,
-     "trust": -34.8,
-     "dealer": 45.5
+     "foreign": 251.7,
+     "trust": -38.6,
+     "dealer": 39.9
     },
     "foreign_holding_pct": {
      "shares": 515512641,
-     "fh": 47.03
+     "fh": 46.98
     }
    },
    {
     "code": "3443",
     "name": "創意",
     "theme": "IC設計",
-    "price": 8170,
-    "change_pct": 7.71,
-    "ma5": 7754,
-    "ma20": 7974.8,
-    "ma60": 6541.5,
-    "above_ma5": true,
-    "above_ma20": true,
+    "price": 7640,
+    "change_pct": 2.83,
+    "ma5": 7682,
+    "ma20": 7960.5,
+    "ma60": 6605.4,
+    "above_ma5": false,
+    "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": 4.5,
-     "trust": 38.7,
-     "dealer": -2.1
+     "foreign": 5.3,
+     "trust": 32.3,
+     "dealer": 2.6
     },
     "foreign_holding_pct": {
      "shares": 134011911,
-     "fh": 27.41
+     "fh": 27.45
     }
    },
    {
     "code": "3711",
     "name": "日月光投控",
     "theme": "半導體封測",
-    "price": 695,
-    "change_pct": 6.27,
-    "ma5": 667.6,
-    "ma20": 701.8,
-    "ma60": 643,
+    "price": 683,
+    "change_pct": 4.92,
+    "ma5": 667.4,
+    "ma20": 701.6,
+    "ma60": 645.1,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": -1250.3,
-     "trust": 1209.4,
-     "dealer": 57
+     "foreign": -1404.9,
+     "trust": 1263.6,
+     "dealer": 144
     },
     "foreign_holding_pct": {
      "shares": 4488089243,
-     "fh": 77.15
+     "fh": 77.08
     }
    },
    {
     "code": "2449",
     "name": "京元電",
     "theme": "半導體封測",
-    "price": 277.5,
-    "change_pct": 5.71,
-    "ma5": 269.9,
-    "ma20": 284.9,
-    "ma60": 267.7,
+    "price": 269.5,
+    "change_pct": 0.19,
+    "ma5": 268.2,
+    "ma20": 283.6,
+    "ma60": 268.5,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": -575,
-     "trust": 480,
-     "dealer": 62.7
+     "foreign": -548.7,
+     "trust": 233.7,
+     "dealer": 86
     },
     "foreign_holding_pct": {
      "shares": 1283882318,
-     "fh": 24.59
+     "fh": 24.37
     }
    },
    {
     "code": "6223",
     "name": "旺矽",
     "theme": "半導體封測",
-    "price": 5115,
-    "change_pct": 4.6,
-    "ma5": 4938,
-    "ma20": 5311.5,
-    "ma60": 5528,
-    "above_ma5": true,
+    "price": 4840,
+    "change_pct": 1.04,
+    "ma5": 4905,
+    "ma20": 5294.3,
+    "ma60": 5520.7,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 11.1,
-     "trust": 29.9,
-     "dealer": -0.8
+     "foreign": -6.4,
+     "trust": 28,
+     "dealer": 0.4
     },
     "foreign_holding_pct": null
    },
@@ -1925,40 +1910,40 @@
     "code": "6239",
     "name": "力成",
     "theme": "半導體封測",
-    "price": 272.5,
-    "change_pct": 9.88,
-    "ma5": 257.8,
-    "ma20": 282.3,
-    "ma60": 277.1,
+    "price": 270.5,
+    "change_pct": 6.29,
+    "ma5": 258.7,
+    "ma20": 281.8,
+    "ma60": 277.7,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 450.1,
-     "trust": -18.1,
-     "dealer": 77.8
+     "foreign": 525.7,
+     "trust": 42.6,
+     "dealer": 35.7
     },
     "foreign_holding_pct": {
      "shares": 759146634,
-     "fh": 31.08
+     "fh": 30.91
     }
    },
    {
     "code": "3374",
     "name": "精材",
     "theme": "半導體封測",
-    "price": 500,
-    "change_pct": 7.87,
-    "ma5": 472.2,
-    "ma20": 468.6,
-    "ma60": 408.3,
+    "price": 487.5,
+    "change_pct": 5.18,
+    "ma5": 475.6,
+    "ma20": 470.2,
+    "ma60": 411.8,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 581,
-     "trust": -183.9,
-     "dealer": -28.3
+     "foreign": 446.2,
+     "trust": -197.1,
+     "dealer": 38.7
     },
     "foreign_holding_pct": null
    },
@@ -1966,22 +1951,22 @@
     "code": "2344",
     "name": "華邦電",
     "theme": "記憶體",
-    "price": 172,
-    "change_pct": 11.33,
-    "ma5": 160.7,
-    "ma20": 167.8,
-    "ma60": 171.4,
+    "price": 170.5,
+    "change_pct": 4.6,
+    "ma5": 162.9,
+    "ma20": 167.6,
+    "ma60": 172.1,
     "above_ma5": true,
     "above_ma20": true,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": 5827.8,
-     "trust": -375.9,
-     "dealer": 603.4
+     "foreign": 7217.5,
+     "trust": -310.2,
+     "dealer": 515.9
     },
     "foreign_holding_pct": {
      "shares": 4500000193,
-     "fh": 20.73
+     "fh": 21.04
     }
    },
    {
@@ -1989,39 +1974,39 @@
     "name": "南亞科",
     "theme": "記憶體",
     "price": 477,
-    "change_pct": 15.22,
-    "ma5": 436.5,
-    "ma20": 479.7,
-    "ma60": 490.5,
+    "change_pct": 8.16,
+    "ma5": 444.6,
+    "ma20": 478.3,
+    "ma60": 492.4,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 1535.2,
-     "trust": -265.9,
-     "dealer": 275.5
+     "foreign": 2494.9,
+     "trust": -158.9,
+     "dealer": 284.3
     },
     "foreign_holding_pct": {
      "shares": 3098627894,
-     "fh": 15.2
+     "fh": 15.31
     }
    },
    {
     "code": "6488",
     "name": "環球晶",
     "theme": "矽晶圓",
-    "price": 849,
-    "change_pct": 2.78,
-    "ma5": 839,
-    "ma20": 994.1,
-    "ma60": 959.9,
-    "above_ma5": true,
+    "price": 814,
+    "change_pct": 0,
+    "ma5": 825.8,
+    "ma20": 987.5,
+    "ma60": 959.2,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -341.3,
-     "trust": -74.4,
-     "dealer": 58.4
+     "foreign": -510.9,
+     "trust": -58.7,
+     "dealer": 20.4
     },
     "foreign_holding_pct": null
    },
@@ -2029,18 +2014,18 @@
     "code": "6182",
     "name": "合晶科技",
     "theme": "矽晶圓",
-    "price": 105,
-    "change_pct": 0.48,
-    "ma5": 105.4,
-    "ma20": 118.1,
-    "ma60": 111.4,
+    "price": 100.5,
+    "change_pct": -1.47,
+    "ma5": 103.3,
+    "ma20": 117.1,
+    "ma60": 111.6,
     "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 152.7,
-     "trust": 35.7,
-     "dealer": -6
+     "foreign": -83.3,
+     "trust": 9,
+     "dealer": 16
     },
     "foreign_holding_pct": null
    },
@@ -2048,18 +2033,18 @@
     "code": "3105",
     "name": "穩懋",
     "theme": "化合物半導體",
-    "price": 540,
-    "change_pct": 11.11,
-    "ma5": 503,
-    "ma20": 535.4,
-    "ma60": 458.4,
+    "price": 594,
+    "change_pct": 20.98,
+    "ma5": 519.4,
+    "ma20": 540.5,
+    "ma60": 463.4,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 1138.5,
-     "trust": -581.2,
-     "dealer": 69.4
+     "foreign": 2901.8,
+     "trust": -4,
+     "dealer": 69.8
     },
     "foreign_holding_pct": null
    },
@@ -2067,40 +2052,40 @@
     "code": "2455",
     "name": "全新",
     "theme": "化合物半導體",
-    "price": 512,
-    "change_pct": 9.64,
-    "ma5": 480.5,
-    "ma20": 523.1,
-    "ma60": 477.9,
+    "price": 484,
+    "change_pct": 3.86,
+    "ma5": 479.2,
+    "ma20": 520.2,
+    "ma60": 481.1,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": -319.5,
-     "trust": 209.3,
-     "dealer": -91.6
+     "foreign": -607.9,
+     "trust": 475.4,
+     "dealer": -47.5
     },
     "foreign_holding_pct": {
      "shares": 184905918,
-     "fh": 32
+     "fh": 30.03
     }
    },
    {
     "code": "3081",
     "name": "聯亞",
     "theme": "光通訊",
-    "price": 2580,
-    "change_pct": 8.63,
-    "ma5": 2491,
-    "ma20": 2714,
-    "ma60": 2752.8,
+    "price": 2575,
+    "change_pct": 3,
+    "ma5": 2481,
+    "ma20": 2710.3,
+    "ma60": 2768.6,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -19.6,
-     "trust": 30.7,
-     "dealer": -5.1
+     "foreign": -171.5,
+     "trust": 44.1,
+     "dealer": -8.9
     },
     "foreign_holding_pct": null
    },
@@ -2108,458 +2093,458 @@
     "code": "6442",
     "name": "光聖",
     "theme": "光通訊",
-    "price": 1405,
-    "change_pct": -0.35,
-    "ma5": 1421,
-    "ma20": 1557.3,
-    "ma60": 1555.7,
+    "price": 1305,
+    "change_pct": -5.43,
+    "ma5": 1382,
+    "ma20": 1547.5,
+    "ma60": 1558.2,
     "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -50.9,
-     "trust": -0.1,
-     "dealer": -3.6
+     "foreign": -70.3,
+     "trust": -0.2,
+     "dealer": -3
     },
     "foreign_holding_pct": {
      "shares": 81817552,
-     "fh": 30.95
+     "fh": 30.61
     }
    },
    {
     "code": "2404",
     "name": "漢唐",
     "theme": "半導體設備",
-    "price": 1100,
-    "change_pct": 0.92,
+    "price": 1105,
+    "change_pct": 1.84,
     "ma5": 1094,
-    "ma20": 1189.3,
-    "ma60": 1128.2,
+    "ma20": 1183.5,
+    "ma60": 1128.3,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -51.7,
-     "trust": 27.1,
-     "dealer": -5.1
+     "foreign": -22.1,
+     "trust": 19.5,
+     "dealer": -1.7
     },
     "foreign_holding_pct": {
      "shares": 190586698,
-     "fh": 36.62
+     "fh": 36.67
     }
    },
    {
     "code": "3583",
     "name": "辛耘",
     "theme": "半導體設備",
-    "price": 615,
-    "change_pct": 3.54,
-    "ma5": 603,
-    "ma20": 678.8,
-    "ma60": 699.9,
-    "above_ma5": true,
+    "price": 597,
+    "change_pct": 0.84,
+    "ma5": 598.4,
+    "ma20": 673,
+    "ma60": 699,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 7.6,
-     "trust": -42.9,
-     "dealer": -0.8
+     "foreign": 29.6,
+     "trust": -46.6,
+     "dealer": -2.2
     },
     "foreign_holding_pct": {
      "shares": 80346080,
-     "fh": 19.39
+     "fh": 19.55
     }
    },
    {
     "code": "2383",
     "name": "台光電",
     "theme": "ABF載板",
-    "price": 5025,
-    "change_pct": -0.89,
-    "ma5": 4981,
-    "ma20": 5306.8,
-    "ma60": 5373.2,
+    "price": 5010,
+    "change_pct": 5.47,
+    "ma5": 4985,
+    "ma20": 5311.3,
+    "ma60": 5377.6,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -191.6,
-     "trust": 41.5,
-     "dealer": 12.2
+     "foreign": -153.6,
+     "trust": 65.4,
+     "dealer": 21.7
     },
     "foreign_holding_pct": {
      "shares": 358321114,
-     "fh": 42.79
+     "fh": 42.86
     }
    },
    {
     "code": "3037",
     "name": "欣興",
     "theme": "ABF載板",
-    "price": 1100,
-    "change_pct": 1.38,
-    "ma5": 1086,
-    "ma20": 1173,
-    "ma60": 1068.3,
-    "above_ma5": true,
+    "price": 1040,
+    "change_pct": -1.89,
+    "ma5": 1074,
+    "ma20": 1166.8,
+    "ma60": 1072.6,
+    "above_ma5": false,
     "above_ma20": false,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": -897.1,
-     "trust": 569.9,
-     "dealer": 23.4
+     "foreign": -889.8,
+     "trust": 546.8,
+     "dealer": 48.7
     },
     "foreign_holding_pct": {
      "shares": 1641291596,
-     "fh": 41.47
+     "fh": 41.33
     }
    },
    {
     "code": "2382",
     "name": "廣達",
     "theme": "AI伺服器ODM",
-    "price": 330,
-    "change_pct": 2.48,
-    "ma5": 326,
-    "ma20": 326.6,
-    "ma60": 327.9,
-    "above_ma5": true,
-    "above_ma20": true,
-    "above_ma60": true,
+    "price": 318,
+    "change_pct": -2.9,
+    "ma5": 323.9,
+    "ma20": 325.7,
+    "ma60": 328.3,
+    "above_ma5": false,
+    "above_ma20": false,
+    "above_ma60": false,
     "inst": {
-     "foreign": 1305.9,
-     "trust": 245.9,
-     "dealer": 187.6
+     "foreign": 696.7,
+     "trust": 234.6,
+     "dealer": 109.7
     },
     "foreign_holding_pct": {
      "shares": 4107627432,
-     "fh": 23.15
+     "fh": 23.13
     }
    },
    {
     "code": "6669",
     "name": "緯穎",
     "theme": "AI伺服器ODM",
-    "price": 1950,
-    "change_pct": 5.98,
-    "ma5": 1892,
-    "ma20": 2045.5,
-    "ma60": 2152.4,
-    "above_ma5": true,
+    "price": 1885,
+    "change_pct": -3.33,
+    "ma5": 1893,
+    "ma20": 2034.8,
+    "ma60": 2153.7,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 258.7,
-     "trust": -172.2,
-     "dealer": -19.3
+     "foreign": 221.6,
+     "trust": -171.8,
+     "dealer": -22.3
     },
     "foreign_holding_pct": {
      "shares": 560199772,
-     "fh": 26.61
+     "fh": 26.75
     }
    },
    {
     "code": "2356",
     "name": "英業達",
     "theme": "伺服器兼營廠",
-    "price": 63.8,
-    "change_pct": 5.45,
+    "price": 61.4,
+    "change_pct": -2.54,
     "ma5": 61.8,
-    "ma20": 59.4,
+    "ma20": 59.5,
     "ma60": 62.9,
-    "above_ma5": true,
+    "above_ma5": false,
     "above_ma20": true,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": 4391.2,
-     "trust": -226.9,
-     "dealer": 299.2
+     "foreign": 2976.7,
+     "trust": 67.2,
+     "dealer": 120
     },
     "foreign_holding_pct": {
      "shares": 3587475066,
-     "fh": 19.74
+     "fh": 19.45
     }
    },
    {
     "code": "2376",
     "name": "技嘉",
     "theme": "伺服器兼營廠",
-    "price": 362.5,
-    "change_pct": 3.87,
-    "ma5": 355.3,
-    "ma20": 360.8,
-    "ma60": 355.8,
-    "above_ma5": true,
-    "above_ma20": true,
-    "above_ma60": true,
+    "price": 343,
+    "change_pct": -4.06,
+    "ma5": 352.2,
+    "ma20": 359.8,
+    "ma60": 355.9,
+    "above_ma5": false,
+    "above_ma20": false,
+    "above_ma60": false,
     "inst": {
-     "foreign": 288.9,
-     "trust": 27.2,
-     "dealer": 74.9
+     "foreign": -355.7,
+     "trust": 71.1,
+     "dealer": 60.9
     },
     "foreign_holding_pct": {
      "shares": 669888886,
-     "fh": 23.15
+     "fh": 22.35
     }
    },
    {
     "code": "3231",
     "name": "緯創",
     "theme": "AI伺服器ODM",
-    "price": 194.5,
-    "change_pct": 2.37,
-    "ma5": 192,
-    "ma20": 187.5,
-    "ma60": 186.1,
-    "above_ma5": true,
+    "price": 188.5,
+    "change_pct": -1.05,
+    "ma5": 190.7,
+    "ma20": 187.7,
+    "ma60": 186.3,
+    "above_ma5": false,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 6479.1,
-     "trust": 699.2,
-     "dealer": 586.4
+     "foreign": 2386.6,
+     "trust": -72.2,
+     "dealer": 417.1
     },
     "foreign_holding_pct": {
      "shares": 3429842250,
-     "fh": 36.09
+     "fh": 35.85
     }
    },
    {
     "code": "2357",
     "name": "華碩",
     "theme": "伺服器兼營廠",
-    "price": 988,
-    "change_pct": 4.44,
-    "ma5": 965.8,
-    "ma20": 975.7,
-    "ma60": 943.3,
-    "above_ma5": true,
-    "above_ma20": true,
+    "price": 950,
+    "change_pct": -1.76,
+    "ma5": 959.4,
+    "ma20": 975,
+    "ma60": 945.6,
+    "above_ma5": false,
+    "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": 78.6,
-     "trust": -78.1,
-     "dealer": 82.1
+     "foreign": -67.5,
+     "trust": -44.6,
+     "dealer": 57.3
     },
     "foreign_holding_pct": {
      "shares": 742760280,
-     "fh": 39.79
+     "fh": 39.74
     }
    },
    {
     "code": "2324",
     "name": "仁寶",
     "theme": "伺服器兼營廠",
-    "price": 37.95,
-    "change_pct": 1.74,
-    "ma5": 37.6,
-    "ma20": 36.6,
+    "price": 36.65,
+    "change_pct": -2.53,
+    "ma5": 37.4,
+    "ma20": 36.7,
     "ma60": 38,
-    "above_ma5": true,
-    "above_ma20": true,
+    "above_ma5": false,
+    "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 5516.1,
-     "trust": -267.6,
-     "dealer": 382.2
+     "foreign": 2384.7,
+     "trust": -185.5,
+     "dealer": 144.3
     },
     "foreign_holding_pct": {
      "shares": 4407146625,
-     "fh": 33.85
+     "fh": 33.6
     }
    },
    {
     "code": "2308",
     "name": "台達電",
     "theme": "伺服器電源",
-    "price": 1550,
-    "change_pct": -0.64,
-    "ma5": 1561,
-    "ma20": 1765,
-    "ma60": 1763.8,
+    "price": 1480,
+    "change_pct": -1.99,
+    "ma5": 1532,
+    "ma20": 1747.3,
+    "ma60": 1761.2,
     "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -1257.6,
-     "trust": 31.4,
-     "dealer": -5.5
+     "foreign": -1150.7,
+     "trust": -182.3,
+     "dealer": 38.8
     },
     "foreign_holding_pct": {
      "shares": 2597543329,
-     "fh": 60.27
+     "fh": 60.17
     }
    },
    {
     "code": "2317",
     "name": "鴻海",
     "theme": "AI伺服器ODM",
-    "price": 251.5,
-    "change_pct": 2.65,
-    "ma5": 247.8,
-    "ma20": 247.5,
+    "price": 248,
+    "change_pct": 0.2,
+    "ma5": 247.4,
+    "ma20": 247.3,
     "ma60": 250.9,
     "above_ma5": true,
     "above_ma20": true,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": 5203.7,
-     "trust": 215.5,
-     "dealer": -5.6
+     "foreign": 5152.5,
+     "trust": 169.9,
+     "dealer": -56.9
     },
     "foreign_holding_pct": {
      "shares": 14028648626,
-     "fh": 39.96
+     "fh": 40
     }
    },
    {
     "code": "2301",
     "name": "光寶科",
     "theme": "伺服器電源",
-    "price": 261.5,
-    "change_pct": 2.35,
-    "ma5": 257.7,
-    "ma20": 275.8,
-    "ma60": 277.5,
-    "above_ma5": true,
+    "price": 252,
+    "change_pct": -0.2,
+    "ma5": 255.4,
+    "ma20": 274.3,
+    "ma60": 278.2,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 18,
-     "trust": 20.6,
-     "dealer": 125.6
+     "foreign": -98.8,
+     "trust": 12.1,
+     "dealer": 65.1
     },
     "foreign_holding_pct": {
      "shares": 2316107763,
-     "fh": 42.26
+     "fh": 42.15
     }
    },
    {
     "code": "2059",
     "name": "川湖",
     "theme": "伺服器機構件",
-    "price": 10150,
-    "change_pct": 4.05,
-    "ma5": 9910,
-    "ma20": 10845,
-    "ma60": 11994.8,
+    "price": 9880,
+    "change_pct": 0.71,
+    "ma5": 9870,
+    "ma20": 10733.3,
+    "ma60": 12028.7,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 0.2,
-     "trust": 18.8,
-     "dealer": -3.4
+     "foreign": 12.7,
+     "trust": 16.1,
+     "dealer": -3.9
     },
     "foreign_holding_pct": {
      "shares": 95297072,
-     "fh": 22.72
+     "fh": 22.75
     }
    },
    {
     "code": "8210",
     "name": "勤誠",
     "theme": "伺服器機構件",
-    "price": 781,
-    "change_pct": 2.23,
-    "ma5": 777.2,
-    "ma20": 832,
-    "ma60": 929.5,
-    "above_ma5": true,
+    "price": 756,
+    "change_pct": -2.45,
+    "ma5": 768,
+    "ma20": 825.9,
+    "ma60": 924.7,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 50.1,
-     "trust": -20.9,
-     "dealer": -4.4
+     "foreign": 65.3,
+     "trust": -21,
+     "dealer": -3.8
     },
     "foreign_holding_pct": {
      "shares": 125619146,
-     "fh": 5.25
+     "fh": 5.32
     }
    },
    {
     "code": "3017",
     "name": "奇鋐",
     "theme": "液冷散熱",
-    "price": 3215,
-    "change_pct": 2.23,
-    "ma5": 3174,
-    "ma20": 3346.8,
-    "ma60": 3208.3,
-    "above_ma5": true,
+    "price": 3105,
+    "change_pct": -0.8,
+    "ma5": 3148,
+    "ma20": 3332,
+    "ma60": 3221.3,
+    "above_ma5": false,
     "above_ma20": false,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": -210.8,
-     "trust": 215.7,
-     "dealer": -15.7
+     "foreign": -184.2,
+     "trust": 129.9,
+     "dealer": -12
     },
     "foreign_holding_pct": {
      "shares": 392543007,
-     "fh": 52.56
+     "fh": 52.47
     }
    },
    {
     "code": "8996",
     "name": "高力",
     "theme": "液冷散熱",
-    "price": 1585,
-    "change_pct": 1.6,
-    "ma5": 1566,
-    "ma20": 1596.3,
-    "ma60": 1349.6,
+    "price": 1545,
+    "change_pct": 5.46,
+    "ma5": 1543,
+    "ma20": 1594.3,
+    "ma60": 1361.1,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": -9.2,
-     "trust": 93.1,
-     "dealer": -8.7
+     "foreign": -62.2,
+     "trust": 112.6,
+     "dealer": -15.5
     },
     "foreign_holding_pct": {
      "shares": 93387429,
-     "fh": 23.6
+     "fh": 23.3
     }
    },
    {
     "code": "3653",
     "name": "健策",
     "theme": "液冷散熱",
-    "price": 6375,
-    "change_pct": 5.02,
-    "ma5": 6182,
-    "ma20": 6723,
-    "ma60": 5757.8,
+    "price": 6405,
+    "change_pct": 9.3,
+    "ma5": 6156,
+    "ma20": 6698.5,
+    "ma60": 5807.1,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": 45.7,
-     "trust": 5.6,
-     "dealer": -3.9
+     "foreign": 2,
+     "trust": 6.5,
+     "dealer": -2.7
     },
     "foreign_holding_pct": {
      "shares": 147203878,
-     "fh": 25.39
+     "fh": 25.04
     }
    },
    {
     "code": "2345",
     "name": "智邦",
     "theme": "網通",
-    "price": 1815,
-    "change_pct": 2.25,
-    "ma5": 1788,
-    "ma20": 1936.3,
-    "ma60": 2033.2,
-    "above_ma5": true,
+    "price": 1755,
+    "change_pct": -0.28,
+    "ma5": 1776,
+    "ma20": 1933.5,
+    "ma60": 2027,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -106.1,
-     "trust": 90.3,
-     "dealer": -19.7
+     "foreign": -54.3,
+     "trust": -19.8,
+     "dealer": -4.5
     },
     "foreign_holding_pct": {
      "shares": 561117897,
@@ -2570,132 +2555,132 @@
     "code": "4906",
     "name": "正文",
     "theme": "網通",
-    "price": 41.45,
-    "change_pct": 1.47,
-    "ma5": 41.2,
+    "price": 39.6,
+    "change_pct": -2.46,
+    "ma5": 40.7,
     "ma20": 41.9,
-    "ma60": 37.9,
-    "above_ma5": true,
+    "ma60": 38,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": 64.3,
+     "foreign": 191.4,
      "trust": 0,
-     "dealer": -33.5
+     "dealer": -50.1
     },
     "foreign_holding_pct": {
      "shares": 451706232,
-     "fh": 8.34
+     "fh": 8.17
     }
    },
    {
     "code": "3481",
     "name": "群創",
     "theme": "面板",
-    "price": 48.45,
-    "change_pct": 3.64,
-    "ma5": 47.4,
-    "ma20": 49.8,
+    "price": 46,
+    "change_pct": -0.54,
+    "ma5": 46.9,
+    "ma20": 49.6,
     "ma60": 48.9,
-    "above_ma5": true,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": 4099,
-     "trust": 42.3,
-     "dealer": 1462
+     "foreign": -272.7,
+     "trust": 31.7,
+     "dealer": 715.9
     },
     "foreign_holding_pct": {
      "shares": 7989197337,
-     "fh": 20.57
+     "fh": 20.08
     }
    },
    {
     "code": "2409",
     "name": "友達",
     "theme": "面板",
-    "price": 35.55,
-    "change_pct": 0.42,
-    "ma5": 35.4,
-    "ma20": 36.5,
-    "ma60": 30.6,
-    "above_ma5": true,
+    "price": 34.05,
+    "change_pct": 1.79,
+    "ma5": 34.8,
+    "ma20": 36.4,
+    "ma60": 30.7,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": -5640.9,
-     "trust": 1490.8,
-     "dealer": 375.2
+     "foreign": -7523.5,
+     "trust": 1187.3,
+     "dealer": -32.9
     },
     "foreign_holding_pct": {
      "shares": 7547098972,
-     "fh": 11.88
+     "fh": 11.2
     }
    },
    {
     "code": "2603",
     "name": "長榮",
     "theme": "海運",
-    "price": 263,
-    "change_pct": 1.15,
-    "ma5": 260.4,
-    "ma20": 251,
-    "ma60": 237.3,
-    "above_ma5": true,
+    "price": 261,
+    "change_pct": -0.19,
+    "ma5": 261.1,
+    "ma20": 252.2,
+    "ma60": 238.2,
+    "above_ma5": false,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 619.8,
-     "trust": -83.2,
-     "dealer": 167.9
+     "foreign": 664.7,
+     "trust": -16.4,
+     "dealer": 134.4
     },
     "foreign_holding_pct": {
      "shares": 2165042996,
-     "fh": 27.19
+     "fh": 27.26
     }
    },
    {
     "code": "2609",
     "name": "陽明",
     "theme": "海運",
-    "price": 62.9,
-    "change_pct": 1.62,
-    "ma5": 62.4,
-    "ma20": 61.6,
-    "ma60": 58.5,
-    "above_ma5": true,
+    "price": 62,
+    "change_pct": -1.59,
+    "ma5": 62.3,
+    "ma20": 61.8,
+    "ma60": 58.7,
+    "above_ma5": false,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 979.1,
-     "trust": -211.9,
-     "dealer": -45.1
+     "foreign": 845.5,
+     "trust": -15.3,
+     "dealer": -23.6
     },
     "foreign_holding_pct": {
      "shares": 3492104270,
-     "fh": 28.54
+     "fh": 28.57
     }
    },
    {
     "code": "2618",
     "name": "長榮航",
     "theme": "航空",
-    "price": 42.4,
-    "change_pct": 0.47,
-    "ma5": 42.4,
-    "ma20": 42.4,
-    "ma60": 42.4,
+    "price": 42.75,
+    "change_pct": -0.47,
+    "ma5": 42.5,
+    "ma20": 42.5,
+    "ma60": 42.3,
     "above_ma5": true,
-    "above_ma20": false,
+    "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 1628.4,
-     "trust": -1512.1,
-     "dealer": 244.7
+     "foreign": 1627.1,
+     "trust": -1097.1,
+     "dealer": 131.8
     },
     "foreign_holding_pct": {
      "shares": 5400444335,
-     "fh": 34.13
+     "fh": 34.17
     }
    },
    {
@@ -2703,17 +2688,17 @@
     "name": "華航",
     "theme": "航空",
     "price": 20.25,
-    "change_pct": -1.22,
+    "change_pct": -0.98,
     "ma5": 20.4,
     "ma20": 20.4,
-    "ma60": 20.6,
+    "ma60": 20.5,
     "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -424.1,
-     "trust": -663.1,
-     "dealer": -59.1
+     "foreign": -41.2,
+     "trust": -434.9,
+     "dealer": -35.9
     },
     "foreign_holding_pct": {
      "shares": 6117941273,
@@ -2724,260 +2709,260 @@
     "code": "2002",
     "name": "中鋼",
     "theme": "傳產",
-    "price": 19.75,
-    "change_pct": 1.02,
+    "price": 19.45,
+    "change_pct": -1.52,
     "ma5": 19.6,
     "ma20": 19.3,
     "ma60": 19.1,
-    "above_ma5": true,
+    "above_ma5": false,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 7919.5,
-     "trust": 1462.2,
-     "dealer": -182.9
+     "foreign": 6660.6,
+     "trust": 349.4,
+     "dealer": -232.9
     },
     "foreign_holding_pct": {
      "shares": 15734860997,
-     "fh": 16.53
+     "fh": 16.54
     }
    },
    {
     "code": "6505",
     "name": "台塑化",
     "theme": "傳產",
-    "price": 103,
-    "change_pct": -3.29,
-    "ma5": 106.3,
-    "ma20": 106.9,
-    "ma60": 86.5,
+    "price": 98.6,
+    "change_pct": -6.98,
+    "ma5": 104.1,
+    "ma20": 107.1,
+    "ma60": 86.9,
     "above_ma5": false,
     "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": 4332.5,
-     "trust": -2318.4,
-     "dealer": -28.1
+     "foreign": 3668.8,
+     "trust": -1588.7,
+     "dealer": 8.5
     },
     "foreign_holding_pct": {
      "shares": 9525959652,
-     "fh": 6.57
+     "fh": 6.62
     }
    },
    {
     "code": "1101",
     "name": "台泥",
     "theme": "傳產",
-    "price": 28,
-    "change_pct": 0.18,
-    "ma5": 27.8,
-    "ma20": 26.6,
-    "ma60": 25.1,
+    "price": 28.2,
+    "change_pct": 0.36,
+    "ma5": 28.1,
+    "ma20": 26.7,
+    "ma60": 25.2,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 1845.7,
-     "trust": 1556.7,
-     "dealer": 306.9
+     "foreign": 2634.2,
+     "trust": 915.9,
+     "dealer": 382.7
     },
     "foreign_holding_pct": {
      "shares": 7523181742,
-     "fh": 13.36
+     "fh": 13.37
     }
    },
    {
     "code": "1301",
     "name": "台塑",
     "theme": "傳產",
-    "price": 75.4,
-    "change_pct": 2.17,
-    "ma5": 74.9,
-    "ma20": 75.2,
-    "ma60": 65.8,
-    "above_ma5": true,
-    "above_ma20": true,
+    "price": 73.9,
+    "change_pct": -0.67,
+    "ma5": 74.3,
+    "ma20": 75.6,
+    "ma60": 66.1,
+    "above_ma5": false,
+    "above_ma20": false,
     "above_ma60": true,
     "inst": {
-     "foreign": -2059.5,
-     "trust": 26.7,
-     "dealer": -14
+     "foreign": -758.6,
+     "trust": 0.4,
+     "dealer": 74.2
     },
     "foreign_holding_pct": {
      "shares": 6365740781,
-     "fh": 34.61
+     "fh": 34.69
     }
    },
    {
     "code": "2412",
     "name": "中華電",
     "theme": "電信",
-    "price": 156.5,
-    "change_pct": -0.95,
-    "ma5": 156.9,
-    "ma20": 150.2,
-    "ma60": 142.6,
-    "above_ma5": false,
+    "price": 158,
+    "change_pct": 0,
+    "ma5": 157.7,
+    "ma20": 150.9,
+    "ma60": 142.9,
+    "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 900,
-     "trust": 247.2,
-     "dealer": -25.3
+     "foreign": 1145,
+     "trust": 296.9,
+     "dealer": -20.9
     },
     "foreign_holding_pct": {
      "shares": 7757446545,
-     "fh": 18.88
+     "fh": 18.93
     }
    },
    {
     "code": "4904",
     "name": "遠傳",
     "theme": "電信",
-    "price": 112,
-    "change_pct": -2.61,
-    "ma5": 113.6,
-    "ma20": 109.1,
-    "ma60": 105,
+    "price": 113,
+    "change_pct": -0.88,
+    "ma5": 113.8,
+    "ma20": 109.5,
+    "ma60": 105.1,
     "above_ma5": false,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 238.3,
-     "trust": 171.5,
-     "dealer": 151.9
+     "foreign": 590.8,
+     "trust": 39.5,
+     "dealer": 18.8
     },
     "foreign_holding_pct": {
      "shares": 3607705357,
-     "fh": 20.55
+     "fh": 20.62
     }
    },
    {
     "code": "2881",
     "name": "富邦金",
     "theme": "金融",
-    "price": 161,
-    "change_pct": 1.58,
-    "ma5": 159.7,
-    "ma20": 156.5,
-    "ma60": 145.5,
+    "price": 162,
+    "change_pct": 0,
+    "ma5": 160.4,
+    "ma20": 157,
+    "ma60": 146,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 880.9,
-     "trust": 22.1,
-     "dealer": 96.1
+     "foreign": 1871.5,
+     "trust": 34.7,
+     "dealer": 121.4
     },
     "foreign_holding_pct": {
      "shares": 14007364952,
-     "fh": 18.89
+     "fh": 18.93
     }
    },
    {
     "code": "2882",
     "name": "國泰金",
     "theme": "金融",
-    "price": 115.5,
-    "change_pct": 1.76,
-    "ma5": 114.1,
-    "ma20": 112.9,
-    "ma60": 108.1,
+    "price": 116.5,
+    "change_pct": 2.19,
+    "ma5": 114.6,
+    "ma20": 113.1,
+    "ma60": 108.3,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 1401.3,
-     "trust": 72.9,
-     "dealer": 142.3
+     "foreign": 2378.3,
+     "trust": 66.6,
+     "dealer": 106.8
     },
     "foreign_holding_pct": {
      "shares": 14669210128,
-     "fh": 23.31
+     "fh": 23.33
     }
    },
    {
     "code": "2891",
     "name": "中信金",
     "theme": "金融",
-    "price": 74.2,
-    "change_pct": -0.93,
-    "ma5": 74.8,
-    "ma20": 71.1,
-    "ma60": 68.1,
-    "above_ma5": false,
+    "price": 75.3,
+    "change_pct": 0.4,
+    "ma5": 74.9,
+    "ma20": 71.4,
+    "ma60": 68.3,
+    "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 1906.1,
-     "trust": -770.5,
-     "dealer": 922.5
+     "foreign": 4500.1,
+     "trust": -771.5,
+     "dealer": 748.1
     },
     "foreign_holding_pct": {
      "shares": 19675932806,
-     "fh": 35.25
+     "fh": 35.34
     }
    },
    {
     "code": "2885",
     "name": "元大金",
     "theme": "金融",
-    "price": 73,
-    "change_pct": 0.83,
-    "ma5": 72.5,
-    "ma20": 70.5,
-    "ma60": 68,
+    "price": 73.4,
+    "change_pct": 0.27,
+    "ma5": 72.9,
+    "ma20": 70.7,
+    "ma60": 68.2,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": 2537.4,
-     "trust": -86,
-     "dealer": 652.2
+     "foreign": 3114.6,
+     "trust": 233.8,
+     "dealer": 517
     },
     "foreign_holding_pct": {
      "shares": 13864395944,
-     "fh": 27.52
+     "fh": 27.55
     }
    },
    {
     "code": "3008",
     "name": "大立光",
     "theme": "光學",
-    "price": 6335,
-    "change_pct": 2.59,
-    "ma5": 6171,
-    "ma20": 6455.5,
-    "ma60": 6050.5,
-    "above_ma5": true,
+    "price": 5815,
+    "change_pct": -3.08,
+    "ma5": 6100,
+    "ma20": 6445.3,
+    "ma60": 6080.2,
+    "above_ma5": false,
     "above_ma20": false,
-    "above_ma60": true,
+    "above_ma60": false,
     "inst": {
-     "foreign": -6,
-     "trust": 35.3,
-     "dealer": -31.8
+     "foreign": -35.8,
+     "trust": 54.4,
+     "dealer": -21.4
     },
     "foreign_holding_pct": {
      "shares": 130798197,
-     "fh": 22.96
+     "fh": 22.47
     }
    },
    {
     "code": "3484",
     "name": "亞光",
     "theme": "光學",
-    "price": 48.85,
-    "change_pct": 3.72,
+    "price": 47.8,
+    "change_pct": 1.49,
     "ma5": 47.6,
     "ma20": 48.6,
     "ma60": 48.5,
     "above_ma5": true,
-    "above_ma20": true,
-    "above_ma60": true,
+    "above_ma20": false,
+    "above_ma60": false,
     "inst": {
-     "foreign": -2.5,
+     "foreign": -3.7,
      "trust": 0,
-     "dealer": -0.2
+     "dealer": -0.3
     },
     "foreign_holding_pct": null
    },
@@ -2985,452 +2970,470 @@
     "code": "2327",
     "name": "國巨",
     "theme": "被動元件",
-    "price": 547,
-    "change_pct": 7.89,
-    "ma5": 524.8,
-    "ma20": 577,
-    "ma60": 568.8,
+    "price": 543,
+    "change_pct": 4.22,
+    "ma5": 525,
+    "ma20": 576.8,
+    "ma60": 569.4,
     "above_ma5": true,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -634.2,
-     "trust": 23.8,
-     "dealer": 28.7
+     "foreign": -302.5,
+     "trust": 72,
+     "dealer": 137.4
     },
     "foreign_holding_pct": {
      "shares": 2063128462,
-     "fh": 42.29
+     "fh": 42.11
     }
    },
    {
     "code": "2492",
     "name": "華新科",
     "theme": "被動元件",
-    "price": 398,
-    "change_pct": 8.15,
-    "ma5": 382.4,
-    "ma20": 379,
-    "ma60": 319.7,
+    "price": 423,
+    "change_pct": 13.56,
+    "ma5": 385.9,
+    "ma20": 385,
+    "ma60": 323.1,
     "above_ma5": true,
     "above_ma20": true,
     "above_ma60": true,
     "inst": {
-     "foreign": -1261.6,
-     "trust": 1039.7,
-     "dealer": -115.8
+     "foreign": -532.8,
+     "trust": 876.2,
+     "dealer": 21.9
     },
     "foreign_holding_pct": {
      "shares": 485204774,
-     "fh": 14.07
+     "fh": 14.66
     }
    },
    {
     "code": "2472",
     "name": "立隆電",
     "theme": "被動元件",
-    "price": 208.5,
-    "change_pct": 2.96,
-    "ma5": 206.8,
-    "ma20": 223,
-    "ma60": 224.2,
-    "above_ma5": true,
+    "price": 203,
+    "change_pct": 1,
+    "ma5": 203.5,
+    "ma20": 222.5,
+    "ma60": 223.9,
+    "above_ma5": false,
     "above_ma20": false,
     "above_ma60": false,
     "inst": {
-     "foreign": -12.5,
+     "foreign": -38.7,
      "trust": 0.6,
-     "dealer": -9.1
+     "dealer": -13.1
     },
     "foreign_holding_pct": {
      "shares": 164735137,
-     "fh": 9.77
+     "fh": 9.75
     }
    }
   ],
   "all_opportunities": [],
   "etf_flows": {
    "0050": {
-    "date": "2026/10/28",
-    "prev": "2026/10/27",
+    "date": "2026/10/29",
+    "prev": "2026/10/28",
     "changes": [
      {
       "code": "2408",
       "name": "南亞科",
-      "out": true,
-      "w": 1.25
+      "new": true,
+      "w": 1.34
      },
      {
       "code": "2382",
       "name": "廣達",
-      "out": true,
-      "w": 1.1
+      "new": true,
+      "w": 1.06
      },
      {
       "code": "2412",
       "name": "中華電",
-      "out": true,
+      "new": true,
       "w": 1
-     },
-     {
-      "code": "6669",
-      "name": "緯穎",
-      "out": true,
-      "w": 0.89
      },
      {
       "code": "2327",
       "name": "國巨",
-      "out": true,
-      "w": 0.88
+      "new": true,
+      "w": 0.91
      },
      {
-      "code": "2885",
-      "name": "元大金",
-      "out": true,
-      "w": 0.83
-     },
-     {
-      "code": "6505",
-      "name": "台塑化",
-      "out": true,
-      "w": 0.83
+      "code": "6669",
+      "name": "緯穎",
+      "new": true,
+      "w": 0.86
      },
      {
       "code": "3443",
       "name": "創意",
-      "out": true,
-      "w": 0.82
+      "new": true,
+      "w": 0.83
      },
      {
-      "code": "7769",
-      "name": "鴻勁",
-      "out": true,
+      "code": "2885",
+      "name": "元大金",
+      "new": true,
+      "w": 0.83
+     },
+     {
+      "code": "3653",
+      "name": "健策",
+      "new": true,
       "w": 0.77
      },
      {
       "code": "2059",
       "name": "川湖",
-      "out": true,
+      "new": true,
       "w": 0.77
+     },
+     {
+      "code": "6505",
+      "name": "台塑化",
+      "new": true,
+      "w": 0.76
+     },
+     {
+      "code": "7769",
+      "name": "鴻勁",
+      "new": true,
+      "w": 0.76
      },
      {
       "code": "2884",
       "name": "",
-      "out": true,
-      "w": 0.72
-     },
-     {
-      "code": "3653",
-      "name": "健策",
-      "out": true,
+      "new": true,
       "w": 0.71
      },
      {
       "code": "2360",
       "name": "致茂",
-      "out": true,
-      "w": 0.68
+      "new": true,
+      "w": 0.67
      },
      {
       "code": "2886",
       "name": "",
-      "out": true,
-      "w": 0.67
+      "new": true,
+      "w": 0.66
      },
      {
       "code": "8046",
       "name": "南電",
-      "out": true,
+      "new": true,
       "w": 0.66
-     },
-     {
-      "code": "3008",
-      "name": "大立光",
-      "out": true,
-      "w": 0.64
      },
      {
       "code": "2344",
       "name": "華邦電",
-      "out": true,
-      "w": 0.6
+      "new": true,
+      "w": 0.62
+     },
+     {
+      "code": "3008",
+      "name": "大立光",
+      "new": true,
+      "w": 0.62
      },
      {
       "code": "2357",
       "name": "華碩",
-      "out": true,
-      "w": 0.59
+      "new": true,
+      "w": 0.57
      },
      {
       "code": "2880",
       "name": "",
-      "out": true,
-      "w": 0.58
+      "new": true,
+      "w": 0.57
      },
      {
       "code": "2890",
       "name": "永豐金",
-      "out": true,
+      "new": true,
       "w": 0.56
      }
     ]
    },
    "0056": {
-    "date": "2026/10/28",
-    "prev": "2026/10/27",
+    "date": "2026/10/29",
+    "prev": "2026/10/28",
     "changes": [
-     {
-      "code": "2357",
-      "name": "華碩",
-      "pct": -1.7,
-      "w": 4.15
-     },
      {
       "code": "2885",
       "name": "元大金",
-      "pct": -1.7,
-      "w": 2.55
-     },
-     {
-      "code": "2344",
-      "name": "華邦電",
-      "pct": -1.6,
-      "w": 3.55
-     },
-     {
-      "code": "2886",
-      "name": "",
-      "pct": -1.6,
-      "w": 3.55
-     },
-     {
-      "code": "1303",
-      "name": "南亞",
-      "pct": -1.5,
-      "w": 9.92
-     },
-     {
-      "code": "2890",
-      "name": "永豐金",
-      "pct": -1.5,
-      "w": 4.15
-     },
-     {
-      "code": "2408",
-      "name": "南亞科",
-      "pct": -1.5,
-      "w": 3.88
-     },
-     {
-      "code": "3231",
-      "name": "緯創",
-      "pct": -1.5,
-      "w": 3.68
-     },
-     {
-      "code": "2603",
-      "name": "長榮",
-      "pct": -1.5,
-      "w": 3.14
+      "pct": 1.4,
+      "w": 2.6
      },
      {
       "code": "2884",
       "name": "",
-      "pct": -1.5,
-      "w": 2.62
+      "pct": 1.3,
+      "w": 2.69
      },
      {
       "code": "2880",
       "name": "",
-      "pct": -1.4,
-      "w": 4.22
-     },
-     {
-      "code": "2891",
-      "name": "中信金",
-      "pct": -1.4,
-      "w": 3.93
-     },
-     {
-      "code": "2887",
-      "name": "",
-      "pct": -1.4,
-      "w": 2.58
-     },
-     {
-      "code": "2382",
-      "name": "廣達",
-      "pct": -1.3,
-      "w": 3.41
-     },
-     {
-      "code": "2883",
-      "name": "凱基金",
-      "pct": -1.3,
-      "w": 2.86
-     }
-    ]
-   },
-   "00929": {
-    "date": "2026/10/28",
-    "prev": "2026/10/27",
-    "changes": [
-     {
-      "code": "2382",
-      "name": "廣達",
-      "pct": -1.9,
-      "w": 2.69
-     },
-     {
-      "code": "3702",
-      "name": "大聯大",
-      "pct": -1.9,
-      "w": 2.48
-     },
-     {
-      "code": "2377",
-      "name": "微星",
-      "pct": -1.9,
-      "w": 2.45
-     },
-     {
-      "code": "3045",
-      "name": "台灣大",
-      "pct": -1.8,
-      "w": 3.29
-     },
-     {
-      "code": "2347",
-      "name": "聯強",
-      "pct": -1.7,
-      "w": 3.34
-     },
-     {
-      "code": "3231",
-      "name": "緯創",
-      "pct": -1.7,
-      "w": 2.72
+      "pct": 1.2,
+      "w": 4.34
      },
      {
       "code": "2357",
       "name": "華碩",
-      "pct": -1.6,
+      "pct": 1.2,
+      "w": 4.04
+     },
+     {
+      "code": "3231",
+      "name": "緯創",
+      "pct": 1.2,
+      "w": 3.61
+     },
+     {
+      "code": "2344",
+      "name": "華邦電",
+      "pct": 1.2,
+      "w": 3.56
+     },
+     {
+      "code": "2883",
+      "name": "凱基金",
+      "pct": 1.2,
+      "w": 2.89
+     },
+     {
+      "code": "1303",
+      "name": "南亞",
+      "pct": 1.1,
+      "w": 9.81
+     },
+     {
+      "code": "2890",
+      "name": "永豐金",
+      "pct": 1.1,
+      "w": 4.21
+     },
+     {
+      "code": "2886",
+      "name": "",
+      "pct": 1.1,
+      "w": 3.65
+     },
+     {
+      "code": "2603",
+      "name": "長榮",
+      "pct": 1.1,
+      "w": 3.15
+     },
+     {
+      "code": "2891",
+      "name": "中信金",
+      "pct": 1,
       "w": 4.03
-     },
-     {
-      "code": "2379",
-      "name": "瑞昱",
-      "pct": -1.6,
-      "w": 3.24
-     },
-     {
-      "code": "2412",
-      "name": "中華電",
-      "pct": -1.5,
-      "w": 2.86
-     },
-     {
-      "code": "5434",
-      "name": "崇越",
-      "pct": -1.3,
-      "w": 2.5
-     },
-     {
-      "code": "4904",
-      "name": "遠傳",
-      "pct": -1.1,
-      "w": 2.73
-     }
-    ]
-   },
-   "00891": {
-    "date": "2026/10/28",
-    "prev": "2026/10/27",
-    "changes": [
-     {
-      "code": "7769",
-      "name": "鴻勁",
-      "pct": 11.5,
-      "w": 2.56
-     },
-     {
-      "code": "3034",
-      "name": "聯詠",
-      "pct": -5.1,
-      "w": 1.8
-     },
-     {
-      "code": "2379",
-      "name": "瑞昱",
-      "pct": -4.9,
-      "w": 2.04
-     },
-     {
-      "code": "5274",
-      "name": "信驊",
-      "pct": -4.6,
-      "w": 3.05
-     },
-     {
-      "code": "3653",
-      "name": "健策",
-      "pct": -4,
-      "w": 3.06
-     },
-     {
-      "code": "3443",
-      "name": "創意",
-      "pct": -3.7,
-      "w": 3.26
      },
      {
       "code": "2408",
       "name": "南亞科",
-      "pct": -3.7,
-      "w": 1.77
+      "pct": 1,
+      "w": 3.92
      },
      {
-      "code": "3711",
-      "name": "日月光投控",
-      "pct": -3.4,
-      "w": 4.87
+      "code": "2382",
+      "name": "廣達",
+      "pct": 1,
+      "w": 3.32
+     }
+    ]
+   },
+   "00929": {
+    "date": "2026/10/29",
+    "prev": "2026/10/28",
+    "changes": [
+     {
+      "code": "3260",
+      "name": "威剛",
+      "new": true,
+      "w": 2.53
      },
      {
-      "code": "2303",
-      "name": "聯電",
-      "pct": -3.4,
+      "code": "3702",
+      "name": "大聯大",
+      "out": true,
+      "w": 2.48
+     },
+     {
+      "code": "2357",
+      "name": "華碩",
+      "pct": 3.7,
+      "w": 4.02
+     },
+     {
+      "code": "2377",
+      "name": "微星",
+      "pct": 3.6,
+      "w": 2.41
+     },
+     {
+      "code": "2347",
+      "name": "聯強",
+      "pct": 3.5,
+      "w": 3.44
+     },
+     {
+      "code": "2382",
+      "name": "廣達",
+      "pct": 3.4,
+      "w": 2.68
+     },
+     {
+      "code": "2379",
+      "name": "瑞昱",
+      "pct": 3,
+      "w": 3.35
+     },
+     {
+      "code": "3034",
+      "name": "聯詠",
+      "pct": 2.7,
+      "w": 4.29
+     },
+     {
+      "code": "3231",
+      "name": "緯創",
+      "pct": 2.4,
+      "w": 2.7
+     },
+     {
+      "code": "3045",
+      "name": "台灣大",
+      "pct": 1.8,
+      "w": 3.4
+     },
+     {
+      "code": "2474",
+      "name": "可成",
+      "pct": 1.6,
+      "w": 2.95
+     },
+     {
+      "code": "2412",
+      "name": "中華電",
+      "pct": 1.5,
+      "w": 2.93
+     },
+     {
+      "code": "4904",
+      "name": "遠傳",
+      "pct": 1.3,
+      "w": 2.79
+     },
+     {
+      "code": "5434",
+      "name": "崇越",
+      "pct": 1.2,
+      "w": 2.49
+     }
+    ]
+   },
+   "00891": {
+    "date": "2026/10/29",
+    "prev": "2026/10/28",
+    "changes": [
+     {
+      "code": "3661",
+      "name": "世芯-KY",
+      "new": true,
+      "w": 1.66
+     },
+     {
+      "code": "5274",
+      "name": "信驊",
+      "pct": 2.9,
       "w": 3.08
      },
      {
       "code": "6223",
       "name": "旺矽",
-      "pct": -3.4,
-      "w": 2.31
+      "pct": 2.5,
+      "w": 2.24
+     },
+     {
+      "code": "2408",
+      "name": "南亞科",
+      "pct": 2.3,
+      "w": 1.81
+     },
+     {
+      "code": "3711",
+      "name": "日月光投控",
+      "pct": 2.2,
+      "w": 4.89
+     },
+     {
+      "code": "2303",
+      "name": "聯電",
+      "pct": 2.2,
+      "w": 2.84
+     },
+     {
+      "code": "7769",
+      "name": "鴻勁",
+      "pct": 2.2,
+      "w": 2.44
      },
      {
       "code": "2330",
       "name": "台積電",
-      "pct": -3.2,
-      "w": 41.12
+      "pct": 2.1,
+      "w": 41.82
+     },
+     {
+      "code": "2379",
+      "name": "瑞昱",
+      "pct": 2.1,
+      "w": 2.09
      },
      {
       "code": "2454",
       "name": "聯發科",
-      "pct": -3.2,
-      "w": 12.08
+      "pct": 2,
+      "w": 11.77
+     },
+     {
+      "code": "3443",
+      "name": "創意",
+      "pct": 2,
+      "w": 3.11
+     },
+     {
+      "code": "3034",
+      "name": "聯詠",
+      "pct": 2,
+      "w": 1.83
      },
      {
       "code": "2344",
       "name": "華邦電",
-      "pct": -3.2,
-      "w": 2.86
+      "pct": 1.9,
+      "w": 2.89
+     },
+     {
+      "code": "3653",
+      "name": "健策",
+      "pct": 1.8,
+      "w": 3.13
      },
      {
       "code": "2449",
       "name": "京元電",
-      "pct": -3.1,
-      "w": 1.72
+      "pct": 1.8,
+      "w": 1.7
      }
     ]
    }
