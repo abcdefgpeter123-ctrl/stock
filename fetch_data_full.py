@@ -1955,6 +1955,18 @@ def fetch_all_otc_openapi():
 
 # ── 個股：Yahoo Finance 備援 ──────────────────────────────
 
+def prev_close_before(timestamps, closes, mkt_date):
+    """
+    回傳「日期早於 mkt_date 的最後一根」收盤價；找不到回 None。
+    timestamps 為 Unix 秒，mkt_date 為 'YYYY/MM/DD'。close 為 None 的 K 棒略過。
+    純函式，test_pure.py 有回歸測試（見 fetch_yahoo 的說明）。
+    """
+    prior = [c for t, c in zip(timestamps, closes)
+             if c is not None
+             and datetime.datetime.fromtimestamp(t).strftime("%Y/%m/%d") < mkt_date]
+    return prior[-1] if prior else None
+
+
 def fetch_yahoo(code):
     """Yahoo Finance — 境外可用，逐支抓"""
     for suffix in [".TW", ".TWO"]:
@@ -1977,11 +1989,17 @@ def fetch_yahoo(code):
             lows   = [v for v in quote.get("low",   []) if v is not None]
             vols   = [v for v in quote.get("volume",[]) if v is not None]
             closes = [v for v in quote.get("close", []) if v is not None]
-            # meta.previousClose 在連續漲跌停等異常情況下常常是好幾天前的舊值，
-            # 優先用同一批請求裡「昨日」的實際收盤價（closes[-2]）計算漲跌，較可靠
-            if len(closes) >= 2:
-                prev = closes[-2]
-            else:
+            # 昨收要用「日期早於今天的最後一根 K 棒」，不能直接拿 closes[-2]。
+            #
+            # 2026/10/29 踩過：Yahoo 的日 K 序列常常還沒附上今天那根（或今天那根
+            # close 是 None 被濾掉），此時 closes[-1] 其實是昨天、closes[-2] 是「前天」，
+            # 漲跌幅就變成「今天對前天」。連跌兩天、中間有反彈時會整片顯示成上漲
+            # （聯發科實際 −4.49% 顯示 +2.15%，64 檔裡 57 檔算錯）。
+            #
+            # meta.previousClose 也不可靠（連續漲跌停時常是好幾天前的舊值），只當最後退路。
+            prev = prev_close_before(result.get("timestamp") or [],
+                                     quote.get("close", []), mkt_date)
+            if prev is None:
                 prev = meta.get("previousClose") or meta.get("chartPreviousClose")
             if not prev:
                 continue
@@ -2905,6 +2923,14 @@ def main():
             "closes": twii_closes,
         }
         print(f"   ✅ 大盤歷史: {len(twii_closes)} 筆 ({twii_dates[0]} ~ {twii_dates[-1]})")
+        # Yahoo 的歷史常晚一天，和個股歷史一樣用當日報價補上最後一根。
+        # 少了這根，牛熊燈號的均線與逐日表都會落後一天（2026/10/29 指數 −1.42% 沒進歷史）。
+        tw_now = data.get("twii") or {}
+        if (tw_now.get("price") and tw_now.get("date")
+                and twii_dates and twii_dates[-1] < tw_now["date"]):
+            twii_dates.append(tw_now["date"])
+            twii_closes.append(round(tw_now["price"], 2))
+            print(f"   🗓️ 大盤歷史補上 {tw_now['date']}：{tw_now['price']}")
 
     # 2. 三大法人
     inst = fetch_institutional()

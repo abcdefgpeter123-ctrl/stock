@@ -169,9 +169,32 @@ def test_stocks_json():
     eq([v for v in set(tp.values()) if v in tp], [], "題材父子關係只有一層")
 
 
+# ── prev_close_before（Yahoo 昨收）──────────────────────────────
+def test_prev_close_before():
+    """
+    2026/10/29：Yahoo 日 K 還沒附上今天那根時，舊寫法 closes[-2] 拿到「前天」，
+    聯發科 −4.49% 顯示成 +2.15%。昨收必須是「日期早於今天的最後一根」。
+    """
+    from fetch_data_full import prev_close_before
+    print("prev_close_before")
+    ts = lambda y, m, d: int(datetime.datetime(y, m, d, 9, 0).timestamp())
+    days = [ts(2026, 10, 27), ts(2026, 10, 28)]
+    # 今天(10/29)那根還沒出現：昨收應是 10/28，不是 10/27
+    eq(prev_close_before(days, [3960, 4235], "2026/10/29"), 4235, "今天的 K 棒缺席時取昨天（曾經誤取前天）")
+    # 今天那根已附上：一樣取 10/28
+    eq(prev_close_before(days + [ts(2026, 10, 29)], [3960, 4235, 4045], "2026/10/29"), 4235,
+       "今天的 K 棒已存在時取昨天")
+    # 今天那根 close 是 None
+    eq(prev_close_before(days + [ts(2026, 10, 29)], [3960, 4235, None], "2026/10/29"), 4235,
+       "今天的 close 為 None 不影響")
+    # 昨天那根 close 是 None → 往前找
+    eq(prev_close_before(days, [3960, None], "2026/10/29"), 3960, "昨天為 None 時往前取")
+    eq(prev_close_before([], [], "2026/10/29"), None, "沒有資料回 None")
+
+
 def main():
     for fn in [test_roc_to_ad_date, test_safe_float, test_merge_eps_history,
-               test_split_heavy_payloads, test_weekdays_between,
+               test_split_heavy_payloads, test_weekdays_between, test_prev_close_before,
                test_stocks_json]:
         fn()
         print()
