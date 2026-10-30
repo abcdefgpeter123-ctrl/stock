@@ -5,7 +5,7 @@
     "industry": "半導體業",
     "major_clients": "Apple、NVIDIA、AMD、Qualcomm",
     "generated": "2026/05/22",
-    "pe": 24.8,
+    "pe": 24.3,
     "eps": 97.47,
     "quarterly_eps": [
       {
@@ -69,7 +69,7 @@
     "industry": "電子零組件業",
     "major_clients": "Apple、NVIDIA、Microsoft",
     "generated": "2026/05/22",
-    "pe": 16.4,
+    "pe": 16.3,
     "eps": 15.05,
     "quarterly_eps": [
       {
@@ -328,7 +328,7 @@
     "industry": "光學業",
     "major_clients": "Apple、Samsung",
     "generated": "2026/05/22",
-    "pe": 31.6,
+    "pe": 29.5,
     "eps": 183.78,
     "quarterly_eps": [
       {
@@ -533,8 +533,8 @@
     "industry": "半導體業",
     "major_clients": "手機廠、IoT 裝置廠",
     "generated": "2026/05/22",
-    "pe": 17.6,
-    "eps": 8.77,
+    "pe": 18.2,
+    "eps": 9.05,
     "quarterly_eps": [
       {
         "q": "2024Q4",
@@ -1114,7 +1114,7 @@
     "industry": "航運業",
     "major_clients": "全球貿易商",
     "generated": "2026/05/22",
-    "pe": 10.4,
+    "pe": 10.8,
     "eps": 25.2,
     "quarterly_eps": [
       {
@@ -1949,7 +1949,7 @@
     "industry": "半導體業",
     "major_clients": "Google、Amazon、Meta、台積電",
     "generated": "2026/05/31",
-    "pe": 196.2,
+    "pe": 196.1,
     "eps": 38.93,
     "quarterly_eps": [
       {
@@ -2493,7 +2493,7 @@
   },
   "2345": {
     "generated": "2026/06/05",
-    "pe": 28.7,
+    "pe": 25.5,
     "eps": 63.31,
     "quarterly_eps": [
       {
@@ -2772,7 +2772,7 @@
   },
   "3090": {
     "generated": "2026/06/05",
-    "pe": 19.7,
+    "pe": 18.4,
     "eps": 8.05,
     "quarterly_eps": [
       {
@@ -2831,7 +2831,7 @@
   },
   "2356": {
     "generated": "2026/06/05",
-    "pe": 19.9,
+    "pe": 19.3,
     "eps": 3.08,
     "quarterly_eps": [
       {
@@ -3878,7 +3878,7 @@
   },
   "2887": {
     "generated": "2026/07/30",
-    "pe": 22.2,
+    "pe": 22.4,
     "eps": 1.89,
     "quarterly_eps": [
       {
@@ -4056,7 +4056,7 @@
   },
   "3583": {
     "generated": "2026/07/30",
-    "pe": 36.4,
+    "pe": 34.4,
     "eps": 16.41,
     "quarterly_eps": [
       {
