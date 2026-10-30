@@ -961,7 +961,9 @@ def compute_opportunities(all_prices, extra_codes=None, company_info=None, inst_
             histories[code] = closes          # 完整年資料，供 pct 計算
             histories_json[code] = {
                 "labels":  dates,                           # 全年日期（~252 筆）
-                "closes":  [round(c, 1) for c in closes],  # 全年收盤
+                # 兩位小數：50 元以下的股票跳動單位是 0.05，只留一位會把 42.55 存成 42.5，
+                # 均線與「今日價 vs 歷史最後一根」的比對都會有誤差
+                "closes":  [round(c, 2) for c in closes],  # 全年收盤
                 "volumes": volumes,                         # 全年成交量
             }
         time.sleep(0.25)
@@ -1786,11 +1788,16 @@ def _parse_twse_rwd_rows(resp):
             close = safe_float(row[idx_close])
             if close == 0:
                 continue
-            # 漲跌方向
-            direction = str(row[idx_dir]).strip() if idx_dir >= 0 else ""
-            chg = safe_float(row[idx_chg]) if idx_chg >= 0 else 0.0
-            if "▼" in direction or direction == "-":
-                chg = -abs(chg)
+            # 漲跌方向。MI_INDEX 給的是 HTML：'<p style= color:green>-</p>'，
+            # 不是單純的 '-'。先去掉標籤再判斷，否則所有下跌都會被當成上漲
+            # （2026/10/30 實測：聯發科 −3.21% 被算成 +3.43%）。
+            # 'X' 是除權息等不比價的日子，漲跌價差不具意義，當作 0。
+            direction = re.sub(r"<[^>]+>", "", str(row[idx_dir])).strip() if idx_dir >= 0 else ""
+            chg = abs(safe_float(row[idx_chg])) if idx_chg >= 0 else 0.0
+            if direction in ("-", "▼") or "▼" in direction:
+                chg = -chg
+            elif direction == "X":
+                chg = 0.0
             prev    = close - chg
             chg_pct = round(chg / prev * 100, 2) if prev else 0.0
             vol_s   = str(row[idx_vol]).replace(",", "") if idx_vol >= 0 else "0"
@@ -1926,6 +1933,14 @@ def fetch_all_otc_openapi():
         r = requests.get(url, headers=HEADERS, timeout=60)
         rows = r.json()
         prices = {}
+        # 和上市端一樣只收「今天」的資料。TPEX 盤後更新前會回前一天，
+        # 現在交易所報價優先於 Yahoo，沒擋的話會用昨天的舊價蓋掉今天的。
+        today_roc = str(datetime.date.today().year - 1911) + datetime.date.today().strftime("%m%d")
+        dates = {str(x.get("Date", "")).strip() for x in rows[:50] if isinstance(x, dict)}
+        if dates and today_roc not in dates:
+            print(f"   ⚠️ TPEX 資料日期 {sorted(dates)} 非今天 {today_roc}，略過")
+            return {}
+        today_s = datetime.date.today().strftime("%Y/%m/%d")
         for row in rows:
             code  = str(row.get("SecuritiesCompanyCode",
                         row.get("code", ""))).strip()
@@ -1945,7 +1960,9 @@ def fetch_all_otc_openapi():
                 "open":    safe_float(row.get("Open", "")),
                 "high":    safe_float(row.get("High", "")),
                 "low":     safe_float(row.get("Low", "")),
-                "vol":     int(str(row.get("TradeVolume","0")).replace(",","") or 0),
+                "vol":     int(float(str(row.get("TradingShares", row.get("TradeVolume", "0"))).replace(",", "") or 0)),
+                "date":    today_s,
+                "src":     "TPEX",
             }
         return prices
     except Exception as e:
@@ -2984,12 +3001,48 @@ def main():
     otc = fetch_all_otc_openapi()
     print(f"   上櫃: {len(otc)} 支")
 
-    # Yahoo 即時報價優先；TWSE/TPEX 補齊其餘個股
-    all_prices = {**otc, **twse, **yf_prices}
+    # 交易所（TWSE／TPEX）優先，Yahoo 只當備援。
+    #
+    # 2026/10 之前是 Yahoo 優先。Yahoo 的「昨收」來自它自己的日 K 序列，序列晚一天
+    # 時漲跌幅會變成「今天對前天」——16 個交易日裡有 7 天整片算錯。交易所給的是
+    # 官方的漲跌價差，不必自己推算昨收。兩邊都只收「今天」的資料（各自有日期檢查）。
+    today_s = datetime.date.today().strftime("%Y/%m/%d")
+    exch = {**otc, **twse}
+    for v in exch.values():
+        v.setdefault("date", today_s)
+        v.setdefault("src", "TWSE")
+    for v in yf_prices.values():
+        v.setdefault("src", "Yahoo")
+    all_prices = {**yf_prices, **exch}
+    for code, v in all_prices.items():           # 交易所沒給中文名時沿用 Yahoo 對照
+        if not v.get("name") and yf_prices.get(code, {}).get("name"):
+            v["name"] = yf_prices[code]["name"]
 
-    # 從 Yahoo 樣本取得實際交易日期
+    # 兩個來源都有的監控股，價格或漲跌幅對不上就警告——不默默挑一個。
+    watch = [c for c in FALLBACK_CODES if c in WATCH_NAMES]
+    diffs = []
+    for c in watch:
+        e, y = exch.get(c), yf_prices.get(c)
+        if not e or not y or not e.get("price"):
+            continue
+        if (abs(e["price"] - y["price"]) / e["price"] > 0.005
+                or abs((e.get("changeP") or 0) - (y.get("changeP") or 0)) > 0.3):
+            diffs.append(f"{WATCH_NAMES.get(c, c)}({c}) 交易所 {e['price']} {e.get('changeP', 0):+.2f}%"
+                         f"／Yahoo {y['price']} {y.get('changeP', 0):+.2f}%")
+    if diffs:
+        warn(f"交易所與 Yahoo 報價有 {len(diffs)} 檔不一致，已採用交易所數字："
+             + "；".join(diffs[:4]) + ("…" if len(diffs) > 4 else ""))
+
+    # 交易所大面積缺席時，等於整批靠 Yahoo，漲跌幅有算錯的風險，要讓使用者知道
+    n_exch = sum(1 for c in watch if c in exch)
+    if watch and n_exch / len(watch) < 0.8:
+        warn(f"今日只有 {n_exch}/{len(watch)} 檔監控股取得交易所報價，其餘改用 Yahoo 備援，"
+             f"單日漲跌幅可能不準確", "error" if n_exch / len(watch) < 0.5 else "warn")
+
+    # 交易日期：交易所有資料就是今天；否則用 Yahoo 回報的市場日期
     sample_yf = next((v for v in yf_prices.values() if v.get("date")), None)
-    data["prices_date"] = sample_yf["date"] if sample_yf else datetime.date.today().strftime("%Y/%m/%d")
+    data["prices_date"] = (today_s if n_exch else
+                           (sample_yf["date"] if sample_yf else today_s))
 
     print(f"✅ 全市場合計 {len(all_prices)} 支")
 
@@ -3077,6 +3130,24 @@ def main():
     if patched:
         data["histories"] = histories
         print(f"   🗓️ 補上最新交易日 {prices_date}：{patched} 支股票")
+
+    # ── 漲跌幅自我檢查：報價的 changeP 要對得上「歷史最後兩根」──────────
+    # 交易所報價失效、整批改用 Yahoo 時，這是唯一能抓到「昨收取錯天」的地方
+    # （2026/10 有 7 個交易日整片算錯，當時完全沒有提示）。
+    bad = []
+    for code in FALLBACK_CODES:
+        h, p = histories.get(code) or {}, all_prices.get(code) or {}
+        labels, closes = h.get("labels", []), h.get("closes", [])
+        if (len(closes) < 2 or not labels or labels[-1] != prices_date
+                or p.get("changeP") is None or not closes[-2]):
+            continue
+        real = (closes[-1] / closes[-2] - 1) * 100
+        if abs(real - p["changeP"]) > 0.5:
+            bad.append(f"{WATCH_NAMES.get(code, code)} 顯示 {p['changeP']:+.2f}% 應為 {real:+.2f}%")
+    if bad:
+        warn(f"單日漲跌幅有 {len(bad)} 檔和歷史收盤對不上，題材回顧「一天」與漲跌家數可能有誤："
+             + "、".join(bad[:4]) + ("…" if len(bad) > 4 else ""),
+             "error" if len(bad) >= 10 else "warn")
 
     # 5b. ETF 持股比重（TWSE OpenAPI）
     print("📊 ETF 成分股持股抓取中...")

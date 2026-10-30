@@ -192,9 +192,34 @@ def test_prev_close_before():
     eq(prev_close_before([], [], "2026/10/29"), None, "沒有資料回 None")
 
 
+# ── _parse_twse_rwd_rows（上市個股漲跌方向）─────────────────────
+def test_parse_twse_rwd_direction():
+    """
+    MI_INDEX 的「漲跌(+/-)」是 HTML（'<p style= color:green>-</p>'），
+    舊版只比對 '-'，所有下跌都被算成上漲。
+    """
+    from fetch_data_full import _parse_twse_rwd_rows
+    print("_parse_twse_rwd_rows 漲跌方向")
+    fields = ['證券代號', '證券名稱', '成交股數', '成交筆數', '成交金額', '開盤價', '最高價',
+              '最低價', '收盤價', '漲跌(+/-)', '漲跌價差']
+    row = lambda code, d, chg, close: [code, 'x', '1,000', '1', '1', close, close, close, close, d, chg]
+    p = _parse_twse_rwd_rows({"fields": fields, "data": [
+        row('2454', '<p style= color:green>-</p>', '130.00', '3,915.00'),
+        row('1101', '<p style= color:red>+</p>', '0.15', '28.35'),
+        row('2330', '<p> </p>', '0.00', '2,370.00'),
+        row('9999', '<p>X</p>', '5.00', '100.00'),
+    ]})
+    eq(p['2454']['changeP'], -3.21, "HTML 綠色 '-' → 下跌（曾經誤判成 +3.43%）")
+    eq(p['2454']['change'], -130.0, "下跌的漲跌價差為負")
+    eq(p['1101']['changeP'], 0.53, "HTML 紅色 '+' → 上漲")
+    eq(p['2330']['changeP'], 0.0, "平盤")
+    eq(p['9999']['changeP'], 0.0, "X（不比價）當作 0")
+
+
 def main():
     for fn in [test_roc_to_ad_date, test_safe_float, test_merge_eps_history,
                test_split_heavy_payloads, test_weekdays_between, test_prev_close_before,
+               test_parse_twse_rwd_direction,
                test_stocks_json]:
         fn()
         print()
