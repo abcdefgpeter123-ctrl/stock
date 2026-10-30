@@ -1,12 +1,12 @@
 {
  "_readme": "給排程／自動化讀的精簡摘要。網頁上看得到的分析在這裡都已算好，不需要跑瀏覽器。由 build_daily_summary.js 在 GitHub Actions 中產生。",
- "generated_at": "2026-10-30T12:19:29.419Z",
+ "generated_at": "2026-10-30T16:56:38.559Z",
  "source": "https://github.com/abcdefgpeter123-ctrl/stock",
  "tw": {
-  "updated_at": "2026/10/30 20:19",
+  "updated_at": "2026/10/31 00:56",
   "prices_date": "2026/10/30",
   "market_summary": "今日加權指數大跌 -2.49%，收 45,212 點（-1156），外資賣超 1125 億，三大法人合計賣超 1403 億，籌碼略顯鬆動。 題材面以海運（+3.2%）、電信（+1.1%）、金融（-0.3%）表現較強；面板（-8.8%）、被動元件（-8.0%）、伺服器電源（-7.2%）相對落後。 留意 世界先進(5347) -8.0%、采鈺(6789) -6.3% 等個股壓力。 法人持續調節，短線需注意支撐能否守穩，建議控管部位風險。",
-  "weekly_summary": "本週加權指數收跌 -2.49%，收 45,212 點，市場偏弱整理。 題材面以海運（平均+4.4%）、金融（平均+1.4%）、半導體（平均+0.2%）表現最佳；伺服器電源（-10.2%）、網通（-9.0%）相對落後。外資本週賣超 1125 億。 本週個股亮點為穩懋(3105)（+18.9%）、南亞科(2408)（+9.8%）、華邦電(2344)（+6.5%）、威剛(3260)（+5.6%）、精材(3374)（+5.3%）；跌幅較深者有台達電(2308)（-14.4%）、臻鼎-KY(4958)（-14.3%）、友達(2409)（-13.4%）、光聖(6442)（-12.8%）、大立光(3008)（-12.1%）。",
+  "weekly_summary": "本週加權指數收跌 -2.49%，收 45,212 點，市場偏弱整理。 題材面以海運（平均+4.4%）、金融（平均+1.4%）、半導體（平均+0.2%）表現最佳；伺服器電源（-10.2%）、網通（-9.0%）相對落後。外資本週賣超 1125 億。 本週個股亮點為穩懋(3105)（+18.9%）、南亞科(2408)（+9.8%）、威剛(3260)（+8.9%）、第一金(2892)（+7.6%）、華邦電(2344)（+6.5%）；跌幅較深者有台達電(2308)（-14.4%）、友達(2409)（-13.4%）、光聖(6442)（-12.8%）、大立光(3008)（-12.1%）、聯電(2303)（-11.2%）。",
   "index": {
    "price": 45211.83,
    "chg": -1156.5,
@@ -25,14 +25,14 @@
    "dealerPct": -5.47
   },
   "vix": {
-   "price": 18.66,
-   "chg": 1.46,
-   "chgP": 8.49
+   "price": 20.03,
+   "chg": 2.83,
+   "chgP": 16.45
   },
   "usdtwd": {
-   "price": 32.58,
-   "chg": 0.197,
-   "chgP": 0.61
+   "price": 32.603,
+   "chg": 0.22,
+   "chgP": 0.68
   },
   "margin": {
    "balance_today": 9588759,
@@ -402,9 +402,9 @@
       "code": "2383",
       "name": "台光電",
       "price": 4675,
-      "low": 6150,
+      "low": 6340,
       "analysts": 18,
-      "gap_pct": 31.6,
+      "gap_pct": 35.6,
       "only_one_analyst": false
      },
      {
@@ -658,7 +658,7 @@
     {
      "code": "2308",
      "name": "台達電",
-     "upside": 87.3
+     "upside": 76.6
     },
     {
      "code": "2317",
@@ -933,20 +933,6 @@
     "below_low": true
    },
    {
-    "code": "2308",
-    "name": "台達電",
-    "price": 1335,
-    "target_median": 2500,
-    "target_mean": 2500.1,
-    "high": 4120,
-    "low": 1330,
-    "analysts": 22,
-    "rating": "strong_buy",
-    "upside_pct": 87.3,
-    "mean_change": -2.3,
-    "below_low": false
-   },
-   {
     "code": "8210",
     "name": "勤誠",
     "price": 716,
@@ -965,9 +951,9 @@
     "name": "台光電",
     "price": 4675,
     "target_median": 8462.5,
-    "target_mean": 8731.4,
+    "target_mean": 8793.1,
     "high": 11700,
-    "low": 6150,
+    "low": 6340,
     "analysts": 18,
     "rating": "strong_buy",
     "upside_pct": 81,
@@ -987,6 +973,20 @@
     "upside_pct": 78,
     "mean_change": -236.4,
     "below_low": true
+   },
+   {
+    "code": "2308",
+    "name": "台達電",
+    "price": 1335,
+    "target_median": 2357,
+    "target_mean": 2418.1,
+    "high": 4120,
+    "low": 1330,
+    "analysts": 22,
+    "rating": "strong_buy",
+    "upside_pct": 76.6,
+    "mean_change": -2.3,
+    "below_low": false
    },
    {
     "code": "3661",
@@ -1119,7 +1119,7 @@
     "name": "聯亞",
     "price": 2370,
     "target_median": 3422.5,
-    "target_mean": 3161.2,
+    "target_mean": 3171.2,
     "high": 4500,
     "low": 981.8,
     "analysts": 10,
@@ -1151,7 +1151,7 @@
     "high": 85.3,
     "low": 26,
     "analysts": 5,
-    "rating": "none",
+    "rating": "hold",
     "upside_pct": 41,
     "mean_change": 7.6,
     "below_low": false
@@ -1179,7 +1179,7 @@
     "high": 846,
     "low": 268,
     "analysts": 10,
-    "rating": "none",
+    "rating": "strong_buy",
     "upside_pct": 39.3,
     "mean_change": 22,
     "below_low": false
@@ -1605,6 +1605,20 @@
     "below_low": false
    },
    {
+    "code": "2379",
+    "name": "瑞昱",
+    "price": 803,
+    "target_median": 765,
+    "target_mean": 762.2,
+    "high": 950,
+    "low": 540,
+    "analysts": 16,
+    "rating": "buy",
+    "upside_pct": -4.7,
+    "mean_change": 1.4,
+    "below_low": false
+   },
+   {
     "code": "4904",
     "name": "遠傳",
     "price": 114,
@@ -1616,20 +1630,6 @@
     "rating": "none",
     "upside_pct": -4.8,
     "mean_change": 2.5,
-    "below_low": false
-   },
-   {
-    "code": "2379",
-    "name": "瑞昱",
-    "price": 803,
-    "target_median": 730,
-    "target_mean": 730.5,
-    "high": 950,
-    "low": 610,
-    "analysts": 15,
-    "rating": "none",
-    "upside_pct": -9.1,
-    "mean_change": 1.4,
     "below_low": false
    },
    {
@@ -1765,7 +1765,7 @@
     },
     "foreign_holding_pct": {
      "shares": 25932370067,
-     "fh": 68.55
+     "fh": 68.51
     }
    },
    {
@@ -1787,7 +1787,7 @@
     },
     "foreign_holding_pct": {
      "shares": 12570093899,
-     "fh": 38.84
+     "fh": 38.96
     }
    },
    {
@@ -1828,7 +1828,7 @@
     },
     "foreign_holding_pct": {
      "shares": 318413119,
-     "fh": 4.58
+     "fh": 4.46
     }
    },
    {
@@ -1850,7 +1850,7 @@
     },
     "foreign_holding_pct": {
      "shares": 1604952613,
-     "fh": 53.88
+     "fh": 53.68
     }
    },
    {
@@ -1872,7 +1872,7 @@
     },
     "foreign_holding_pct": {
      "shares": 86204722,
-     "fh": 50.18
+     "fh": 49.45
     }
    },
    {
@@ -1894,7 +1894,7 @@
     },
     "foreign_holding_pct": {
      "shares": 611511469,
-     "fh": 46.22
+     "fh": 46.18
     }
    },
    {
@@ -1916,7 +1916,7 @@
     },
     "foreign_holding_pct": {
      "shares": 515512641,
-     "fh": 46.98
+     "fh": 47.34
     }
    },
    {
@@ -1938,7 +1938,7 @@
     },
     "foreign_holding_pct": {
      "shares": 134011911,
-     "fh": 27.45
+     "fh": 27.37
     }
    },
    {
@@ -1960,7 +1960,7 @@
     },
     "foreign_holding_pct": {
      "shares": 4488089243,
-     "fh": 77.08
+     "fh": 76.79
     }
    },
    {
@@ -1982,7 +1982,7 @@
     },
     "foreign_holding_pct": {
      "shares": 1283882318,
-     "fh": 24.37
+     "fh": 24.23
     }
    },
    {
@@ -2023,7 +2023,7 @@
     },
     "foreign_holding_pct": {
      "shares": 759146634,
-     "fh": 30.91
+     "fh": 30.71
     }
    },
    {
@@ -2064,7 +2064,7 @@
     },
     "foreign_holding_pct": {
      "shares": 4500000193,
-     "fh": 21.04
+     "fh": 20.96
     }
    },
    {
@@ -2086,7 +2086,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3098627894,
-     "fh": 15.31
+     "fh": 15.16
     }
    },
    {
@@ -2165,7 +2165,7 @@
     },
     "foreign_holding_pct": {
      "shares": 184905918,
-     "fh": 30.03
+     "fh": 30.34
     }
    },
    {
@@ -2206,7 +2206,7 @@
     },
     "foreign_holding_pct": {
      "shares": 81817552,
-     "fh": 30.61
+     "fh": 31.1
     }
    },
    {
@@ -2250,7 +2250,7 @@
     },
     "foreign_holding_pct": {
      "shares": 80346080,
-     "fh": 19.55
+     "fh": 19.59
     }
    },
    {
@@ -2272,7 +2272,7 @@
     },
     "foreign_holding_pct": {
      "shares": 358321114,
-     "fh": 42.86
+     "fh": 42.65
     }
    },
    {
@@ -2294,7 +2294,7 @@
     },
     "foreign_holding_pct": {
      "shares": 1641291596,
-     "fh": 41.33
+     "fh": 41.13
     }
    },
    {
@@ -2316,7 +2316,7 @@
     },
     "foreign_holding_pct": {
      "shares": 4107627432,
-     "fh": 23.13
+     "fh": 23.05
     }
    },
    {
@@ -2360,7 +2360,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3587475066,
-     "fh": 19.45
+     "fh": 19.35
     }
    },
    {
@@ -2382,7 +2382,7 @@
     },
     "foreign_holding_pct": {
      "shares": 669888886,
-     "fh": 22.35
+     "fh": 22.18
     }
    },
    {
@@ -2404,7 +2404,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3429842250,
-     "fh": 35.85
+     "fh": 35.5
     }
    },
    {
@@ -2426,7 +2426,7 @@
     },
     "foreign_holding_pct": {
      "shares": 742760280,
-     "fh": 39.74
+     "fh": 39.57
     }
    },
    {
@@ -2448,7 +2448,7 @@
     },
     "foreign_holding_pct": {
      "shares": 4407146625,
-     "fh": 33.6
+     "fh": 33.24
     }
    },
    {
@@ -2470,7 +2470,7 @@
     },
     "foreign_holding_pct": {
      "shares": 2597543329,
-     "fh": 60.17
+     "fh": 59.76
     }
    },
    {
@@ -2492,7 +2492,7 @@
     },
     "foreign_holding_pct": {
      "shares": 14028648626,
-     "fh": 40
+     "fh": 39.99
     }
    },
    {
@@ -2514,7 +2514,7 @@
     },
     "foreign_holding_pct": {
      "shares": 2316107763,
-     "fh": 42.15
+     "fh": 41.95
     }
    },
    {
@@ -2536,7 +2536,7 @@
     },
     "foreign_holding_pct": {
      "shares": 95297072,
-     "fh": 22.75
+     "fh": 22.72
     }
    },
    {
@@ -2558,7 +2558,7 @@
     },
     "foreign_holding_pct": {
      "shares": 125619146,
-     "fh": 5.32
+     "fh": 5.52
     }
    },
    {
@@ -2580,7 +2580,7 @@
     },
     "foreign_holding_pct": {
      "shares": 392543007,
-     "fh": 52.47
+     "fh": 52.36
     }
    },
    {
@@ -2602,7 +2602,7 @@
     },
     "foreign_holding_pct": {
      "shares": 93387429,
-     "fh": 23.3
+     "fh": 23.22
     }
    },
    {
@@ -2624,7 +2624,7 @@
     },
     "foreign_holding_pct": {
      "shares": 147203878,
-     "fh": 25.04
+     "fh": 24.89
     }
    },
    {
@@ -2646,7 +2646,7 @@
     },
     "foreign_holding_pct": {
      "shares": 561117897,
-     "fh": 56.21
+     "fh": 56.27
     }
    },
    {
@@ -2668,7 +2668,7 @@
     },
     "foreign_holding_pct": {
      "shares": 451706232,
-     "fh": 8.17
+     "fh": 7.79
     }
    },
    {
@@ -2690,7 +2690,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7989197337,
-     "fh": 20.08
+     "fh": 19.97
     }
    },
    {
@@ -2712,7 +2712,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7547098972,
-     "fh": 11.2
+     "fh": 10.81
     }
    },
    {
@@ -2734,7 +2734,7 @@
     },
     "foreign_holding_pct": {
      "shares": 2165042996,
-     "fh": 27.26
+     "fh": 27.62
     }
    },
    {
@@ -2756,7 +2756,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3492104270,
-     "fh": 28.57
+     "fh": 29.04
     }
    },
    {
@@ -2778,7 +2778,7 @@
     },
     "foreign_holding_pct": {
      "shares": 5400444335,
-     "fh": 34.17
+     "fh": 34.23
     }
    },
    {
@@ -2800,7 +2800,7 @@
     },
     "foreign_holding_pct": {
      "shares": 6117941273,
-     "fh": 15.85
+     "fh": 15.96
     }
    },
    {
@@ -2866,7 +2866,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7523181742,
-     "fh": 13.37
+     "fh": 13.54
     }
    },
    {
@@ -2888,7 +2888,7 @@
     },
     "foreign_holding_pct": {
      "shares": 6365740781,
-     "fh": 34.69
+     "fh": 34.68
     }
    },
    {
@@ -2910,7 +2910,7 @@
     },
     "foreign_holding_pct": {
      "shares": 7757446545,
-     "fh": 18.93
+     "fh": 19.04
     }
    },
    {
@@ -2932,7 +2932,7 @@
     },
     "foreign_holding_pct": {
      "shares": 3607705357,
-     "fh": 20.62
+     "fh": 20.69
     }
    },
    {
@@ -2954,7 +2954,7 @@
     },
     "foreign_holding_pct": {
      "shares": 14007364952,
-     "fh": 18.93
+     "fh": 18.92
     }
    },
    {
@@ -2976,7 +2976,7 @@
     },
     "foreign_holding_pct": {
      "shares": 14669210128,
-     "fh": 23.33
+     "fh": 23.32
     }
    },
    {
@@ -2998,7 +2998,7 @@
     },
     "foreign_holding_pct": {
      "shares": 19675932806,
-     "fh": 35.34
+     "fh": 35.38
     }
    },
    {
@@ -3020,7 +3020,7 @@
     },
     "foreign_holding_pct": {
      "shares": 13864395944,
-     "fh": 27.55
+     "fh": 27.52
     }
    },
    {
@@ -3042,7 +3042,7 @@
     },
     "foreign_holding_pct": {
      "shares": 130798197,
-     "fh": 22.47
+     "fh": 22.95
     }
    },
    {
@@ -3086,7 +3086,7 @@
     },
     "foreign_holding_pct": {
      "shares": 2063128462,
-     "fh": 42.11
+     "fh": 41.39
     }
    },
    {
@@ -3108,7 +3108,7 @@
     },
     "foreign_holding_pct": {
      "shares": 485204774,
-     "fh": 14.66
+     "fh": 12.82
     }
    },
    {
@@ -3130,7 +3130,7 @@
     },
     "foreign_holding_pct": {
      "shares": 164735137,
-     "fh": 9.75
+     "fh": 10
     }
    }
   ],
