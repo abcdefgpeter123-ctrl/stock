@@ -3014,9 +3014,13 @@ def main():
     for v in yf_prices.values():
         v.setdefault("src", "Yahoo")
     all_prices = {**yf_prices, **exch}
-    for code, v in all_prices.items():           # 交易所沒給中文名時沿用 Yahoo 對照
-        if not v.get("name") and yf_prices.get(code, {}).get("name"):
-            v["name"] = yf_prices[code]["name"]
+    for code, v in all_prices.items():
+        # 交易所的名稱是簡稱且常帶記號（「國巨*」「世界」「京元電子」），
+        # 監控股一律用清單上的名字，畫面才一致；其餘去掉尾端的 *。
+        if code in WATCH_NAMES:
+            v["name"] = WATCH_NAMES[code]
+        else:
+            v["name"] = str(v.get("name") or yf_prices.get(code, {}).get("name") or "").rstrip("*").strip()
 
     # 兩個來源都有的監控股，價格或漲跌幅對不上就警告——不默默挑一個。
     watch = [c for c in FALLBACK_CODES if c in WATCH_NAMES]
@@ -3032,6 +3036,18 @@ def main():
     if diffs:
         warn(f"交易所與 Yahoo 報價有 {len(diffs)} 檔不一致，已採用交易所數字："
              + "；".join(diffs[:4]) + ("…" if len(diffs) > 4 else ""))
+
+    # 代號對不對：清單名稱和交易所名稱至少要有一個字重疊。
+    # 2026/10 抓到「亞光」的代號被寫成 3484（那是崧騰），整個清單建立以來一直顯示錯的公司。
+    # 簡稱不同（世界／世界先進、京元電子／京元電）不會誤報，完全不相干才會。
+    wrong = []
+    for c in watch:
+        ex_name = str((exch.get(c) or {}).get("name", "")).rstrip("*").strip()
+        mine = WATCH_NAMES.get(c, "")
+        if ex_name and mine and not (set(ex_name) & set(mine)):
+            wrong.append(f"{c} 清單寫「{mine}」但交易所是「{ex_name}」")
+    if wrong:
+        warn("監控清單的代號可能打錯（stocks.json）：" + "；".join(wrong), "error")
 
     # 交易所大面積缺席時，等於整批靠 Yahoo，漲跌幅有算錯的風險，要讓使用者知道
     n_exch = sum(1 for c in watch if c in exch)

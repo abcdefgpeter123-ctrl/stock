@@ -307,7 +307,7 @@ window.STOCK_DATA = {
    "theme": "光學"
   },
   {
-   "code": "3484",
+   "code": "3019",
    "name": "亞光",
    "theme": "光學"
   },

@@ -1,0 +1,90 @@
+/*
+ * mobile.css — 手機版調整（所有頁面共用）
+ *
+ * 只在 640px 以下生效，電腦版完全不受影響。
+ * 2026/10 實測 375px 寬時的問題（修改前）：
+ *   · 頂部導覽 6 顆按鈕擠在一排，「台股」被壓成一字一行的直排
+ *   · 首頁 1,600 多處文字小於 11px（大量 9–10.5px），手機上幾乎看不清
+ *   · 154 個可點元素高度不到 28px，手指很難點中
+ *   · 個股表格內容寬 1,016px、畫面只有 345px，左右滑的時候看不到是哪一檔
+ * 頁面專屬的調整（首頁的快速跳轉列、目標價先顯示 8 張）寫在 index.html。
+ */
+@media (max-width: 640px) {
+
+  /* ── 頂部導覽：維持一排，可左右滑，文字不換行 ── */
+  nav {
+    display: flex !important; flex-wrap: nowrap !important;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    gap: 6px !important; margin-bottom: 14px !important; padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav > a, nav > .nav-tab {
+    flex: 0 0 auto !important; white-space: nowrap !important;
+    padding: 7px 12px !important; font-size: 13px !important;
+  }
+
+  /* ── 字級下限：9–10.5px 的一律拉到 11px ──
+     很多字級寫在 inline style 裡，只能用屬性選擇器蓋過去。 */
+  [style*="font-size:9px"], [style*="font-size: 9px"],
+  [style*="font-size:9.5px"], [style*="font-size:10px"], [style*="font-size: 10px"],
+  [style*="font-size:10.5px"],
+  .cheat-chip .q, .detail-label, .inst5-sum, .inst-nums, .inst-pct, .inst-hold,
+  .trend-chg, .trend-lvl, .trend-streak, .pe-lbl, .val-note, .val-nums,
+  .tp-stat-note, .tp-stat-est, .tp-fund-lbl, .tp-dim-tag, .tp-revenue-note,
+  .etf-type, .etf-watchlist, .etf-holdings-title, .etf-expand-hint, .holding-code,
+  .v2-tag, .src-tag, .aetf-row .cd, .aetf-row .chg, .aetf-who, .expand-icon {
+    font-size: 11px !important;
+  }
+
+  /* ── 點擊目標：至少 32px 高 ── */
+  .cheat-chip, .why-chip, .pill, .sec-toggle, .theme-period-tab,
+  .opp-chip, .chip, .lnk, .btn-sm, .fav-btn, .wl-btn {
+    min-height: 32px; display: inline-flex; align-items: center;
+  }
+  .cheat-chip { padding: 4px 10px; font-size: 12.5px; }
+  .cheat-chips { gap: 6px; }
+  .sec-toggle { padding: 5px 12px; font-size: 12px; }
+
+  /* ── 個股表格：藏掉代號、題材兩欄，☆ 與名稱固定在左邊 ──
+     表格本來就照題材分段，「題材」欄重複；代號點開詳情就看得到。
+     左右滑看漲跌、法人時，名稱留在原地，才知道是哪一檔。 */
+  .tbl-wrap { -webkit-overflow-scrolling: touch; }
+  .tbl-wrap table th:nth-child(2), .tbl-wrap table td:nth-child(2):not([colspan]),
+  .tbl-wrap table th:nth-child(4), .tbl-wrap table td:nth-child(4):not([colspan]) {
+    display: none;
+  }
+  .tbl-wrap table th:nth-child(1), .tbl-wrap table td:nth-child(1):not([colspan]) {
+    position: sticky; left: 0; z-index: 2; width: 34px !important; min-width: 34px;
+    background: var(--bg2);
+  }
+  .tbl-wrap table th:nth-child(3), .tbl-wrap table td:nth-child(3):not([colspan]) {
+    position: sticky; left: 34px; z-index: 2; background: var(--bg2);
+    box-shadow: 4px 0 6px -4px rgba(0,0,0,.6);
+  }
+  .tbl-wrap table th { z-index: 3; }
+  /* 欄距收窄、名稱與訊號允許換行。原本每格左右各 14px 且不換行，
+     整張表 1,016px，在 345px 的畫面上要滑三個畫面寬 */
+  .tbl-wrap table th, .tbl-wrap table td:not([colspan]) { padding: 8px 7px; }
+  .tbl-wrap table th:nth-child(1), .tbl-wrap table td:nth-child(1):not([colspan]) {
+    padding: 8px 0; text-align: center;
+  }
+  .tbl-wrap table td:nth-child(3):not([colspan]) {
+    white-space: normal; min-width: 64px; max-width: 92px; word-break: keep-all;
+  }
+  .tbl-wrap table th:last-child, .tbl-wrap table td:last-child:not([colspan]) {
+    white-space: normal; min-width: 84px;
+  }
+  .tbl-wrap table td:last-child:not([colspan]) .badge { margin: 1px 0; }
+  /* 題材分段的標題列（「晶圓代工 代客製造晶片…」）原本不換行，一行就把整張表
+     撐到 1,016px——藏欄位、縮欄距都沒用，真正的元兇是它。讓它換行，並固定在左側可視範圍 */
+  /* 法人 5 日那欄是外／投／自三條橫條加一行外資持股，決定了整列高度（約 95px，
+     一個畫面只放得下 5 檔）。手機上把條變細、行距收緊，「—」的外資持股（上櫃股沒資料）直接不顯示 */
+  .inst-bar2 { gap: 0 !important; min-width: 96px !important; }
+  .inst-row2 { line-height: 1.15; }
+  .inst-bar2-track { height: 5px !important; }
+  .inst-hold { line-height: 1.15; }
+  .inst-hold.dim { display: none; }
+  .tbl-wrap table td[colspan] { white-space: normal; }
+  .tbl-wrap table td[colspan] > * { position: sticky; left: 8px; max-width: calc(100vw - 60px); }
+}
