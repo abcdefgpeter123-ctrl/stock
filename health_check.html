@@ -432,7 +432,7 @@ body{font-family:var(--font);color:var(--text);padding:24px 20px 80px;max-width:
 </div>
 
 <script src="freshness.js?v=2"></script>
-<script src="stocks.js?v=1"></script>
+<script src="stocks.js?v=284ee951"></script>
 <script src="market_status.js?v=5"></script>
 <script>
 // ══════════════════════════════════════════════════════
@@ -496,6 +496,19 @@ let twiiPrice      = 0;
 //  Load data.json + company_info.json
 // ══════════════════════════════════════════════════════
 async function loadData() {
+  // 與首頁相同：stocks.js 沒載入時 WATCH_STOCKS 會安靜地變成空的，整頁看起來像沒資料
+  if (!WATCH_STOCKS.length) {
+    let tried = false;
+    try { tried = !!sessionStorage.getItem("stocks_js_retry"); sessionStorage.setItem("stocks_js_retry", "1"); } catch (e) { tried = true; }
+    if (!tried) { location.reload(); return; }
+    const bar = document.createElement("div");
+    bar.style.cssText = "background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;" +
+      "padding:10px 16px;margin:0 0 16px;font-size:13px;color:#f87171";
+    bar.textContent = "⚠️ 監控清單（stocks.js）載入失敗，個股指標無法計算。請按 Cmd+Shift+R（Windows：Ctrl+F5）強制重新整理。";
+    (document.querySelector(".wrap, .container, main") || document.body).prepend(bar);
+  } else {
+    try { sessionStorage.removeItem("stocks_js_retry"); } catch (e) {}
+  }
   try {
     const [dRes, ciRes] = await Promise.all([
       fetch('data.json?t=' + Date.now()),

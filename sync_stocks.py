@@ -45,6 +45,28 @@ def build():
     return data
 
 
+def bump_version():
+    """
+    依 stocks.js 的內容雜湊更新各頁面 <script src="stocks.js?v=..."> 的版本號。
+
+    之前版本號固定是 v=1，清單改了三次（健策、勤誠、亞光代號）都沒動過，
+    瀏覽器若沿用舊快取就會拿到舊清單。用內容雜湊，清單沒變就不會改到頁面。
+    """
+    import hashlib
+    h = hashlib.sha1(open(OUT, "rb").read()).hexdigest()[:8]
+    changed = []
+    for page in ("index.html", "health_check.html"):
+        p = os.path.join(D, page)
+        if not os.path.exists(p):
+            continue
+        s = open(p, encoding="utf-8").read()
+        new = re.sub(r'stocks\.js\?v=[^"\']*', f"stocks.js?v={h}", s)
+        if new != s:
+            open(p, "w", encoding="utf-8").write(new)
+            changed.append(page)
+    return h, changed
+
+
 def check(data):
     """確認頁面沒有偷偷留著自己的硬編碼清單。"""
     problems = []
@@ -61,6 +83,15 @@ def check(data):
             tail = s[m.end():m.end() + 400]
             if re.search(r'\{\s*code\s*:\s*"', tail):
                 problems.append(f"{page} 仍有硬編碼的清單字面值")
+    # 每個題材都要能從首頁的題材按鈕篩到（直接有按鈕，或掛在有按鈕的父題材底下）。
+    # 「光學」就是這樣漏掉的：新增題材時沒人記得去 index.html 補按鈕。
+    p = os.path.join(D, "index.html")
+    if os.path.exists(p):
+        pills = set(re.findall(r'data-theme="([^"]+)"', open(p, encoding="utf-8").read()))
+        parent = data.get("theme_parent", {})
+        for t in sorted({x["theme"] for x in data["tw_watchlist"]}):
+            if t not in pills and parent.get(t) not in pills:
+                problems.append(f"index.html 沒有「{t}」的題材按鈕（也沒有可篩到它的父題材）")
     return problems
 
 
@@ -71,7 +102,8 @@ def main():
     for s in tw:
         themes[s["theme"]] = themes.get(s["theme"], 0) + 1
 
-    print(f"✓ 已產生 stocks.js")
+    ver, touched = bump_version()
+    print(f"✓ 已產生 stocks.js（版本 {ver}" + (f"，已更新 {'、'.join(touched)}" if touched else "") + "）")
     print(f"  台股清單 {len(tw)} 檔／額外抓取 {len(data['tw_fetch_extra'])} 檔"
           f"／題材組 {len(data['theme_groups'])} 組")
     print("  題材分佈：" + "、".join(f"{k} {v}" for k, v in
