@@ -162,20 +162,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .opp-chip:hover{background:rgba(167,139,250,.22);color:var(--text)}
 .fav-empty{padding:20px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg2);border:1px dashed var(--border);border-radius:var(--r)}
 
-/* ── 機會點交集 Venn 圖 ── */
-.venn-container{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
-.venn-svg{width:280px;height:250px;flex-shrink:0}
-.venn-circle{fill-opacity:.32;stroke-width:1.5}
-.venn-a{fill:#4ade80;stroke:#4ade80}
-.venn-b{fill:#a78bfa;stroke:#a78bfa}
-.venn-c{fill:#60a5fa;stroke:#60a5fa}
-.venn-set-label{font-size:10.5px;fill:var(--text2);text-anchor:middle;font-weight:600;letter-spacing:.02em}
-.venn-count{font-size:17px;fill:var(--text);text-anchor:middle;font-weight:700;font-family:var(--mono)}
-.venn-count-strong{font-size:21px;fill:#fbbf24}
-.venn-detail{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
-.venn-bucket-hd{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
-.venn-bucket-chips{display:flex;flex-wrap:wrap;gap:6px}
-.venn-empty{color:var(--text3);font-size:12px;padding:6px 0}
 
 /* ── 機會點 v2（依 5 年回測校準）── */
 .v2-note{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--yellow);
@@ -631,21 +617,6 @@ tr.stock-row:hover .name-cell{color:var(--purple)}
     <button class="theme-period-tab" data-period="p365" onclick="switchThemePeriod('p365',this)">一年</button>
   </div>
   <div class="theme-review-grid" id="theme-review-grid"></div>
-  <div class="sec-hd" style="margin-top:18px">🔵 機會點交集圖<span class="src-tag">兩項同時成立訊號較強</span></div>
-  <div class="venn-container">
-    <!-- 原本三圈，2026/08 移除「① 突破均線」：5 年回測逐年檢查只有 1/6 年成立，
-         總表看起來勝過基準純粹是樣本組成（多頭年份站上均線的日子本來就多）。 -->
-    <svg viewBox="0 0 300 220" class="venn-svg">
-      <circle cx="115" cy="110" r="88" class="venn-circle venn-b"/>
-      <circle cx="185" cy="110" r="88" class="venn-circle venn-c"/>
-      <text x="62"  y="212" class="venn-set-label">① 目標價上漲</text>
-      <text x="238" y="212" class="venn-set-label" style="cursor:help">② 題材補漲<title>整體題材已漲、該個股尚未反應，且落後龍頭 8–12 個百分點（回測中勝率最高的區間）</title></text>
-      <text id="venn-count-b"  x="72"  y="118" class="venn-count">0</text>
-      <text id="venn-count-c"  x="228" y="118" class="venn-count">0</text>
-      <text id="venn-count-bc" x="150" y="118" class="venn-count venn-count-strong">0</text>
-    </svg>
-    <div id="venn-detail" class="venn-detail"></div>
-  </div>
 
   <!-- ── 法人目標價追蹤 ── -->
   <div class="sec-hd" style="margin-top:18px">
@@ -1383,8 +1354,8 @@ function renderMarketSummary() {
     </div>`;
   }).join("");
 
-  // 註：原本這裡還會渲染「🎯 機會點快覽」兩列，2026/08 依需求移除。
-  renderOppVenn();
+  // 註：原本這裡還會渲染「🎯 機會點快覽」與「🔵 機會點交集圖」，
+  // 2026/08 與 2026/11 依需求先後移除（交集的兩個集合幾乎不重疊，題材補漲常是 0 檔）。
 }
 
 function _maOf(closes, n) {
@@ -1393,115 +1364,6 @@ function _maOf(closes, n) {
   return slice.reduce((a, b) => a + b, 0) / n;
 }
 
-// 註：原本這裡有 renderMaBreakoutOpps()（機會點快覽的「突破均線」列）。
-// 2026/08 隨交集圖一起移除——5 年回測逐年檢查只有 1/6 年成立，
-// 總表勝過基準是樣本組成造成的假象。_maOf() 保留給其他計算使用。
-function computeOppSets() {
-  const A = new Map();  // 站上 5/20/60 均線 —— 已退出交集圖，只留給 v2 當補充標籤
-  STOCKS.forEach(s => {
-    if (s._extra) return;
-    const p = priceCache[s.code];
-    const h = histories[s.code];
-    const closes = h?.closes;
-    if (!p || !p.price || !closes || closes.length < 60) return;
-    const price = p.price;
-    const ma5  = _maOf(closes, 5);
-    const ma20 = _maOf(closes, 20);
-    const ma60 = _maOf(closes, 60);
-    if (ma5 == null || ma20 == null || ma60 == null) return;
-    if (price <= ma5 || price <= ma20 || price <= ma60) return;
-    A.set(s.code, { code: s.code, name: nameCache[s.code] || s.name });
-  });
-
-  const B = new Map();  // ① 目標價上漲空間為正
-  watchedTargets().forEach(([code, at]) => {
-    if (!at.mean) return;
-    const p = priceCache[code];
-    if (!p || !p.price) return;
-    const upside = ((at.median || at.mean) - p.price) / p.price * 100;   // 中位數優先
-    if (upside <= 0) return;
-    B.set(code, { code, name: nameCache[code] || code, upside });
-  });
-
-  /*
-   * ② 題材已漲、個股未反應 —— 收斂到「落後龍頭 8–12 個百分點」。
-   *
-   * 抓取端仍保留 gap ≥ 8 的完整名單（機會點快覽與 v2 都吃那份），這裡只縮篩選範圍。
-   * 依據：5 年回測按落後幅度分桶，20 日勝率
-   *   8–12pt 61.9% ／ 12–16pt 59.2% ／ 16–20pt 50.5% ／ 20–30pt 41.9%（中位數轉負）
-   * 而且這個順序 2021–2026 每一年都成立。落後太多通常不是「還沒輪到它」，
-   * 是個股本身有問題，題材漲它也漲不動。
-   */
-  const GAP_LO = 8, GAP_HI = 12;
-  const C = new Map();
-  (opps || []).forEach(o => {
-    if (o.gap == null || o.gap < GAP_LO || o.gap > GAP_HI) return;
-    C.set(o.code, { code: o.code, name: o.name, gap: o.gap });
-  });
-
-  return { A, B, C };
-}
-
-// ── 機會點 v2：依 5 年回測（104 檔 / 2021-08~2026-08 / 39,612 訊號日）重新校準 ──
-//
-// v1 的信心評分把「落差越大」當成越好（落差極大 +25 分），回測顯示方向是反的：
-//   落差 8–12%  勝率 61.9%、中位 +2.41%
-//   落差 12–16% 勝率 59.2%、中位 +2.09%
-//   落差 16–20% 勝率 50.5%、中位 +0.40%
-//   落差 20–30% 勝率 41.9%、中位 −1.36%
-// 且這個順序在 2021~2026 每一年都成立。落差拉到 20% 以上通常不是「還沒跟上」，
-// 而是這檔本身有問題。v2 因此把 8–16% 當甜蜜區，≥20% 直接扣分。
-//
-// 另外兩件回測結果，也一併反映在這裡：
-//   ·「突破均線 ＋ 題材補漲」的交集反而比單獨任一項差（勝率 52.1% vs 54.9%），
-function renderOppVenn() {
-  const detailEl = document.getElementById("venn-detail");
-  if (!detailEl) return;
-
-  const { A, B, C } = computeOppSets();
-  const allCodes = new Set([...B.keys(), ...C.keys()]);   // A 仍供 v2 當補充標籤，不進交集圖
-
-  const buckets = { bc: [], b: [], c: [] };
-  allCodes.forEach(code => {
-    const inB = B.has(code), inC = C.has(code);
-    const src = B.get(code) || C.get(code);
-    if (!src) return;
-    const item = { code, name: src.name };
-    if (inB && inC)   buckets.bc.push(item);
-    else if (inB)     buckets.b.push(item);
-    else if (inC)     buckets.c.push(item);
-  });
-
-  Object.entries(buckets).forEach(([k, arr]) => {
-    const el = document.getElementById("venn-count-" + k);
-    if (el) el.textContent = arr.length;
-  });
-
-  const LABELS = {
-    bc: "🏆 兩項全中",
-    b:  "僅 ① 目標價上漲空間",
-    c:  "僅 ② 題材補漲",
-  };
-  const order = ["bc", "b", "c"];
-
-  const nonEmpty = order.filter(k => buckets[k].length);
-  if (!nonEmpty.length) {
-    detailEl.innerHTML = `<div class="venn-empty">目前尚無符合任何條件的個股</div>`;
-    return;
-  }
-
-  detailEl.innerHTML = nonEmpty.map(k => {
-    const chips = buckets[k].map(it =>
-      `<span class="opp-chip" onclick="toggleStockDetail('${it.code}')"><span style="color:var(--text)">${it.name}</span></span>`
-    ).join("");
-    const hasC = k.includes("c") || k === "abc";
-    const titleAttr = hasC ? ` title="② 題材補漲：整體題材已漲、該個股尚未反應，落後龍頭 8–12 個百分點" style="cursor:help"` : "";
-    return `<div>
-      <div class="venn-bucket-hd"${titleAttr}>${LABELS[k]} <span style="color:var(--text3);font-weight:400">(${buckets[k].length})</span></div>
-      <div class="venn-bucket-chips">${chips}</div>
-    </div>`;
-  }).join("");
-}
 
 // 機會點卡片牆已移除，改為直接展開個股表格裡的詳情列
 function scrollToOpp(code) {
@@ -3838,7 +3700,7 @@ async function loadData(){
     if(data.valuation){ valuationData = data.valuation; }
     // 懶人包①要顯示快照累積進度，必須先接上統計再渲染
     window.__snapshotStats = data.target_snapshot_stats || null;
-    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderOppVenn(); renderCheatSheet(); }
+    if(data.analyst_targets){ analystTargets = data.analyst_targets; renderCheatSheet(); }
     loadLocalTargets();   // 本機檔案，線上版沒有就自動略過
     loadActiveEtf();      // 同上：主動型 ETF 每日增減
     renderEtfFlows(data.etf_flows);
