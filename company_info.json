@@ -5,7 +5,7 @@
     "industry": "半導體業",
     "major_clients": "Apple、NVIDIA、AMD、Qualcomm",
     "generated": "2026/05/22",
-    "pe": 21.5,
+    "pe": 20.5,
     "eps": 97.47,
     "quarterly_eps": [
       {
@@ -69,7 +69,7 @@
     "industry": "電子零組件業",
     "major_clients": "Apple、NVIDIA、Microsoft",
     "generated": "2026/05/22",
-    "pe": 13.4,
+    "pe": 12.8,
     "eps": 16.42,
     "quarterly_eps": [
       {
@@ -202,7 +202,7 @@
     "industry": "伺服器業",
     "major_clients": "Meta、Google、Microsoft",
     "generated": "2026/05/22",
-    "pe": 13.1,
+    "pe": 11.8,
     "eps": 112.18,
     "quarterly_eps": [
       {
@@ -277,7 +277,7 @@
     "industry": "半導體業",
     "major_clients": "Amazon、Google",
     "generated": "2026/05/22",
-    "pe": 40.0,
+    "pe": 36.0,
     "eps": 89.9,
     "quarterly_eps": [
       {
@@ -412,7 +412,7 @@
     "industry": "半導體業",
     "major_clients": "MediaTek、聯發科、瑞昱",
     "generated": "2026/05/22",
-    "pe": 23.3,
+    "pe": 21.0,
     "eps": 7.5,
     "quarterly_eps": [
       {
@@ -504,7 +504,7 @@
     "industry": "半導體業",
     "major_clients": "伺服器廠、PC 廠",
     "generated": "2026/05/22",
-    "pe": 5.8,
+    "pe": 5.2,
     "eps": 50.82,
     "quarterly_eps": [
       {
@@ -568,7 +568,7 @@
     "industry": "半導體業",
     "major_clients": "手機廠、IoT 裝置廠",
     "generated": "2026/05/22",
-    "pe": 6.1,
+    "pe": 5.6,
     "eps": 16.0,
     "quarterly_eps": [
       {
@@ -653,7 +653,7 @@
     "industry": "半導體業",
     "major_clients": "光模組廠、AI 資料中心設備廠",
     "generated": "2026/05/22",
-    "pe": 96.6,
+    "pe": 87.0,
     "eps": 15.69,
     "quarterly_eps": [
       {
@@ -722,7 +722,7 @@
     "industry": "半導體業",
     "major_clients": "光模組廠、VCSEL 廠",
     "generated": "2026/05/22",
-    "pe": 59.2,
+    "pe": 53.3,
     "eps": 4.97,
     "quarterly_eps": [
       {
@@ -875,7 +875,7 @@
     "industry": "電子零組件業",
     "major_clients": "Apple、車廠、AI 伺服器廠",
     "generated": "2026/05/22",
-    "pe": 23.7,
+    "pe": 19.9,
     "eps": 14.85,
     "quarterly_eps": [
       {
@@ -1003,7 +1003,7 @@
     "industry": "半導體業",
     "major_clients": "Samsung、LG、BOE",
     "generated": "2026/05/22",
-    "pe": 14.0,
+    "pe": 12.8,
     "eps": 32.6,
     "quarterly_eps": [
       {
@@ -1078,7 +1078,7 @@
     "industry": "電子零組件業",
     "major_clients": "緯穎、廣達、英業達、Dell",
     "generated": "2026/05/22",
-    "pe": 27.3,
+    "pe": 24.6,
     "eps": 89.52,
     "quarterly_eps": [
       {
@@ -1184,7 +1184,7 @@
     "industry": "航運業",
     "major_clients": "全球貿易商",
     "generated": "2026/05/22",
-    "pe": 6.7,
+    "pe": 6.4,
     "eps": 36.66,
     "quarterly_eps": [
       {
@@ -1248,8 +1248,8 @@
     "industry": "航運業",
     "major_clients": "全球貿易商",
     "generated": "2026/05/22",
-    "pe": 13.5,
-    "eps": 4.44,
+    "pe": 6.6,
+    "eps": 8.02,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -1280,6 +1280,11 @@
         "q": "2026Q2",
         "eps": 1.64,
         "date": "2026-06-30"
+      },
+      {
+        "q": "2026Q3",
+        "eps": 5.31,
+        "date": "2026-09-30"
       }
     ],
     "annual_eps": [
@@ -1325,7 +1330,7 @@
     "industry": "航空業",
     "major_clients": "旅客、電商平台",
     "generated": "2026/05/22",
-    "pe": 9.5,
+    "pe": 9.1,
     "eps": 4.88,
     "quarterly_eps": [
       {
@@ -1389,7 +1394,7 @@
     "industry": "航空業",
     "major_clients": "旅客、貿易商",
     "generated": "2026/05/22",
-    "pe": 9.6,
+    "pe": 8.9,
     "eps": 2.38,
     "quarterly_eps": [
       {
@@ -1546,7 +1551,7 @@
     "industry": "鋼鐵業",
     "major_clients": "建設業、製造業",
     "generated": "2026/05/22",
-    "pe": 598.3,
+    "pe": 570.0,
     "eps": 0.03,
     "quarterly_eps": [
       {
@@ -1610,7 +1615,7 @@
     "industry": "石化業",
     "major_clients": "下游化工廠",
     "generated": "2026/05/22",
-    "pe": 22.9,
+    "pe": 21.2,
     "eps": 2.64,
     "quarterly_eps": [
       {
@@ -1735,7 +1740,7 @@
     "industry": "金融業",
     "major_clients": "一般消費者、企業",
     "generated": "2026/05/22",
-    "pe": 15.4,
+    "pe": 14.4,
     "eps": 6.73,
     "quarterly_eps": [
       {
@@ -1789,7 +1794,7 @@
     "industry": "電信業",
     "major_clients": "一般消費者、企業用戶",
     "generated": "2026/05/22",
-    "pe": 30.5,
+    "pe": 29.9,
     "eps": 5.44,
     "quarterly_eps": [
       {
@@ -1853,7 +1858,7 @@
     "industry": "半導體材料業",
     "major_clients": "台積電、三星、英特爾",
     "generated": "2026/05/22",
-    "pe": 27.8,
+    "pe": 22.5,
     "eps": 19.58,
     "quarterly_eps": [
       {
@@ -1991,7 +1996,7 @@
     "industry": "半導體業",
     "major_clients": "三星、小米、OPPO、vivo",
     "generated": "2026/05/31",
-    "pe": 59.8,
+    "pe": 53.9,
     "eps": 62.2,
     "quarterly_eps": [
       {
@@ -2123,7 +2128,7 @@
     "industry": "半導體業",
     "major_clients": "三星、SK海力士、美光",
     "generated": "2026/05/31",
-    "pe": 17.5,
+    "pe": 15.7,
     "eps": 11.53,
     "quarterly_eps": [
       {
@@ -2187,7 +2192,7 @@
     "industry": "半導體業",
     "major_clients": "台積電、聯電",
     "generated": "2026/05/31",
-    "pe": 12.2,
+    "pe": 11.1,
     "eps": 73.79,
     "quarterly_eps": [
       {
@@ -2447,7 +2452,7 @@
     "industry": "電機機械業",
     "major_clients": "國內外資料中心、科技廠",
     "generated": "2026/05/31",
-    "pe": 57.7,
+    "pe": 52.0,
     "eps": 17.75,
     "quarterly_eps": [
       {
@@ -2515,7 +2520,7 @@
     "industry": "金融業",
     "major_clients": "零售與法人投資人",
     "generated": "2026/05/31",
-    "pe": 24.7,
+    "pe": 22.5,
     "eps": 2.63,
     "quarterly_eps": [
       {
@@ -2583,7 +2588,7 @@
   },
   "2308": {
     "generated": "2026/06/05",
-    "pe": 31.7,
+    "pe": 27.1,
     "eps": 33.24,
     "quarterly_eps": [
       {
@@ -2768,7 +2773,7 @@
   },
   "2891": {
     "generated": "2026/06/05",
-    "pe": 18.1,
+    "pe": 16.7,
     "eps": 4.06,
     "quarterly_eps": [
       {
@@ -2822,7 +2827,7 @@
   },
   "3374": {
     "generated": "2026/06/05",
-    "pe": 50.8,
+    "pe": 45.7,
     "eps": 6.99,
     "quarterly_eps": [
       {
@@ -2882,7 +2887,7 @@
   },
   "6173": {
     "generated": "2026/06/05",
-    "pe": 23.8,
+    "pe": 19.3,
     "eps": 6.99,
     "quarterly_eps": [
       {
@@ -3006,7 +3011,7 @@
   },
   "2356": {
     "generated": "2026/06/05",
-    "pe": 13.4,
+    "pe": 13.0,
     "eps": 3.03,
     "quarterly_eps": [
       {
@@ -3066,7 +3071,7 @@
   },
   "6223": {
     "generated": "2026/06/05",
-    "pe": 76.6,
+    "pe": 62.1,
     "eps": 57.3,
     "quarterly_eps": [
       {
@@ -3190,7 +3195,7 @@
   },
   "3026": {
     "generated": "2026/06/05",
-    "pe": 28.0,
+    "pe": 25.2,
     "eps": 12.84,
     "quarterly_eps": [
       {
@@ -3310,7 +3315,7 @@
   },
   "2382": {
     "generated": "2026/06/05",
-    "pe": 11.9,
+    "pe": 11.4,
     "eps": 22.06,
     "quarterly_eps": [
       {
@@ -3370,7 +3375,7 @@
   },
   "2472": {
     "generated": "2026/06/05",
-    "pe": 13.9,
+    "pe": 11.3,
     "eps": 10.42,
     "quarterly_eps": [
       {
@@ -3430,7 +3435,7 @@
   },
   "2324": {
     "generated": "2026/06/05",
-    "pe": 13.9,
+    "pe": 13.1,
     "eps": 1.93,
     "quarterly_eps": [
       {
@@ -3545,7 +3550,7 @@
   },
   "6505": {
     "generated": "2026/06/05",
-    "pe": 11.1,
+    "pe": 10.6,
     "eps": 7.61,
     "quarterly_eps": [
       {
@@ -3665,7 +3670,7 @@
   },
   "2303": {
     "generated": "2026/06/05",
-    "pe": 13.9,
+    "pe": 12.0,
     "eps": 6.7,
     "quarterly_eps": [
       {
@@ -3725,7 +3730,7 @@
   },
   "2379": {
     "generated": "2026/06/05",
-    "pe": 25.6,
+    "pe": 23.5,
     "eps": 28.37,
     "quarterly_eps": [
       {
@@ -3785,7 +3790,7 @@
   },
   "3231": {
     "generated": "2026/06/05",
-    "pe": 10.7,
+    "pe": 10.1,
     "eps": 14.6,
     "quarterly_eps": [
       {
@@ -3845,7 +3850,7 @@
   },
   "1101": {
     "generated": "2026/07/30",
-    "pe": 88.4,
+    "pe": 84.0,
     "eps": 0.29,
     "quarterly_eps": [
       {
@@ -3905,7 +3910,7 @@
   },
   "2409": {
     "generated": "2026/07/30",
-    "pe": 313.8,
+    "pe": 290.6,
     "eps": 0.08,
     "quarterly_eps": [
       {
@@ -4015,7 +4020,7 @@
   },
   "2884": {
     "generated": "2026/07/30",
-    "pe": 19.0,
+    "pe": 18.7,
     "eps": 2.12,
     "quarterly_eps": [
       {
@@ -4069,7 +4074,7 @@
   },
   "2886": {
     "generated": "2026/07/30",
-    "pe": 22.6,
+    "pe": 21.9,
     "eps": 2.36,
     "quarterly_eps": [
       {
@@ -4123,8 +4128,8 @@
   },
   "2887": {
     "generated": "2026/07/30",
-    "pe": 20.4,
-    "eps": 1.89,
+    "pe": 18.7,
+    "eps": 1.82,
     "quarterly_eps": [
       {
         "q": "2024Q4",
@@ -4361,8 +4366,8 @@
   },
   "4904": {
     "generated": "2026/07/30",
-    "pe": 26.3,
-    "eps": 4.11,
+    "pe": 25.3,
+    "eps": 4.07,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -4416,7 +4421,7 @@
   },
   "4906": {
     "generated": "2026/07/30",
-    "pe": 580.0,
+    "pe": 522.0,
     "eps": 0.05,
     "quarterly_eps": [
       {
@@ -4480,8 +4485,8 @@
   },
   "6182": {
     "generated": "2026/07/30",
-    "pe": 274.3,
-    "eps": 0.23,
+    "pe": 177.5,
+    "eps": 0.32,
     "quarterly_eps": [
       {
         "q": "2025Q1",
@@ -4535,7 +4540,7 @@
   },
   "6789": {
     "generated": "2026/07/30",
-    "pe": 58.3,
+    "pe": 48.3,
     "eps": 6.01,
     "quarterly_eps": [
       {
@@ -4595,52 +4600,52 @@
   },
   "00940": {
     "generated": "2026/07/30",
-    "pe": 12.6,
+    "pe": 11.8,
     "eps": null
   },
   "0056": {
     "generated": "2026/07/30",
-    "pe": 15.5,
+    "pe": 14.5,
     "eps": null
   },
   "00662": {
     "generated": "2026/07/30",
-    "pe": 5.3,
+    "pe": 5.0,
     "eps": null
   },
   "00929": {
     "generated": "2026/07/30",
-    "pe": 13.0,
+    "pe": 12.2,
     "eps": null
   },
   "00757": {
     "generated": "2026/07/30",
-    "pe": 23.2,
+    "pe": 22.1,
     "eps": null
   },
   "00919": {
     "generated": "2026/07/30",
-    "pe": 13.9,
+    "pe": 13.1,
     "eps": null
   },
   "00891": {
     "generated": "2026/07/30",
-    "pe": 26.0,
+    "pe": 23.9,
     "eps": null
   },
   "00878": {
     "generated": "2026/07/30",
-    "pe": 15.9,
+    "pe": 15.0,
     "eps": null
   },
   "00713": {
     "generated": "2026/07/30",
-    "pe": 16.4,
+    "pe": 15.6,
     "eps": null
   },
   "0050": {
     "generated": "2026/07/30",
-    "pe": 23.6,
+    "pe": 22.1,
     "eps": null
   },
   "3653": {
@@ -4705,7 +4710,7 @@
   },
   "8210": {
     "generated": "2026/10/13",
-    "pe": 13.7,
+    "pe": 11.2,
     "eps": 37.92,
     "quarterly_eps": [
       {
